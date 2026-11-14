@@ -9,17 +9,28 @@ export interface Point {
 const H = 190;
 const PAD = { top: 14, right: 14, bottom: 26, left: 44 };
 
-export function LineChart({ points, format }: { points: Point[]; format: (v: number) => string }) {
+export function LineChart({
+  points,
+  format,
+  scatter = [],
+  emptyText = 'Log this exercise in at least two workouts to see the trend.',
+}: {
+  points: Point[];
+  format: (v: number) => string;
+  /** Raw readings drawn as faint dots behind the line (e.g. daily scale weight). */
+  scatter?: Point[];
+  emptyText?: string;
+}) {
   const [ref, width] = useWidth<HTMLDivElement>();
   if (points.length < 2) {
     return (
       <div className="chart-empty muted">
-        Log this exercise in at least two workouts to see the trend.
+        {emptyText}
       </div>
     );
   }
   const w = Math.max(width, 200);
-  const ys = points.map((p) => p.y);
+  const ys = [...points, ...scatter].map((p) => p.y);
   const ticks = niceTicks(Math.min(...ys), Math.max(...ys), 4);
   const yMin = ticks[0];
   const yMax = ticks[ticks.length - 1];
@@ -63,8 +74,11 @@ export function LineChart({ points, format }: { points: Point[]; format: (v: num
             </text>
           ))}
           <path d={area} fill="url(#fill)" />
+          {scatter.map((p, i) => (
+            <circle key={'s' + i} cx={sx(p.x)} cy={sy(p.y)} r="3" fill="var(--muted)" opacity="0.55" />
+          ))}
           <path d={line} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinejoin="round" />
-          {points.length <= 40 &&
+          {points.length <= 40 && !scatter.length &&
             points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r="2.5" fill="var(--accent)" />)}
           <circle cx={sx(last.x)} cy={sy(last.y)} r="5.5" fill="var(--bg)" stroke="var(--accent)" strokeWidth="3" />
         </svg>

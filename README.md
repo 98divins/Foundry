@@ -19,6 +19,15 @@ All data stays on your device.
 - **kg or lb**: weights are stored in kg and converted for display.
 - **Your data**: JSON backup and restore, CSV export, and **CSV import from a Hevy export** (Hevy → Settings → Export & Import Data → Export workouts). Unknown exercise names become custom exercises; workouts already present are skipped.
 
+## Nutrition
+
+- **Food log** by meal: search 150 common foods with French names (built in, works offline), 5 900 more basic foods in English, and branded products from Open Food Facts by name or **barcode** (camera or typed). Quick add for calories and macros, and your own foods from the label.
+- **Weight trend**: daily weigh-ins smoothed into a trend line, so water swings do not hide progress.
+- **Adaptive expenditure**: starts from Mifflin-St Jeor × activity, then learns from your data. Each day it compares the last 3 weeks of intake with the slope of your weight and moves 10 % toward what that implies (7 700 kcal per kg). Days marked as not fully logged are left out.
+- **Weekly check-in**: calories = expenditure + your chosen rate of weight change; protein per kg of trend weight, fat as a share of calories, carbs fill the rest. Never below 1 200 / 1 500 kcal.
+
+Food data: USDA FoodData Central (public domain) via the [TempoLife food dataset](https://tempolife.app) (CC-BY-4.0), and [Open Food Facts](https://openfoodfacts.org) (ODbL).
+
 ## Run it
 
 ```bash

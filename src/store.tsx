@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { displayName, LIBRARY } from './exercises';
 import type { Exercise, Routine, State, WorkoutExercise } from './types';
 import { registerKinds, uid } from './utils';
+import { defaultNutrition, type NutritionState } from './nutrition';
 
 const KEY = 'foundry:v1';
 
@@ -64,6 +65,7 @@ export function defaultState(): State {
     active: null,
     rest: null,
     settings: { unit: 'kg', defaultRest: 90, sound: true, exerciseLang: 'fr' },
+    nutrition: defaultNutrition(),
   };
 }
 
@@ -73,7 +75,12 @@ function load(): State {
     if (!raw) return defaultState();
     const saved = JSON.parse(raw) as Partial<State>;
     const base = defaultState();
-    return { ...base, ...saved, settings: { ...base.settings, ...saved.settings } } as State;
+    return {
+      ...base,
+      ...saved,
+      settings: { ...base.settings, ...saved.settings },
+      nutrition: { ...base.nutrition, ...saved.nutrition },
+    } as State;
   } catch {
     return defaultState();
   }
@@ -86,7 +93,7 @@ export function parseBackup(text: string): State {
     throw new Error('This file is not a Foundry backup.');
   }
   const base = defaultState();
-  return { ...base, ...data, settings: { ...base.settings, ...data.settings } };
+  return { ...base, ...data, settings: { ...base.settings, ...data.settings }, nutrition: { ...base.nutrition, ...data.nutrition } };
 }
 
 interface Ctx {
@@ -140,4 +147,11 @@ export function useStore(): Ctx {
 export function exerciseName(exMap: Map<string, Exercise>, id: string) {
   const e = exMap.get(id);
   return e?.label ?? e?.name ?? 'Deleted exercise';
+}
+
+/** The nutrition part of the state, with an updater scoped to it. */
+export function useNutrition() {
+  const { state, update } = useStore();
+  const setN = (fn: (n: NutritionState) => NutritionState) => update((s) => ({ ...s, nutrition: fn(s.nutrition) }));
+  return { n: state.nutrition, setN, unit: state.settings.unit };
 }

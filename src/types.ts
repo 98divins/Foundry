@@ -1,3 +1,5 @@
+import type { NutritionState } from './nutrition';
+
 export type Unit = 'kg' | 'lb';
 export type SetType = 'normal' | 'warmup' | 'drop' | 'failure';
 export type Muscle =
@@ -129,6 +131,7 @@ export interface State {
   active: Workout | null;
   rest: RestTimer | null;
   settings: Settings;
+  nutrition: NutritionState;
 }
 
 export type PRKind = 'weight' | '1rm' | 'volume' | 'reps' | 'duration' | 'distance';

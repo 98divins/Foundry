@@ -26,8 +26,10 @@ export function displayName(e: Exercise, lang: NameLang): string {
 export const fold = (s: string) =>
   s
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae');
 
 export const MUSCLES: Muscle[] = [
   'chest', 'upper_back', 'lats', 'lower_back', 'traps', 'shoulders', 'biceps', 'triceps', 'forearms', 'abs',
