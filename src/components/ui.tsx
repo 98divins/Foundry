@@ -156,12 +156,15 @@ export function Sheet({
   title,
   children,
   tall,
+  noClose,
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
   children: ReactNode;
   tall?: boolean;
+  /** For choices that must be made: no close button, backdrop taps ignored. */
+  noClose?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -171,7 +174,7 @@ export function Sheet({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className="sheet-backdrop" onClick={noClose ? undefined : onClose}>
       <div
         className={'sheet' + (tall ? ' sheet-tall' : '')}
         role="dialog"
@@ -183,9 +186,11 @@ export function Sheet({
         {title && (
           <div className="sheet-head">
             <h2>{title}</h2>
-            <button className="icon-btn" onClick={onClose} aria-label="Close">
-              <Icon name="x" />
-            </button>
+            {!noClose && (
+              <button className="icon-btn" onClick={onClose} aria-label="Close">
+                <Icon name="x" />
+              </button>
+            )}
           </div>
         )}
         {children}

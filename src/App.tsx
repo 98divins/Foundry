@@ -15,6 +15,7 @@ import { ImportRoutines } from './screens/ImportRoutines';
 import { WorkoutDetail } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 import { useStore } from './store';
+import { CloudDialogs } from './components/Account';
 import { dayKey, type Meal } from './nutrition';
 import { NutritionHome } from './screens/nutrition/NutritionHome';
 import { AddFood } from './screens/nutrition/AddFood';
@@ -100,6 +101,7 @@ export function App() {
         </div>
       )}
       {screen}
+      <CloudDialogs />
       {state.active && section !== 'active' && (
         <button className="mini-workout" onClick={() => go('active')}>
           <span className="mini-dot" aria-hidden="true" />

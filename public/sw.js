@@ -1,5 +1,14 @@
 // Offline support: network first for navigations, cache first for assets.
-const CACHE = 'foundry-v2';
+const CACHE = 'foundry-v3';
+
+// Only the app itself, its fonts and exercise photos are cached. Live data (cloud sync,
+// Open Food Facts) always goes to the network so it is never stale.
+const CACHEABLE = (url) =>
+  url.origin === self.location.origin ||
+  url.hostname === 'fonts.googleapis.com' ||
+  url.hostname === 'fonts.gstatic.com' ||
+  (url.hostname === 'cdn.jsdelivr.net' && url.pathname.includes('free-exercise-db')) ||
+  (url.hostname === 'raw.githubusercontent.com' && url.pathname.includes('free-exercise-db'));
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting()));
@@ -17,6 +26,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  if (!CACHEABLE(new URL(req.url))) return;
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req)

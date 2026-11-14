@@ -2288,3 +2288,49 @@ span.ex-photo {
 .backup-banner .btn {
   flex: none;
 }
+
+/* ---------- Account & sync ---------- */
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sync-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.sync-status.synced .sync-dot {
+  background: var(--good);
+}
+.sync-status.syncing .sync-dot {
+  background: var(--accent);
+  animation: pulse 1.2s infinite;
+}
+.sync-status.offline .sync-dot {
+  background: var(--gold);
+}
+.sync-status.error .sync-dot {
+  background: var(--danger);
+}
+.account-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+}
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.sync-status.conflict .sync-dot {
+  background: var(--gold);
+}

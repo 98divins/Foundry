@@ -6,6 +6,7 @@ import { defaultState, parseBackup, useStore } from '../store';
 import type { NameLang, Unit } from '../types';
 import { download, fmtClock } from '../utils';
 import { fmtBackupAge, saveBackup } from '../backup';
+import { AccountSection } from '../components/Account';
 
 export function SettingsPage() {
   const { state, update, exercises, exMap } = useStore();
@@ -43,6 +44,8 @@ export function SettingsPage() {
     <>
       <Header title="Settings" onBack={() => back('profile')} />
       <main className="page">
+        <AccountSection />
+
         <section className="panel">
           <h2 className="panel-title">Settings</h2>
           <div className="setting">

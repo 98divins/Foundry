@@ -40,6 +40,17 @@ All data stays on your device.
 
 Food data: USDA FoodData Central (public domain) via the [TempoLife food dataset](https://tempolife.app) (CC-BY-4.0), and [Open Food Facts](https://openfoodfacts.org) (ODbL).
 
+## Accounts and sync (Supabase)
+
+Optional. Without it, everything stays on the device (with backup files).
+
+1. Create a Supabase project (free tier), region in Europe.
+2. SQL Editor → run `supabase/schema.sql` once: one `user_state` row per user (the app data as JSON), Row Level Security so each user only reads and writes their own row, and `delete_my_account()` for in-app account deletion.
+3. Authentication → URL Configuration: Site URL and Redirect URLs = the app's address (e.g. `https://98divins.github.io/Foundry/`), so confirmation and password-reset emails come back to the app.
+4. Put the Project URL and the publishable key in `src/cloud/config.ts` (both are public by design).
+
+Sync: after sign-in, a phone with data and an empty account uploads; a fresh phone downloads; if both hold data the user chooses which to keep. Changes upload 2 s after the last edit; on return to the app or the network, the newer side wins, and when both changed the user chooses. Offline edits are kept and sent later.
+
 ## Run it
 
 ```bash
