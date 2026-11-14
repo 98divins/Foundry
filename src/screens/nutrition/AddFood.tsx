@@ -18,6 +18,7 @@ import { SavedMealsList } from './SavedMeals';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { fmtDay } from './NutritionHome';
+import { t } from '../../i18n';
 
 type Mode = 'search' | 'meals' | 'scan' | 'quick' | 'create';
 
@@ -40,39 +41,36 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
 
   return (
     <>
-      <Header title={`Add to ${MEAL_LABEL[meal]}`} onBack={() => back('n/' + date)} />
+      <Header title={t('Add to {meal}', { meal: t(MEAL_LABEL[meal]) })} onBack={() => back('n/' + date)} />
       <main className="page">
         <div className="add-meta">
           <span className="muted small">{fmtDay(date)}</span>
-          <select id="add-meal" aria-label="Meal" value={meal} onChange={(e) => setMeal(e.target.value as Meal)}>
+          <select id="add-meal" aria-label={t('Meal')} value={meal} onChange={(e) => setMeal(e.target.value as Meal)}>
             {MEALS.map((m) => (
               <option key={m} value={m}>
-                {MEAL_LABEL[m]}
+                {t(MEAL_LABEL[m])}
               </option>
             ))}
           </select>
         </div>
         <Segmented<Mode>
-          label="How to add"
+          label={t('How to add')}
           value={mode}
           onChange={setMode}
           options={[
-            { value: 'search', label: 'Search' },
-            { value: 'meals', label: 'Meals' },
-            { value: 'scan', label: 'Scan' },
-            { value: 'quick', label: 'Quick' },
-            { value: 'create', label: 'New' },
+            { value: 'search', label: t('Search') },
+            { value: 'meals', label: t('Meals') },
+            { value: 'scan', label: t('Scan') },
+            { value: 'quick', label: t('Quick') },
+            { value: 'create', label: t('New') },
           ]}
         />
         {added.length > 0 && (
           <div className="added-box" role="status">
-            <span>
-              Added: {added.slice(-3).join(', ')}
-              {added.length > 3 && ` and ${added.length - 3} more`}
+            <span>{t('Added:')}{' '}{added.slice(-3).join(', ')}
+              {added.length > 3 && t(' and {n} more', { n: added.length - 3 })}
             </span>
-            <button className="btn btn-small btn-primary" onClick={() => back('n/' + date)}>
-              Done
-            </button>
+            <button className="btn btn-small btn-primary" onClick={() => back('n/' + date)}>{t('Done')}</button>
           </div>
         )}
 
@@ -119,14 +117,13 @@ export function FoodRow({ food, onPick, favorite }: { food: Food; onPick: (f: Fo
       <button className="food-row" onClick={() => onPick(food)}>
         <span className="entry-text">
           <span className="entry-name">
-            {favorite && <span className="fav-star" aria-label="Favourite">★ </span>}
+            {favorite && <span className="fav-star" aria-label={t('Favourite')}>★ </span>}
             {food.name}
-            {food.source === 'custom' && <span className="tag">Mine</span>}
+            {food.source === 'custom' && <span className="tag">{t('Mine')}</span>}
           </span>
           <span className="muted small">
             {food.brand && <>{food.brand} · </>}
-            {Math.round(p.kcal)} kcal · P {fmtNum(p.protein)} · C {fmtNum(p.carbs)} · F {fmtNum(p.fat)} per 100 g
-          </span>
+            {t('{kcal} kcal · P {p} · C {c} · F {f} per 100 g', { kcal: Math.round(p.kcal), p: fmtNum(p.protein), c: fmtNum(p.carbs), f: fmtNum(p.fat) })}</span>
         </span>
         <Icon name="plus" size={18} />
       </button>
@@ -184,7 +181,7 @@ export function SearchFoods({
     try {
       setGeneric(await loadGenericFoods());
     } catch {
-      setError('The extra food list could not load. Check your connection and try again.');
+      setError(t('The extra food list could not load. Check your connection and try again.'));
     } finally {
       setBusy('');
     }
@@ -197,7 +194,7 @@ export function SearchFoods({
     try {
       setOnline({ q, foods: await offSearch(q) });
     } catch (e) {
-      setError(e instanceof OffError ? e.message : 'The search failed. Try again.');
+      setError(e instanceof OffError ? e.message : t('The search failed. Try again.'));
     } finally {
       setBusy('');
     }
@@ -215,7 +212,7 @@ export function SearchFoods({
           <Icon name="search" size={18} />
           <input
             id="food-search"
-            placeholder="Search a food (e.g. skyr, riz, poulet)"
+            placeholder={t('Search a food (e.g. skyr, riz, poulet)')}
             value={query}
             enterKeyHint="search"
             onChange={(e) => {
@@ -229,7 +226,7 @@ export function SearchFoods({
 
       {!query.trim() && favs.length > 0 && (
         <>
-          <h3 className="list-title">Favourites</h3>
+          <h3 className="list-title">{t('Favourites')}</h3>
           <ul className="food-list">
             {favs.map((f) => (
               <FoodRow key={f.id} food={f} onPick={onPick} favorite />
@@ -239,7 +236,7 @@ export function SearchFoods({
       )}
       {!query.trim() && (
         <>
-          <h3 className="list-title">Recent</h3>
+          <h3 className="list-title">{t('Recent')}</h3>
           {recent.length ? (
             <ul className="food-list">
               {recent.map((f) => (
@@ -247,7 +244,7 @@ export function SearchFoods({
               ))}
             </ul>
           ) : (
-            <p className="muted small">Foods you log appear here for quick access.</p>
+            <p className="muted small">{t('Foods you log appear here for quick access.')}</p>
           )}
         </>
       )}
@@ -262,20 +259,20 @@ export function SearchFoods({
               <FoodRow key={f.id} food={f} onPick={onPick} />
             ))}
           </ul>
-          {!results.length && !more.length && <p className="muted small">No match in your foods or the French list.</p>}
+          {!results.length && !more.length && <p className="muted small">{t('No match in your foods or the French list.')}</p>}
           <div className="search-more">
             {!generic && (
               <button className="btn" onClick={loadMore} disabled={busy !== ''}>
-                {busy === 'generic' ? 'Loading…' : 'More basic foods (English)'}
+                {busy === 'generic' ? t('Loading…') : t('More basic foods (English)')}
               </button>
             )}
             <button className="btn btn-primary" onClick={searchOnline} disabled={busy !== ''}>
-              {busy === 'online' ? 'Searching…' : 'Search brands (Open Food Facts)'}
+              {busy === 'online' ? t('Searching…') : t('Search brands (Open Food Facts)')}
             </button>
           </div>
           {online && online.q === query.trim() && (
             <>
-              <h3 className="list-title">Open Food Facts</h3>
+              <h3 className="list-title">{t('Open Food Facts')}</h3>
               {online.foods.length ? (
                 <ul className="food-list">
                   {online.foods.map((f) => (
@@ -283,16 +280,13 @@ export function SearchFoods({
                   ))}
                 </ul>
               ) : (
-                <p className="muted small">No product found. Try other words, scan the barcode, or create the food.</p>
+                <p className="muted small">{t('No product found. Try other words, scan the barcode, or create the food.')}</p>
               )}
             </>
           )}
         </>
       )}
-      <p className="muted small credit">
-        Basic foods: USDA FoodData Central via TempoLife (tempolife.app, CC-BY-4.0). Brands and barcodes: Open Food Facts
-        (ODbL). Check the label when it matters.
-      </p>
+      <p className="muted small credit">{t('Basic foods: USDA FoodData Central via TempoLife (tempolife.app, CC-BY-4.0). Brands and barcodes: Open Food Facts (ODbL). Check the label when it matters.')}</p>
     </>
   );
 }
@@ -309,17 +303,17 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
       setCamera(false);
       const mine = foods.find((f) => f.barcode === c);
       if (mine) return onPick(mine);
-      setStatus({ text: `Looking up ${c}…` });
+      setStatus({ text: t('Looking up {code}…', { code: c }) });
       try {
         const food = await offByBarcode(c);
         if (food) {
           setStatus(null);
           onPick(food);
         } else {
-          setStatus({ text: `Barcode ${c} is not in Open Food Facts yet.`, notFound: true });
+          setStatus({ text: t('Barcode {code} is not in Open Food Facts yet.', { code: c }), notFound: true });
         }
       } catch (e) {
-        setStatus({ text: e instanceof OffError ? e.message : 'The lookup failed. Try again.', error: true });
+        setStatus({ text: e instanceof OffError ? e.message : t('The lookup failed. Try again.'), error: true });
       }
     },
     [foods, onPick],
@@ -330,9 +324,7 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
       {camera ? (
         <BarcodeScanner onCode={lookup} onClose={() => setCamera(false)} />
       ) : (
-        <button className="btn btn-wide" onClick={() => setCamera(true)}>
-          Scan with the camera
-        </button>
+        <button className="btn btn-wide" onClick={() => setCamera(true)}>{t('Scan with the camera')}</button>
       )}
       <form
         className="barcode-form"
@@ -344,21 +336,17 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
         <input
           id="barcode"
           inputMode="numeric"
-          placeholder="Or type the barcode digits"
+          placeholder={t('Or type the barcode digits')}
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
         />
-        <button className="btn btn-primary" type="submit" disabled={code.length < 8}>
-          Look up
-        </button>
+        <button className="btn btn-primary" type="submit" disabled={code.length < 8}>{t('Look up')}</button>
       </form>
       {status && (
         <p className={status.error ? 'field-error' : 'muted small'}>
           {status.text}{' '}
           {status.notFound && (
-            <button className="link-btn" onClick={onCreate}>
-              Create it from the label
-            </button>
+            <button className="link-btn" onClick={onCreate}>{t('Create it from the label')}</button>
           )}
         </p>
       )}
@@ -381,19 +369,19 @@ function QuickAdd({ onAdd }: { onAdd: (e: Omit<FoodEntry, 'id' | 'date' | 'meal'
       onSubmit={(e) => {
         e.preventDefault();
         if (!kcal) return;
-        onAdd({ name: name.trim() || 'Quick add', grams: null, kcal, protein: v.protein ?? 0, carbs: v.carbs ?? 0, fat: v.fat ?? 0 });
+        onAdd({ name: name.trim() || t('Quick add'), grams: null, kcal, protein: v.protein ?? 0, carbs: v.carbs ?? 0, fat: v.fat ?? 0 });
         setName('');
         setV({ kcal: null, protein: null, carbs: null, fat: null });
       }}
     >
       <label className="field">
-        <span>Name (optional)</span>
-        <input id="quick-name" value={name} placeholder="e.g. Restaurant lunch" onChange={(e) => setName(e.target.value)} />
+        <span>{t('Name (optional)')}</span>
+        <input id="quick-name" value={name} placeholder={t('e.g. Restaurant lunch')} onChange={(e) => setName(e.target.value)} />
       </label>
       <div className="quick-grid">
         {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
           <label key={k} className="field">
-            <span>{k === 'kcal' ? 'Calories' : `${k} (g)`}</span>
+            <span>{k === 'kcal' ? t('Calories') : `${k} (g)`}</span>
             <NumInput
               id={'quick-' + k}
               label={k}
@@ -404,9 +392,8 @@ function QuickAdd({ onAdd }: { onAdd: (e: Omit<FoodEntry, 'id' | 'date' | 'meal'
           </label>
         ))}
       </div>
-      <p className="muted small">Leave calories empty to compute them from the macros (4 / 4 / 9 kcal per gram).</p>
-      <button className="btn btn-primary btn-wide" type="submit" disabled={!kcal}>
-        Add {kcal ? `${kcal} kcal` : ''}
+      <p className="muted small">{t('Leave calories empty to compute them from the macros (4 / 4 / 9 kcal per gram).')}</p>
+      <button className="btn btn-primary btn-wide" type="submit" disabled={!kcal}>{t('Add')}{' '}{kcal ? `${kcal} kcal` : ''}
       </button>
     </form>
   );
@@ -435,25 +422,25 @@ function CreateFood({ onCreate }: { onCreate: (f: Food) => void }) {
           name: name.trim(),
           brand: brand.trim() || undefined,
           per100: { kcal, protein: v.protein ?? 0, carbs: v.carbs ?? 0, fat: v.fat ?? 0 },
-          serving: serving.grams ? { label: serving.label.trim() || '1 portion', grams: serving.grams } : null,
+          serving: serving.grams ? { label: serving.label.trim() || t('1 portion'), grams: serving.grams } : null,
           source: 'custom',
           barcode: barcode || undefined,
         });
       }}
     >
       <label className="field">
-        <span>Name</span>
-        <input id="new-food-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Skyr nature" />
+        <span>{t('Name')}</span>
+        <input id="new-food-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Skyr nature')} />
       </label>
       <label className="field">
-        <span>Brand (optional)</span>
+        <span>{t('Brand (optional)')}</span>
         <input id="new-food-brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
       </label>
-      <p className="muted small">Values per 100 g, as on the label.</p>
+      <p className="muted small">{t('Values per 100 g, as on the label.')}</p>
       <div className="quick-grid">
         {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
           <label key={k} className="field">
-            <span>{k === 'kcal' ? 'Calories' : `${k} (g)`}</span>
+            <span>{k === 'kcal' ? t('Calories') : `${k} (g)`}</span>
             <NumInput
               id={'new-food-' + k}
               label={k}
@@ -466,31 +453,29 @@ function CreateFood({ onCreate }: { onCreate: (f: Food) => void }) {
       </div>
       <div className="field-row">
         <label className="field">
-          <span>Portion name</span>
+          <span>{t('Portion name')}</span>
           <input
             id="new-food-serving"
             value={serving.label}
-            placeholder="e.g. 1 pot"
+            placeholder={t('e.g. 1 pot')}
             onChange={(e) => setServing((s) => ({ ...s, label: e.target.value }))}
           />
         </label>
         <label className="field field-narrow">
-          <span>Portion (g)</span>
+          <span>{t('Portion (g)')}</span>
           <NumInput
             id="new-food-serving-g"
-            label="Portion in grams"
+            label={t('Portion in grams')}
             value={serving.grams}
             onChange={(g) => setServing((s) => ({ ...s, grams: g }))}
           />
         </label>
       </div>
       <label className="field">
-        <span>Barcode (optional)</span>
+        <span>{t('Barcode (optional)')}</span>
         <input id="new-food-barcode" inputMode="numeric" value={barcode} onChange={(e) => setBarcode(e.target.value.replace(/\D/g, ''))} />
       </label>
-      <button className="btn btn-primary btn-wide" type="submit" disabled={!name.trim() || kcal == null}>
-        Create and choose the amount
-      </button>
+      <button className="btn btn-primary btn-wide" type="submit" disabled={!name.trim() || kcal == null}>{t('Create and choose the amount')}</button>
     </form>
   );
 }
@@ -501,7 +486,7 @@ export function AmountSheet({
   onAdd,
   favorite,
   onToggleFavorite,
-  addLabel = 'Add',
+  addLabel = t('Add'),
 }: {
   food: Food | null;
   onClose: () => void;
@@ -541,7 +526,7 @@ export function AmountSheet({
               aria-pressed={favorite}
               onClick={() => onToggleFavorite(food)}
             >
-              {favorite ? '★ Favourite' : '☆ Add to favourites'}
+              {favorite ? t('★ Favourite') : t('☆ Add to favourites')}
             </button>
           )}
         </div>
@@ -554,16 +539,14 @@ export function AmountSheet({
           ))}
         </div>
         <label className="field">
-          <span>Amount (g)</span>
-          <NumInput id="amount-g" label="Amount in grams" value={grams} onChange={setGrams} />
+          <span>{t('Amount (g)')}</span>
+          <NumInput id="amount-g" label={t('Amount in grams')} value={grams} onChange={setGrams} />
         </label>
         <p className="macro-line">
-          <strong>{m.kcal} kcal</strong> · P {m.protein} g · C {m.carbs} g · F {m.fat} g
+          <strong>{t('{0} kcal', { 0: m.kcal })}</strong> · P {m.protein} g · C {m.carbs} g · F {m.fat} g
         </p>
         <div className="sheet-actions">
-          <button type="button" className="btn" onClick={onClose}>
-            Cancel
-          </button>
+          <button type="button" className="btn" onClick={onClose}>{t('Cancel')}</button>
           <button type="submit" className="btn btn-primary" disabled={!grams}>
             {addLabel}
           </button>

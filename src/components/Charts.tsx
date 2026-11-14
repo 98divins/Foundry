@@ -1,5 +1,6 @@
 import { useWidth } from '../hooks';
 import { niceTicks } from '../utils';
+import { locale, t } from '../i18n';
 
 export interface Point {
   x: number;
@@ -13,7 +14,7 @@ export function LineChart({
   points,
   format,
   scatter = [],
-  emptyText = 'Log this exercise in at least two workouts to see the trend.',
+  emptyText = t('Log this exercise in at least two workouts to see the trend.'),
 }: {
   points: Point[];
   format: (v: number) => string;
@@ -41,13 +42,13 @@ export function LineChart({
   const line = points.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join('');
   const area = `${line}L${sx(xMax).toFixed(1)},${sy(yMin)}L${sx(xMin).toFixed(1)},${sy(yMin)}Z`;
   const last = points[points.length - 1];
-  const fmtD = (t: number) => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  const fmtD = (t: number) => new Date(t).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
   const xLabels = points.length > 2 ? [xMin, (xMin + xMax) / 2, xMax] : [xMin, xMax];
 
   return (
     <div ref={ref} className="chart">
       {width > 0 && (
-        <svg width={w} height={H} role="img" aria-label="Progress chart">
+        <svg width={w} height={H} role="img" aria-label={t('Progress chart')}>
           <defs>
             <linearGradient id="fill" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0" stopColor="var(--accent)" stopOpacity="0.32" />
@@ -99,7 +100,7 @@ export function BarChart({ bars, highlightLast = true }: { bars: { label: string
   return (
     <div ref={ref} className="chart">
       {width > 0 && (
-        <svg width={w} height={h} role="img" aria-label="Workouts per week">
+        <svg width={w} height={h} role="img" aria-label={t('Workouts per week')}>
           <line x1={0} x2={w} y1={h - bottom} y2={h - bottom} stroke="var(--line)" />
           {bars.map((b, i) => {
             const bh = (b.value / max) * (h - top - bottom);

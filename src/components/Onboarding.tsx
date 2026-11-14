@@ -4,11 +4,12 @@ import { go } from '../hooks';
 import { useStore } from '../store';
 import type { NameLang, Unit } from '../types';
 import { Icon, Logo, Segmented, type IconName } from './ui';
+import { t, tk, detectLang, type AppLang } from '../i18n';
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'dumbbell', title: 'Log every set', text: '450 exercises, routines, supersets and a rest timer built for the gym floor.' },
-  { icon: 'apple', title: 'Eat to your goal', text: 'Food log with barcode scan, and targets that adapt to how your body really responds.' },
-  { icon: 'chart', title: 'See what works', text: 'Strength trends, records, and how your diet moves your lifts.' },
+  { icon: 'dumbbell', title: tk('Log every set'), text: tk('450 exercises, routines, supersets and a rest timer built for the gym floor.') },
+  { icon: 'apple', title: tk('Eat to your goal'), text: tk('Food log with barcode scan, and targets that adapt to how your body really responds.') },
+  { icon: 'chart', title: tk('See what works'), text: tk('Strength trends, records, and how your diet moves your lifts.') },
 ];
 
 /** Shown to anyone not signed in: accounts are required. */
@@ -21,8 +22,8 @@ export function Welcome() {
       <main className="welcome">
         <div className="welcome-hero">
           <Logo size={72} />
-          <h1 className="welcome-word">Foundry</h1>
-          <p className="welcome-tag">Training and nutrition, forged in one place.</p>
+          <h1 className="welcome-word">{t('Foundry')}</h1>
+          <p className="welcome-tag">{t('Training and nutrition, forged in one place.')}</p>
         </div>
         <ul className="welcome-features">
           {FEATURES.map((f) => (
@@ -31,20 +32,16 @@ export function Welcome() {
                 <Icon name={f.icon} />
               </span>
               <span>
-                <strong>{f.title}</strong>
-                <span className="muted small">{f.text}</span>
+                <strong>{t(f.title)}</strong>
+                <span className="muted small">{t(f.text)}</span>
               </span>
             </li>
           ))}
         </ul>
         <div className="welcome-actions">
-          <button className="btn btn-primary btn-wide welcome-cta" onClick={() => setScreen('signup')}>
-            Create my account
-          </button>
-          <button className="btn btn-ghost btn-wide" onClick={() => setScreen('login')}>
-            I already have an account
-          </button>
-          <p className="muted small center">Free. Your data is saved to your account, on every device.</p>
+          <button className="btn btn-primary btn-wide welcome-cta" onClick={() => setScreen('signup')}>{t('Create my account')}</button>
+          <button className="btn btn-ghost btn-wide" onClick={() => setScreen('login')}>{t('I already have an account')}</button>
+          <p className="muted small center">{t('Free. Your data is saved to your account, on every device.')}</p>
         </div>
       </main>
     );
@@ -54,12 +51,12 @@ export function Welcome() {
 
   return (
     <main className="welcome auth">
-      <button className="icon-btn auth-back" aria-label="Back" onClick={() => setScreen(screen === 'reset' ? 'login' : 'welcome')}>
+      <button className="icon-btn auth-back" aria-label={t('Back')} onClick={() => setScreen(screen === 'reset' ? 'login' : 'welcome')}>
         <Icon name="back" />
       </button>
       <div className="auth-head">
         <Logo size={44} />
-        <h1>{screen === 'signup' ? 'Create your account' : screen === 'login' ? 'Welcome back' : 'Reset your password'}</h1>
+        <h1>{screen === 'signup' ? t('Create your account') : screen === 'login' ? t('Welcome back') : t('Reset your password')}</h1>
       </div>
       <AuthForm
         mode={screen}
@@ -99,7 +96,7 @@ function AuthForm({
     setBusy(false);
     if (r === 'CHECK_EMAIL') onCheckEmail();
     else if (r) setMsg({ text: r, error: true });
-    else if (mode === 'reset') setMsg({ text: `If an account exists for ${e}, a reset link is on its way. Open it on this phone.` });
+    else if (mode === 'reset') setMsg({ text: t('If an account exists for {email}, a reset link is on its way. Open it on this phone.', { email: e }) });
   };
 
   return (
@@ -111,12 +108,12 @@ function AuthForm({
       }}
     >
       <label className="field">
-        <span>Email</span>
+        <span>{t('Email')}</span>
         <input id="auth-email" type="email" inputMode="email" autoComplete="email" value={email} onChange={(ev) => onEmail(ev.target.value)} />
       </label>
       {mode !== 'reset' && (
         <label className="field">
-          <span>Password</span>
+          <span>{t('Password')}</span>
           <input
             id="auth-password"
             type="password"
@@ -124,27 +121,21 @@ function AuthForm({
             value={password}
             onChange={(ev) => setPassword(ev.target.value)}
           />
-          {mode === 'signup' && <span className="muted small">At least 8 characters.</span>}
+          {mode === 'signup' && <span className="muted small">{t('At least 8 characters.')}</span>}
         </label>
       )}
       {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
       <button className="btn btn-primary btn-wide" type="submit" disabled={busy || !valid}>
-        {busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : mode === 'login' ? 'Log in' : 'Send reset link'}
+        {busy ? t('Please wait…') : mode === 'signup' ? t('Create account') : mode === 'login' ? t('Log in') : t('Send reset link')}
       </button>
       <div className="account-links">
         {mode === 'signup' && (
-          <button type="button" className="link-btn" onClick={() => onMode('login')}>
-            I already have an account
-          </button>
+          <button type="button" className="link-btn" onClick={() => onMode('login')}>{t('I already have an account')}</button>
         )}
         {mode === 'login' && (
           <>
-            <button type="button" className="link-btn" onClick={() => onMode('reset')}>
-              Forgot password?
-            </button>
-            <button type="button" className="link-btn" onClick={() => onMode('signup')}>
-              Create an account
-            </button>
+            <button type="button" className="link-btn" onClick={() => onMode('reset')}>{t('Forgot password?')}</button>
+            <button type="button" className="link-btn" onClick={() => onMode('signup')}>{t('Create an account')}</button>
           </>
         )}
       </div>
@@ -168,30 +159,26 @@ function CheckEmail({ email, onBack }: { email: string; onBack: () => void }) {
         <span className="welcome-icon big">
           <Icon name="note" size={30} />
         </span>
-        <h1>Check your inbox</h1>
+        <h1>{t('Check your inbox')}</h1>
       </div>
-      <p className="center">
-        We sent a confirmation link to <strong>{email}</strong>. Open it on this phone to activate your account.
-      </p>
+      <p className="center">{t('We sent a confirmation link to {email}. Open it on this phone to activate your account.', { email })}</p>
       <ol className="how">
-        <li>Open the email from Foundry (check spam if it is not there within a few minutes).</li>
-        <li>Tap the confirmation link.</li>
-        <li>Come back here and log in.</li>
+        <li>{t('Open the email from Foundry (check spam if it is not there within a few minutes).')}</li>
+        <li>{t('Tap the confirmation link.')}</li>
+        <li>{t('Come back here and log in.')}</li>
       </ol>
       {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
-      <button className="btn btn-primary btn-wide" onClick={onBack}>
-        I confirmed, log in
-      </button>
+      <button className="btn btn-primary btn-wide" onClick={onBack}>{t('I confirmed, log in')}</button>
       <button
         className="btn btn-ghost btn-wide"
         disabled={wait > 0}
         onClick={async () => {
           const e = await c.resendConfirmation(email);
-          setMsg(e ? { text: e, error: true } : { text: 'Sent again. It can take a few minutes.' });
+          setMsg(e ? { text: e, error: true } : { text: t('Sent again. It can take a few minutes.') });
           setWait(60);
         }}
       >
-        {wait > 0 ? `Resend the email (${wait} s)` : 'Resend the email'}
+        {wait > 0 ? t('Resend the email ({n} s)', { n: wait }) : t('Resend the email')}
       </button>
     </main>
   );
@@ -210,64 +197,74 @@ export function QuickStart() {
     return (
       <main className="welcome auth">
         <div className="auth-head">
-          <span className="eyebrow">Step 1 of 2</span>
-          <h1>Your preferences</h1>
+          <span className="eyebrow">{t('Step 1 of 2')}</span>
+          <h1>{t('Your preferences')}</h1>
         </div>
         <div className="panel">
           <div className="setting">
-            <span>Weight unit</span>
+            <span>{t('Weight unit')}</span>
             <Segmented<Unit>
-              label="Weight unit"
+              label={t('Weight unit')}
               value={state.settings.unit}
               onChange={(unit) => update((s) => ({ ...s, settings: { ...s.settings, unit } }))}
               options={[
-                { value: 'kg', label: 'kg' },
-                { value: 'lb', label: 'lb' },
+                { value: 'kg', label: t('kg') },
+                { value: 'lb', label: t('lb') },
               ]}
             />
           </div>
           <div className="setting">
-            <span>Height</span>
+            <span>{t('Height')}</span>
             <Segmented<'cm' | 'in'>
-              label="Height unit"
+              label={t('Height unit')}
               value={state.settings.heightUnit ?? 'cm'}
               onChange={(heightUnit) => update((s) => ({ ...s, settings: { ...s.settings, heightUnit } }))}
               options={[
-                { value: 'cm', label: 'cm' },
-                { value: 'in', label: 'ft / in' },
+                { value: 'cm', label: t('cm') },
+                { value: 'in', label: t('ft / in') },
               ]}
             />
           </div>
           <div className="setting">
-            <span>Exercise names</span>
-            <Segmented<NameLang>
-              label="Exercise names"
-              value={state.settings.exerciseLang}
-              onChange={(exerciseLang) => update((s) => ({ ...s, settings: { ...s.settings, exerciseLang } }))}
+            <span>{t('App language')}</span>
+            <Segmented<AppLang>
+              label={t('App language')}
+              value={state.settings.appLang ?? detectLang()}
+              onChange={(appLang) => update((s) => ({ ...s, settings: { ...s.settings, appLang } }))}
               options={[
                 { value: 'fr', label: 'Français' },
                 { value: 'en', label: 'English' },
               ]}
             />
           </div>
+          <div className="setting">
+            <span>{t('Exercise names')}</span>
+            <Segmented<NameLang>
+              label={t('Exercise names')}
+              value={state.settings.exerciseLang}
+              onChange={(exerciseLang) => update((s) => ({ ...s, settings: { ...s.settings, exerciseLang } }))}
+              options={[
+                { value: 'fr', label: t('Français') },
+                { value: 'en', label: t('English') },
+              ]}
+            />
+          </div>
         </div>
-        <button className="btn btn-primary btn-wide" onClick={() => setStep(2)}>
-          Continue
-        </button>
+        <button className="btn btn-primary btn-wide" onClick={() => setStep(2)}>{t('Continue')}</button>
       </main>
     );
   }
 
   const choices: { icon: IconName; title: string; text: string; route: string }[] = [
-    { icon: 'search', title: 'Pick a program', text: 'Full Body, Upper / Lower or Push / Pull / Legs, ready to start.', route: 'explore' },
-    { icon: 'plus', title: 'Build my own routine', text: 'Choose your exercises, sets and rep ranges.', route: 'r/new' },
-    { icon: 'apple', title: 'Set up my nutrition', text: 'Your calorie and macro targets, adjusted every week.', route: 'n/setup' },
+    { icon: 'search', title: t('Pick a program'), text: t('Full Body, Upper / Lower or Push / Pull / Legs, ready to start.'), route: 'explore' },
+    { icon: 'plus', title: t('Build my own routine'), text: t('Choose your exercises, sets and rep ranges.'), route: 'r/new' },
+    { icon: 'apple', title: t('Set up my nutrition'), text: t('Your calorie and macro targets, adjusted every week.'), route: 'n/setup' },
   ];
   return (
     <main className="welcome auth">
       <div className="auth-head">
-        <span className="eyebrow">Step 2 of 2</span>
-        <h1>Where do you start?</h1>
+        <span className="eyebrow">{t('Step 2 of 2')}</span>
+        <h1>{t('Where do you start?')}</h1>
       </div>
       <ul className="start-choices">
         {choices.map((c) => (
@@ -285,9 +282,7 @@ export function QuickStart() {
           </li>
         ))}
       </ul>
-      <button className="btn btn-ghost btn-wide" onClick={() => done('')}>
-        Skip, take me to the app
-      </button>
+      <button className="btn btn-ghost btn-wide" onClick={() => done('')}>{t('Skip, take me to the app')}</button>
     </main>
   );
 }
@@ -295,7 +290,7 @@ export function QuickStart() {
 /** Brief screen while the saved session is read. */
 export function Splash() {
   return (
-    <main className="splash" aria-label="Loading">
+    <main className="splash" aria-label={t('Loading')}>
       <Logo size={64} />
     </main>
   );

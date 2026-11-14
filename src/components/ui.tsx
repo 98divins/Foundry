@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { cmToFtIn, fmtClock, ftInToCm, parseTime } from '../utils';
+import { t } from '../i18n';
 
 /* ---------- Icons (24px stroke set) ---------- */
 
@@ -139,7 +140,7 @@ export function TimeInput({
       id={id}
       className={'num ' + className}
       inputMode="decimal"
-      aria-label={plainUnit === 'sec' ? 'Time (seconds or m:ss)' : 'Time (minutes or h:mm:ss)'}
+      aria-label={plainUnit === 'sec' ? t('Time (seconds or m:ss)') : t('Time (minutes or h:mm:ss)')}
       placeholder={placeholder}
       value={text}
       onFocus={(e) => {
@@ -195,7 +196,7 @@ export function Sheet({
           <div className="sheet-head">
             <h2>{title}</h2>
             {!noClose && (
-              <button className="icon-btn" onClick={onClose} aria-label="Close">
+              <button className="icon-btn" onClick={onClose} aria-label={t('Close')}>
                 <Icon name="x" />
               </button>
             )}
@@ -228,9 +229,7 @@ export function Confirm({
     <Sheet open={open} onClose={onClose} title={title}>
       <p className="muted sheet-text">{message}</p>
       <div className="sheet-actions">
-        <button className="btn" onClick={onClose}>
-          Cancel
-        </button>
+        <button className="btn" onClick={onClose}>{t('Cancel')}</button>
         <button
           className={'btn ' + (danger ? 'btn-danger' : 'btn-primary')}
           onClick={() => {
@@ -258,7 +257,7 @@ export function Header({
     <header className="top">
       <div className="top-inner">
         {onBack ? (
-          <button className="icon-btn" onClick={onBack} aria-label="Back">
+          <button className="icon-btn" onClick={onBack} aria-label={t('Back')}>
             <Icon name="back" />
           </button>
         ) : (
@@ -321,14 +320,14 @@ export function Logo({ size = 26 }: { size?: number }) {
 
 /** Height in the user's unit: one field in cm, or feet + inches. Always reports centimetres. */
 export function HeightInput({ cm, unit, onChange, id }: { cm: number; unit: 'cm' | 'in'; onChange: (cm: number) => void; id: string }) {
-  if (unit === 'cm') return <NumInput id={id} label="Height in cm" value={cm || null} onChange={(v) => onChange(v ?? 0)} />;
+  if (unit === 'cm') return <NumInput id={id} label={t('Height in cm')} value={cm || null} onChange={(v) => onChange(v ?? 0)} />;
   const { ft, inch } = cmToFtIn(cm);
   return (
     <span className="height-ftin">
-      <NumInput id={id + '-ft'} label="Feet" decimal={false} value={cm ? ft : null} onChange={(v) => onChange(ftInToCm(v ?? 0, inch))} />
-      <span className="muted small">ft</span>
-      <NumInput id={id + '-in'} label="Inches" decimal={false} value={cm ? inch : null} onChange={(v) => onChange(ftInToCm(ft, Math.min(11, v ?? 0)))} />
-      <span className="muted small">in</span>
+      <NumInput id={id + '-ft'} label={t('Feet')} decimal={false} value={cm ? ft : null} onChange={(v) => onChange(ftInToCm(v ?? 0, inch))} />
+      <span className="muted small">{t('ft')}</span>
+      <NumInput id={id + '-in'} label={t('Inches')} decimal={false} value={cm ? inch : null} onChange={(v) => onChange(ftInToCm(ft, Math.min(11, v ?? 0)))} />
+      <span className="muted small">{t('in')}</span>
     </span>
   );
 }

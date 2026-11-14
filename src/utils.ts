@@ -1,4 +1,5 @@
 import type { ExerciseKind, PRKind, SetEntry, Unit, Workout, WorkoutExercise } from './types';
+import { locale, t, getLang } from './i18n';
 
 export const uid = () =>
   Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -14,8 +15,11 @@ export function fromDisplay(value: number, unit: Unit): number {
   return unit === 'lb' ? value / LB_PER_KG : value;
 }
 
+/** Decimal comma in French (82,5), point in English (82.5). Display only, never stored. */
+export const dec = (s: string) => (getLang() === 'fr' ? s.replace('.', ',') : s);
+
 export function fmtNum(v: number): string {
-  return String(Math.round(v * 100) / 100);
+  return dec(String(Math.round(v * 100) / 100));
 }
 
 export function fmtWeight(kg: number | null, unit: Unit): string {
@@ -26,15 +30,15 @@ export function fmtWeight(kg: number | null, unit: Unit): string {
 /** Estimates are rounded to one decimal; more would be false precision. */
 export function fmtEstimate(kg: number | null, unit: Unit): string {
   if (!kg) return '–';
-  return `${Math.round(toDisplay(kg, unit) * 10) / 10} ${unit}`;
+  return `${dec(String(Math.round(toDisplay(kg, unit) * 10) / 10))} ${unit}`;
 }
 
 /** Large volumes read better compacted: 12 450 kg → 12.4 t / 27.4k lb. */
 export function fmtVolume(kg: number, unit: Unit): string {
   const v = toDisplay(kg, unit);
-  if (unit === 'kg' && v >= 10000) return `${(v / 1000).toFixed(1)} t`;
-  if (v >= 10000) return `${(v / 1000).toFixed(1)}k ${unit}`;
-  return `${Math.round(v).toLocaleString('en-US')} ${unit}`;
+  if (unit === 'kg' && v >= 10000) return `${dec((v / 1000).toFixed(1))} t`;
+  if (v >= 10000) return `${dec((v / 1000).toFixed(1))}k ${unit}`;
+  return `${Math.round(v).toLocaleString(locale())} ${unit}`;
 }
 
 /** Estimated one-rep max (Epley formula). */
@@ -100,7 +104,7 @@ export function parseTime(text: string, plainUnit: 'sec' | 'min'): number | null
 
 /** A distance in the user's unit (km or mi). */
 export function fmtKm(km: number): string {
-  return `${kmToDisplay(km)} ${prefs.distanceUnit}`;
+  return `${dec(String(kmToDisplay(km)))} ${prefs.distanceUnit}`;
 }
 
 /** One set as a short line, e.g. "80 kg × 8", "+10 kg × 6", "−20 kg × 8", "1:30", "5 km · 25:00". */
@@ -114,11 +118,11 @@ export function fmtSet(s: Pick<SetEntry, 'weight' | 'reps' | 'duration' | 'dista
       return parts.join(' · ') || '–';
     }
     case 'assisted':
-      return `${w ? `−${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' reps'}`;
+      return `${w ? `−${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' ' + t('reps')}`;
     case 'bodyweight':
-      return `${w ? `+${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' reps'}`;
+      return `${w ? `+${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' ' + t('reps')}`;
     default:
-      return `${w ? `${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' reps'}`;
+      return `${w ? `${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' ' + t('reps')}`;
   }
 }
 
@@ -137,7 +141,7 @@ export function fmtClock(totalSec: number): string {
 }
 
 export function fmtDate(ts: number): string {
-  return new Date(ts).toLocaleDateString(undefined, {
+  return new Date(ts).toLocaleDateString(locale(), {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -146,14 +150,14 @@ export function fmtDate(ts: number): string {
 }
 
 export function fmtTime(ts: number): string {
-  return new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  return new Date(ts).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 export function defaultWorkoutName(ts = Date.now()): string {
   const h = new Date(ts).getHours();
-  if (h < 11) return 'Morning workout';
-  if (h < 17) return 'Afternoon workout';
-  return 'Evening workout';
+  if (h < 11) return t('Morning workout');
+  if (h < 17) return t('Afternoon workout');
+  return t('Evening workout');
 }
 
 export const finished = (workouts: Workout[]) =>

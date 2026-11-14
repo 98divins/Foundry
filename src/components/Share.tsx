@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { encodeRoutines, shareUrl } from '../routines';
 import type { Routine, RoutineFolder } from '../types';
+import { t } from '../i18n';
 
 /** Copies a share link, falling back to showing it for manual copy. */
 export function useShareLink() {
@@ -25,15 +26,13 @@ export function ShareResult({ shared, onClose }: { shared: { url: string; copied
     <div className="share-box" role="status">
       <p>
         {shared.copied
-          ? 'Link copied. Anyone who opens it can add these routines to their Foundry.'
-          : 'Copy this link to share these routines:'}
+          ? t('Link copied. Anyone who opens it can add these routines to their Foundry.')
+          : t('Copy this link to share these routines:')}
       </p>
       {!shared.copied && (
         <textarea id="share-url" readOnly rows={3} value={shared.url} onFocus={(e) => e.currentTarget.select()} />
       )}
-      <button className="btn btn-small" onClick={onClose}>
-        Done
-      </button>
+      <button className="btn btn-small" onClick={onClose}>{t('Done')}</button>
     </div>
   );
 }

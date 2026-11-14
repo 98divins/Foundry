@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../i18n';
 
 interface Detector {
   detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>;
@@ -66,8 +67,8 @@ export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => 
         const name = (e as { name?: string }).name;
         setError(
           name === 'NotAllowedError'
-            ? 'Camera access was refused. Allow the camera for this app in your phone settings, or type the barcode below.'
-            : 'The camera could not start on this device. Type the barcode below instead.',
+            ? t('Camera access was refused. Allow the camera for this app in your phone settings, or type the barcode below.')
+            : t('The camera could not start on this device. Type the barcode below instead.'),
         );
       }
     })();
@@ -90,10 +91,8 @@ export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => 
           <span className="scanner-frame" aria-hidden="true" />
         </div>
       )}
-      <p className="muted small">Point the camera at the barcode. It scans by itself.</p>
-      <button className="btn btn-small" onClick={onClose}>
-        Close camera
-      </button>
+      <p className="muted small">{t('Point the camera at the barcode. It scans by itself.')}</p>
+      <button className="btn btn-small" onClick={onClose}>{t('Close camera')}</button>
     </div>
   );
 }

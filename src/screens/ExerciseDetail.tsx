@@ -21,6 +21,7 @@ import {
   toDisplay,
   type Session,
 } from '../utils';
+import { t, tk, tp } from '../i18n';
 
 type Metric = '1rm' | 'weight' | 'volume' | 'reps' | 'duration' | 'distance' | 'time';
 
@@ -32,13 +33,13 @@ const METRICS: Record<ExerciseKind, Metric[]> = {
   cardio: ['distance', 'time'],
 };
 const METRIC_LABEL: Record<Metric, string> = {
-  '1rm': 'Est. 1RM',
-  weight: 'Heaviest',
-  volume: 'Volume',
-  reps: 'Reps',
-  duration: 'Longest',
-  distance: 'Distance',
-  time: 'Time',
+  '1rm': tk('Est. 1RM'),
+  weight: tk('Heaviest'),
+  volume: tk('Volume'),
+  reps: tk('Reps'),
+  duration: tk('Longest'),
+  distance: tk('Distance'),
+  time: tk('Time'),
 };
 
 export function ExerciseDetail({ id }: { id: string }) {
@@ -54,9 +55,9 @@ export function ExerciseDetail({ id }: { id: string }) {
   if (!ex) {
     return (
       <>
-        <Header title="Exercise" onBack={() => back('exercises')} />
+        <Header title={t('Exercise')} onBack={() => back('exercises')} />
         <main className="page">
-          <p className="muted">This exercise was deleted.</p>
+          <p className="muted">{t('This exercise was deleted.')}</p>
         </main>
       </>
     );
@@ -94,46 +95,46 @@ export function ExerciseDetail({ id }: { id: string }) {
         )}
         <p className="muted small">
           {muscleLabel(ex.muscle, lang)} · {equipmentLabel(ex.equipment, lang)}
-          {ex.custom && ' · Custom'}
+          {ex.custom && t(' · Custom')}
           {otherName && otherName !== label && <> · {otherName}</>}
         </p>
 
         <div className="stats-row">
-          {kind === 'weight' && <Stat label="Heaviest" value={fmtWeight(best('weight') || null, unit)} />}
-          {kind === 'weight' && <Stat label="Best est. 1RM" value={fmtEstimate(best('1rm'), unit)} />}
+          {kind === 'weight' && <Stat label={t('Heaviest')} value={fmtWeight(best('weight') || null, unit)} />}
+          {kind === 'weight' && <Stat label={t('Best est. 1RM')} value={fmtEstimate(best('1rm'), unit)} />}
           {(kind === 'weight' || kind === 'bodyweight' || kind === 'assisted') && (
-            <Stat label="Most reps" value={best('reps') || '–'} />
+            <Stat label={t('Most reps')} value={best('reps') || '–'} />
           )}
-          {kind === 'bodyweight' && <Stat label="Most added" value={best('weight') ? fmtWeight(best('weight'), unit) : '–'} />}
-          {kind === 'duration' && <Stat label="Longest" value={best('duration') ? fmtClock(best('duration')) : '–'} />}
-          {kind === 'cardio' && <Stat label="Longest distance" value={best('distance') ? fmtKm(best('distance')) : '–'} />}
-          {kind === 'cardio' && <Stat label="Longest session" value={best('time') ? fmtClock(best('time')) : '–'} />}
-          <Stat label="Sessions" value={sessions.length} />
+          {kind === 'bodyweight' && <Stat label={t('Most added')} value={best('weight') ? fmtWeight(best('weight'), unit) : '–'} />}
+          {kind === 'duration' && <Stat label={t('Longest')} value={best('duration') ? fmtClock(best('duration')) : '–'} />}
+          {kind === 'cardio' && <Stat label={t('Longest distance')} value={best('distance') ? fmtKm(best('distance')) : '–'} />}
+          {kind === 'cardio' && <Stat label={t('Longest session')} value={best('time') ? fmtClock(best('time')) : '–'} />}
+          <Stat label={t('Sessions')} value={sessions.length} />
         </div>
 
         <section className="panel">
           {METRICS[kind].length > 1 && (
             <Segmented<Metric>
-              label="Chart metric"
+              label={t('Chart metric')}
               value={metric}
               onChange={setMetric}
-              options={METRICS[kind].map((m) => ({ value: m, label: METRIC_LABEL[m] }))}
+              options={METRICS[kind].map((m) => ({ value: m, label: t(METRIC_LABEL[m]) }))}
             />
           )}
           <LineChart points={points} format={fmtAxis} />
           <p className="muted small">
-            {metric === '1rm' && 'Estimated one-rep max per workout (Epley formula, best set).'}
-            {metric === 'weight' && `Heaviest completed set per workout, in ${unit}.`}
-            {metric === 'volume' && `Weight × reps summed over working sets, in ${unit}.`}
-            {metric === 'reps' && 'Most reps in a single set per workout.'}
-            {metric === 'duration' && 'Longest set per workout.'}
-            {metric === 'distance' && `Total distance per workout, in ${distUnit()}.`}
-            {metric === 'time' && 'Total time per workout.'}
+            {metric === '1rm' && t('Estimated one-rep max per workout (Epley formula, best set).')}
+            {metric === 'weight' && t('Heaviest completed set per workout, in {unit}.', { unit })}
+            {metric === 'volume' && t('Weight × reps summed over working sets, in {unit}.', { unit })}
+            {metric === 'reps' && t('Most reps in a single set per workout.')}
+            {metric === 'duration' && t('Longest set per workout.')}
+            {metric === 'distance' && t('Total distance per workout, in {unit}.', { unit: distUnit() })}
+            {metric === 'time' && t('Total time per workout.')}
           </p>
         </section>
 
-        <h2 className="section-title">Recent sessions</h2>
-        {!recent.length && <p className="muted">No completed sets yet. Add this exercise to a workout to start tracking it.</p>}
+        <h2 className="section-title">{t('Recent sessions')}</h2>
+        {!recent.length && <p className="muted">{t('No completed sets yet. Add this exercise to a workout to start tracking it.')}</p>}
         <ul className="session-list">
           {recent.map((s) => (
             <li key={s.workoutId}>
@@ -147,26 +148,22 @@ export function ExerciseDetail({ id }: { id: string }) {
         </ul>
 
         {ex.image && (
-          <p className="muted small credit">
-            Photos: Free Exercise DB (public domain). They show the movement and may differ slightly from your variation.
-          </p>
+          <p className="muted small credit">{t('Photos: Free Exercise DB (public domain). They show the movement and may differ slightly from your variation.')}</p>
         )}
 
         {ex.custom && (
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>
-            Delete custom exercise
-          </button>
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete custom exercise')}</button>
         )}
       </main>
       <Confirm
         open={confirmDelete}
-        title="Delete exercise?"
+        title={t('Delete exercise?')}
         message={
           sessions.length
-            ? `“${label}” appears in ${sessions.length} workout(s). Those sets stay in your history but will show as “Deleted exercise”.`
-            : `“${label}” will be removed from your library.`
+            ? tp(sessions.length, '“{name}” appears in {n} workout. Those sets stay in your history but will show as “Deleted exercise”.', '“{name}” appears in {n} workouts. Those sets stay in your history but will show as “Deleted exercise”.', { name: label })
+            : t('“{name}” will be removed from your library.', { name: label })
         }
-        confirmLabel="Delete"
+        confirmLabel={t('Delete')}
         danger
         onConfirm={() => {
           update((s) => ({ ...s, customExercises: s.customExercises.filter((e) => e.id !== id) }));

@@ -1,5 +1,6 @@
 import type { Routine, WorkoutExercise } from './types';
 import { uid } from './utils';
+import { t, tk } from './i18n';
 
 /** Example programs users can browse and copy into their own routines. */
 export interface Program {
@@ -30,17 +31,17 @@ const ex = (exerciseId: string, sets: number, reps: number, repsMax: number | nu
 export const PROGRAMS: Program[] = [
   {
     id: 'full-body-3',
-    name: 'Full Body',
+    name: tk('Full Body'),
     level: 'Beginner',
     daysPerWeek: 3,
-    goal: 'Strength and muscle',
+    goal: tk('Strength and muscle'),
     description:
-      'Two full-body workouts done in turn (A, B, A, then B, A, B). Every muscle is trained three times every two weeks, with the big lifts first. A good first program.',
+      tk('Two full-body workouts done in turn (A, B, A, then B, A, B). Every muscle is trained three times every two weeks, with the big lifts first. A good first program.'),
     routines: [
       {
-        name: 'Full Body A',
+        name: tk('Full Body A'),
         exercises: [
-          ex('squat_bb', 3, 6, 8, 150, 'Main lift. Add weight when you hit 8 reps on every set.'),
+          ex('squat_bb', 3, 6, 8, 150, tk('Main lift. Add weight when you hit 8 reps on every set.')),
           ex('bench_db', 3, 8, 10, 120),
           ex('row_db', 3, 8, 12, 90),
           ex('rdl_db', 2, 10, 12, 90),
@@ -49,9 +50,9 @@ export const PROGRAMS: Program[] = [
         ],
       },
       {
-        name: 'Full Body B',
+        name: tk('Full Body B'),
         exercises: [
-          ex('deadlift_bb', 3, 5, 6, 180, 'Main lift. Keep 1-2 reps in reserve.'),
+          ex('deadlift_bb', 3, 5, 6, 180, tk('Main lift. Keep 1-2 reps in reserve.')),
           ex('ohp_bb', 3, 6, 8, 120),
           ex('lat_pulldown', 3, 8, 12, 90),
           ex('goblet_squat', 2, 10, 12, 90),
@@ -63,15 +64,15 @@ export const PROGRAMS: Program[] = [
   },
   {
     id: 'upper-lower-4',
-    name: 'Upper / Lower',
+    name: tk('Upper / Lower'),
     level: 'Intermediate',
     daysPerWeek: 4,
-    goal: 'Muscle growth',
+    goal: tk('Muscle growth'),
     description:
-      'Upper body and lower body on alternate days, each twice a week. One heavier day and one lighter, higher-rep day for each.',
+      tk('Upper body and lower body on alternate days, each twice a week. One heavier day and one lighter, higher-rep day for each.'),
     routines: [
       {
-        name: 'Upper (heavy)',
+        name: tk('Upper (heavy)'),
         exercises: [
           ex('bench_bb', 3, 5, 8, 150),
           ex('row_bb', 3, 6, 8, 150),
@@ -82,7 +83,7 @@ export const PROGRAMS: Program[] = [
         ],
       },
       {
-        name: 'Lower (heavy)',
+        name: tk('Lower (heavy)'),
         exercises: [
           ex('squat_bb', 3, 5, 8, 180),
           ex('rdl_bb', 3, 6, 8, 150),
@@ -92,7 +93,7 @@ export const PROGRAMS: Program[] = [
         ],
       },
       {
-        name: 'Upper (volume)',
+        name: tk('Upper (volume)'),
         exercises: [
           ex('incline_bench_db', 3, 8, 12, 120),
           ex('seated_row_cable', 3, 10, 12, 90),
@@ -104,7 +105,7 @@ export const PROGRAMS: Program[] = [
         ],
       },
       {
-        name: 'Lower (volume)',
+        name: tk('Lower (volume)'),
         exercises: [
           ex('bulgarian_split_squat', 3, 8, 12, 90),
           ex('hip_thrust', 3, 8, 12, 90),
@@ -118,15 +119,15 @@ export const PROGRAMS: Program[] = [
   },
   {
     id: 'ppl-3',
-    name: 'Push / Pull / Legs',
+    name: tk('Push / Pull / Legs'),
     level: 'Intermediate',
     daysPerWeek: 3,
-    goal: 'Muscle growth',
+    goal: tk('Muscle growth'),
     description:
-      'Pressing muscles, pulling muscles and legs on separate days. Run it once a week (3 days) or twice (6 days) as you progress.',
+      tk('Pressing muscles, pulling muscles and legs on separate days. Run it once a week (3 days) or twice (6 days) as you progress.'),
     routines: [
       {
-        name: 'Push',
+        name: tk('Push'),
         exercises: [
           ex('bench_bb', 3, 6, 8, 150),
           ex('ohp_bb', 3, 6, 8, 150),
@@ -136,7 +137,7 @@ export const PROGRAMS: Program[] = [
         ],
       },
       {
-        name: 'Pull',
+        name: tk('Pull'),
         exercises: [
           ex('deadlift_bb', 3, 5, 6, 180),
           ex('pull_up', 3, 6, 10, 120),
@@ -146,7 +147,7 @@ export const PROGRAMS: Program[] = [
         ],
       },
       {
-        name: 'Legs',
+        name: tk('Legs'),
         exercises: [
           ex('squat_bb', 3, 6, 8, 180),
           ex('rdl_bb', 3, 8, 10, 150),
@@ -163,11 +164,12 @@ export const PROGRAMS: Program[] = [
 export function routinesFromProgram(p: Program, folderId: string): Routine[] {
   return p.routines.map((r) => ({
     id: uid(),
-    name: r.name,
+    name: t(r.name),
     folderId,
     updatedAt: Date.now(),
     exercises: r.exercises.map((we) => ({
       ...we,
+      ...(we.note ? { note: t(we.note) } : {}),
       id: uid(),
       sets: we.sets.map((s) => ({ ...s, id: uid(), reps: s.reps || null })),
     })),

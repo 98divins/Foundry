@@ -7,6 +7,7 @@ import { ExerciseImage } from './ExerciseImage';
 import { ExercisePicker } from './ExercisePicker';
 import { fmtRepRange, linkWithNext, parseRepRange, supersetSlots, unlink, type SupersetSlot } from '../routines';
 import { Icon, NumInput, Sheet, TimeInput } from './ui';
+import { t } from '../i18n';
 
 export type EditorMode = 'live' | 'edit' | 'routine';
 
@@ -81,7 +82,7 @@ export function WorkoutEditor({
     <div className="editor">
       {exercises.map((we, i) => (
         <div key={we.id} className={supersetClass(slots[i])}>
-          {slots[i].first && <span className={'ss-label ss-c' + ((slots[i].group ?? 0) % 4)}>Superset</span>}
+          {slots[i].first && <span className={'ss-label ss-c' + ((slots[i].group ?? 0) % 4)}>{t('Superset')}</span>}
           <ExerciseCard
             we={we}
             mode={mode}
@@ -102,12 +103,11 @@ export function WorkoutEditor({
       {!exercises.length && (
         <div className="empty-card">
           <Icon name="dumbbell" size={28} />
-          <p>{mode === 'routine' ? 'Add the exercises this routine is made of.' : 'Add your first exercise to start logging sets.'}</p>
+          <p>{mode === 'routine' ? t('Add the exercises this routine is made of.') : t('Add your first exercise to start logging sets.')}</p>
         </div>
       )}
       <button className="btn btn-primary btn-wide" onClick={() => setPicking(true)}>
-        <Icon name="plus" size={18} /> Add exercise
-      </button>
+        <Icon name="plus" size={18} />{' '}{t('Add exercise')}</button>
       <ExercisePicker
         open={picking}
         onClose={() => setPicking(false)}
@@ -127,11 +127,12 @@ export function supersetClass(slot: SupersetSlot): string {
 }
 
 function setLabel(sets: SetEntry[], i: number): string {
-  const t = sets[i].type;
-  if (t === 'warmup') return 'W';
-  if (t === 'drop') return 'D';
+  const type = sets[i].type;
+  // Short set-type marks: W(arm-up), D(rop), F(ailure) — translated (É, D, É in French).
+  if (type === 'warmup') return t('W');
+  if (type === 'drop') return t('D');
   const n = sets.slice(0, i + 1).filter((s) => s.type === 'normal' || s.type === 'failure').length;
-  return t === 'failure' ? `${n}F` : String(n);
+  return type === 'failure' ? `${n}${t('F')}` : String(n);
 }
 
 function ExerciseCard({
@@ -245,7 +246,7 @@ function ExerciseCard({
           <ExerciseImage ex={ex} label={exerciseName(exMap, we.exerciseId)} />
           <span>{exerciseName(exMap, we.exerciseId)}</span>
         </button>
-        <button className="icon-btn" aria-label="Exercise options" onClick={() => setMenu(true)}>
+        <button className="icon-btn" aria-label={t('Exercise options')} onClick={() => setMenu(true)}>
           <Icon name="dots" />
         </button>
       </div>
@@ -253,7 +254,7 @@ function ExerciseCard({
         <textarea
           id={'note-' + we.id}
           className="ex-note"
-          placeholder="Notes: seat height, grip, how it felt…"
+          placeholder={t('Notes: seat height, grip, how it felt…')}
           rows={noteRows(we.note)}
           value={we.note ?? ''}
           onChange={(e) => onChange({ ...we, note: e.target.value })}
@@ -261,28 +262,28 @@ function ExerciseCard({
       )}
       {mode !== 'edit' && (
         <button className="rest-chip" onClick={() => setMenu(true)}>
-          <Icon name="timer" size={15} /> Rest {we.restSec ? fmtClock(we.restSec) : 'off'}
+          <Icon name="timer" size={15} />{' '}{t('Rest')}{' '}{we.restSec ? fmtClock(we.restSec) : t('off')}
         </button>
       )}
 
       <div className={'set-grid' + (showCheck ? ' with-check' : '') + (mode === 'routine' ? ' no-prev' : '')}>
-        <div className="set-hd">Set</div>
-        {mode !== 'routine' && <div className="set-hd">Previous</div>}
+        <div className="set-hd">{t('Set')}</div>
+        {mode !== 'routine' && <div className="set-hd">{t('Previous')}</div>}
         {kind === 'duration' ? (
-          <div className="set-hd span-2">Time</div>
+          <div className="set-hd span-2">{t('Time')}</div>
         ) : kind === 'cardio' ? (
           <>
             <div className="set-hd">{distUnit()}</div>
-            <div className="set-hd">Time</div>
+            <div className="set-hd">{t('Time')}</div>
           </>
         ) : (
           <>
             <div className="set-hd">{weightHeader}</div>
-            <div className="set-hd">Reps</div>
+            <div className="set-hd">{t('Reps')}</div>
           </>
         )}
         {showCheck && (
-          <div className="set-hd" aria-label="Done">
+          <div className="set-hd" aria-label={t('Done')}>
             <Icon name="check" size={16} />
           </div>
         )}
@@ -291,7 +292,7 @@ function ExerciseCard({
           const p = prev[i];
           const rowCls = 'set-row' + (s.done ? ' done' : '') + (flash === s.id ? ' flash' : '');
           return (
-            <div className={rowCls} key={s.id} role="group" aria-label={`Set ${i + 1}`}>
+            <div className={rowCls} key={s.id} role="group" aria-label={t('Set {n}', { n: i + 1 })}>
               <label className={'set-type t-' + s.type}>
                 <span aria-hidden="true">{setLabel(we.sets, i)}</span>
                 <span className="set-type-cue" aria-hidden="true">
@@ -299,18 +300,18 @@ function ExerciseCard({
                 </span>
                 <select
                   id={'type-' + s.id}
-                  aria-label="Set type, or remove this set"
+                  aria-label={t('Set type, or remove this set')}
                   value={s.type}
                   onChange={(e) => {
                     if (e.target.value === 'remove') onChange({ ...we, sets: we.sets.filter((x) => x.id !== s.id) });
                     else setSet(i, { type: e.target.value as SetType });
                   }}
                 >
-                  <option value="normal">Normal set</option>
-                  <option value="warmup">Warm-up</option>
-                  <option value="drop">Drop set</option>
-                  <option value="failure">Failure</option>
-                  <option value="remove">Remove set</option>
+                  <option value="normal">{t('Normal set')}</option>
+                  <option value="warmup">{t('Warm-up')}</option>
+                  <option value="drop">{t('Drop set')}</option>
+                  <option value="failure">{t('Failure')}</option>
+                  <option value="remove">{t('Remove set')}</option>
                 </select>
               </label>
               {mode !== 'routine' && (
@@ -320,7 +321,7 @@ function ExerciseCard({
                   onClick={() =>
                     p && setSet(i, { weight: p.weight, reps: p.reps, duration: p.duration ?? null, distance: p.distance ?? null })
                   }
-                  aria-label={p ? `Use previous: ${prevText(p)}` : 'No previous set'}
+                  aria-label={p ? t('Use previous: {value}', { value: prevText(p) }) : t('No previous set')}
                 >
                   {prevText(p)}
                 </button>
@@ -331,14 +332,14 @@ function ExerciseCard({
                   className="span-2"
                   plainUnit="sec"
                   value={s.duration ?? null}
-                  placeholder={p?.duration ? fmtClock(p.duration) : 'sec'}
+                  placeholder={p?.duration ? fmtClock(p.duration) : t('sec')}
                   onChange={(v) => setSet(i, { duration: v })}
                 />
               ) : kind === 'cardio' ? (
                 <>
                   <NumInput
                     id={'d-' + s.id}
-                    label={`Distance in ${distUnit()}`}
+                    label={t('Distance in {unit}', { unit: distUnit() })}
                     value={s.distance != null ? kmToDisplay(s.distance) : null}
                     placeholder={p?.distance ? fmtNum(kmToDisplay(p.distance)) : '–'}
                     onChange={(v) => setSet(i, { distance: v == null ? null : displayToKm(v) })}
@@ -347,7 +348,7 @@ function ExerciseCard({
                     id={'t-' + s.id}
                     plainUnit="min"
                     value={s.duration ?? null}
-                    placeholder={p?.duration ? fmtClock(p.duration) : 'min'}
+                    placeholder={p?.duration ? fmtClock(p.duration) : t('min')}
                     onChange={(v) => setSet(i, { duration: v })}
                   />
                 </>
@@ -355,7 +356,7 @@ function ExerciseCard({
                 <>
                   <NumInput
                     id={'w-' + s.id}
-                    label={kind === 'assisted' ? 'Assistance weight' : kind === 'bodyweight' ? 'Added weight' : 'Weight'}
+                    label={kind === 'assisted' ? t('Assistance weight') : kind === 'bodyweight' ? t('Added weight') : t('Weight')}
                     value={s.weight == null ? null : toDisplay(s.weight, unit)}
                     placeholder={p?.weight ? fmtNum(toDisplay(p.weight, unit)) : kind === 'weight' ? '–' : '0'}
                     onChange={(v) => setSet(i, { weight: v == null ? null : fromDisplay(v, unit) })}
@@ -370,7 +371,7 @@ function ExerciseCard({
                   ) : (
                     <NumInput
                       id={'r-' + s.id}
-                      label="Reps"
+                      label={t('Reps')}
                       decimal={false}
                       value={s.reps}
                       placeholder={
@@ -385,7 +386,7 @@ function ExerciseCard({
                 <button
                   className={'check' + (s.done ? ' on' : '')}
                   aria-pressed={s.done}
-                  aria-label={s.done ? 'Mark set not done' : 'Complete set'}
+                  aria-label={s.done ? t('Mark set not done') : t('Complete set')}
                   onClick={() => toggleDone(i)}
                 >
                   <Icon name="check" size={18} />
@@ -396,14 +397,13 @@ function ExerciseCard({
         })}
       </div>
       <button className="btn btn-ghost btn-wide" onClick={addSet}>
-        <Icon name="plus" size={16} /> Add set
-      </button>
+        <Icon name="plus" size={16} />{' '}{t('Add set')}</button>
 
       <Sheet open={menu} onClose={() => setMenu(false)} title={ex?.label ?? ex?.name}>
         <div className="menu">
           {mode !== 'edit' && (
             <label className="field">
-              <span>Rest timer</span>
+              <span>{t('Rest timer')}</span>
               <select
                 id={'rest-' + we.id}
                 value={we.restSec}
@@ -411,36 +411,31 @@ function ExerciseCard({
               >
                 {REST_OPTIONS.map((r) => (
                   <option key={r} value={r}>
-                    {r ? fmtClock(r) : 'Off'}
+                    {r ? fmtClock(r) : t('Off')}
                   </option>
                 ))}
               </select>
             </label>
           )}
           <button className="menu-item" onClick={() => { setNoteOpen(true); setMenu(false); }}>
-            <Icon name="note" size={18} /> {we.note ? 'Edit note' : 'Add note'}
+            <Icon name="note" size={18} /> {we.note ? t('Edit note') : t('Add note')}
           </button>
           {inSuperset ? (
             <button className="menu-item" onClick={() => { onUnlink(); setMenu(false); }}>
-              <Icon name="unlink" size={18} /> Remove from superset
-            </button>
+              <Icon name="unlink" size={18} />{' '}{t('Remove from superset')}</button>
           ) : (
             <button className="menu-item" disabled={!canLink} onClick={() => { onLink(); setMenu(false); }}>
-              <Icon name="link" size={18} /> Superset with next exercise
-            </button>
+              <Icon name="link" size={18} />{' '}{t('Superset with next exercise')}</button>
           )}
           <button className="menu-item" disabled={!canUp} onClick={() => { onMove(-1); setMenu(false); }}>
-            <Icon name="up" size={18} /> Move up
-          </button>
+            <Icon name="up" size={18} />{' '}{t('Move up')}</button>
           <button className="menu-item" disabled={!canDown} onClick={() => { onMove(1); setMenu(false); }}>
-            <Icon name="down" size={18} /> Move down
-          </button>
+            <Icon name="down" size={18} />{' '}{t('Move down')}</button>
           <button className="menu-item" onClick={() => { setMenu(false); setReplacing(true); }}>
-            <Icon name="swap" size={18} /> Replace exercise{mode === 'live' && <span className="muted small"> · this workout only</span>}
+            <Icon name="swap" size={18} />{' '}{t('Replace exercise')}{mode === 'live' && <span className="muted small">{t('· this workout only')}</span>}
           </button>
           <button className="menu-item danger" onClick={() => { setMenu(false); onChange(null); }}>
-            <Icon name="trash" size={18} /> Remove exercise
-          </button>
+            <Icon name="trash" size={18} />{' '}{t('Remove exercise')}</button>
         </div>
       </Sheet>
       {replacing && ex && (
@@ -472,7 +467,7 @@ function RepRangeInput({
     <input
       id={id}
       className="num"
-      aria-label="Target reps, a number or a range like 8-12"
+      aria-label={t('Target reps, a number or a range like 8-12')}
       placeholder="8-12"
       value={text}
       onFocus={(e) => e.currentTarget.select()}

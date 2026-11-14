@@ -5,6 +5,7 @@ import { exportWorkoutCsv, importWorkoutCsv } from '../csv';
 import { defaultState, parseBackup, useStore } from '../store';
 import { download } from '../utils';
 import { fmtBackupAge, saveBackup } from '../backup';
+import { t, tp } from '../i18n';
 
 /** Settings → Export & import data. */
 export function DataPage() {
@@ -29,55 +30,40 @@ export function DataPage() {
         customExercises: [...s.customExercises, ...res.newExercises],
       }));
       say(
-        `Imported ${res.workouts.length} workout(s)` +
-          (res.newExercises.length ? `, created ${res.newExercises.length} custom exercise(s)` : '') +
-          (res.skippedDuplicates ? `, skipped ${res.skippedDuplicates} already in your history` : '') +
+        tp(res.workouts.length, 'Imported {n} workout', 'Imported {n} workouts') +
+          (res.newExercises.length ? tp(res.newExercises.length, ', created {n} custom exercise', ', created {n} custom exercises') : '') +
+          (res.skippedDuplicates ? t(', skipped {n} already in your history', { n: res.skippedDuplicates }) : '') +
           '.',
       );
     } catch (e) {
-      say(e instanceof Error ? e.message : 'Could not read this file.', true);
+      say(e instanceof Error ? e.message : t('Could not read this file.'), true);
     }
   };
 
   return (
     <>
-      <Header title="Export & import data" onBack={() => back('settings')} />
+      <Header title={t('Export & import data')} onBack={() => back('settings')} />
       <main className="page">
         <section className="panel">
-          <h2 className="panel-title">Your data</h2>
-          <p className="muted small">
-            Your data is saved to your account. A backup file is an extra copy you keep yourself (Files, iCloud Drive,
-            Google Drive). Last backup: <strong>{fmtBackupAge(state)}</strong>.
+          <h2 className="panel-title">{t('Your data')}</h2>
+          <p className="muted small">{t('Your data is saved to your account. A backup file is an extra copy you keep yourself (Files, iCloud Drive, Google Drive). Last backup:')}{' '}<strong>{fmtBackupAge(state)}</strong>.
           </p>
           <div className="btn-grid">
             <button
               className="btn"
               onClick={() => saveBackup(state, update)}
-            >
-              Export backup
-            </button>
-            <button className="btn" onClick={() => jsonInput.current?.click()}>
-              Restore backup
-            </button>
-            <button className="btn" onClick={() => csvInput.current?.click()}>
-              Import CSV (Hevy export)
-            </button>
+            >{t('Export backup')}</button>
+            <button className="btn" onClick={() => jsonInput.current?.click()}>{t('Restore backup')}</button>
+            <button className="btn" onClick={() => csvInput.current?.click()}>{t('Import CSV (Hevy export)')}</button>
             <button
               className="btn"
               disabled={!done.length}
               onClick={() => download(`foundry-workouts-${stamp}.csv`, exportWorkoutCsv(workouts, exMap), 'text/csv')}
-            >
-              Export CSV
-            </button>
+            >{t('Export CSV')}</button>
           </div>
-          <p className="muted small">
-            To bring your history over from Hevy: in Hevy, open Settings → Export &amp; Import Data → Export workouts, then
-            import that CSV file here. Exercises with unknown names become custom exercises.
-          </p>
+          <p className="muted small">{t('To bring your history over from Hevy: in Hevy, open Settings → Export & Import Data → Export workouts, then import that CSV file here. Exercises with unknown names become custom exercises.')}</p>
           {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmReset(true)}>
-            Erase all data
-          </button>
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmReset(true)}>{t('Erase all data')}</button>
           <input
             ref={csvInput}
             id="csv-file"
@@ -107,30 +93,30 @@ export function DataPage() {
 
       <Confirm
         open={pendingRestore != null}
-        title="Restore backup?"
-        message="Your current workouts, routines and settings will be replaced by the backup."
-        confirmLabel="Restore"
+        title={t('Restore backup?')}
+        message={t('Your current workouts, routines and settings will be replaced by the backup.')}
+        confirmLabel={t('Restore')}
         danger
         onConfirm={() => {
           try {
             const next = parseBackup(pendingRestore!);
             update(() => next);
-            say(`Restored ${next.workouts.filter((w) => w.endedAt).length} workout(s).`);
+            say(tp(next.workouts.filter((w) => w.endedAt).length, 'Restored {n} workout.', 'Restored {n} workouts.'));
           } catch (e) {
-            say(e instanceof Error ? e.message : 'Could not read this backup.', true);
+            say(e instanceof Error ? e.message : t('Could not read this backup.'), true);
           }
         }}
         onClose={() => setPendingRestore(null)}
       />
       <Confirm
         open={confirmReset}
-        title="Erase all data?"
-        message="All workouts, routines, foods, weigh-ins and settings are deleted, on this phone and in your account. Export a backup first if you may need them."
-        confirmLabel="Erase everything"
+        title={t('Erase all data?')}
+        message={t('All workouts, routines, foods, weigh-ins and settings are deleted, on this phone and in your account. Export a backup first if you may need them.')}
+        confirmLabel={t('Erase everything')}
         danger
         onConfirm={() => {
           update(() => defaultState());
-          say('All data erased.');
+          say(t('All data erased.'));
         }}
         onClose={() => setConfirmReset(false)}
       />

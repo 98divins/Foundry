@@ -18,22 +18,23 @@ import {
   workoutSetCount,
   workoutVolume,
 } from '../utils';
+import { t, tk } from '../i18n';
 
 const PR_LABEL: Record<PRKind, string> = {
-  weight: 'Heaviest',
-  '1rm': 'Best 1RM',
-  volume: 'Best set volume',
-  reps: 'Most reps',
-  duration: 'Longest',
-  distance: 'Farthest',
+  weight: tk('Heaviest'),
+  '1rm': tk('Best 1RM'),
+  volume: tk('Best set volume'),
+  reps: tk('Most reps'),
+  duration: tk('Longest'),
+  distance: tk('Farthest'),
 };
 
 const SET_HEADER: Record<ExerciseKind, string> = {
-  weight: 'Weight × reps',
-  bodyweight: 'Reps (added weight)',
-  assisted: 'Reps (assistance)',
-  duration: 'Time',
-  cardio: 'Distance · time',
+  weight: tk('Weight × reps'),
+  bodyweight: tk('Reps (added weight)'),
+  assisted: tk('Reps (assistance)'),
+  duration: tk('Time'),
+  cardio: tk('Distance · time'),
 };
 
 export function WorkoutDetail({ id }: { id: string }) {
@@ -50,9 +51,9 @@ export function WorkoutDetail({ id }: { id: string }) {
   if (!w) {
     return (
       <>
-        <Header title="Workout" onBack={() => back('history')} />
+        <Header title={t('Workout')} onBack={() => back('history')} />
         <main className="page">
-          <p className="muted">This workout was deleted.</p>
+          <p className="muted">{t('This workout was deleted.')}</p>
         </main>
       </>
     );
@@ -78,7 +79,7 @@ export function WorkoutDetail({ id }: { id: string }) {
       ],
     }));
     setMenu(false);
-    setToast(`Saved “${w.name}” as a routine.`);
+    setToast(t('Saved “{name}” as a routine.', { name: w.name }));
     setTimeout(() => setToast(''), 2500);
   };
 
@@ -88,7 +89,7 @@ export function WorkoutDetail({ id }: { id: string }) {
         title={w.name}
         onBack={() => back('history')}
         right={
-          <button className="icon-btn" aria-label="Workout options" onClick={() => setMenu(true)}>
+          <button className="icon-btn" aria-label={t('Workout options')} onClick={() => setMenu(true)}>
             <Icon name="dots" />
           </button>
         }
@@ -98,19 +99,17 @@ export function WorkoutDetail({ id }: { id: string }) {
           {fmtDate(w.startedAt)} · {fmtTime(w.startedAt)}
         </p>
         <div className="stats-row">
-          <Stat label="Duration" value={fmtDuration(w.endedAt! - w.startedAt)} />
-          <Stat label="Volume" value={fmtVolume(workoutVolume(w), unit)} />
-          <Stat label="Sets" value={workoutSetCount(w)} />
-          <Stat label="Records" value={prSets.length} />
+          <Stat label={t('Duration')} value={fmtDuration(w.endedAt! - w.startedAt)} />
+          <Stat label={t('Volume')} value={fmtVolume(workoutVolume(w), unit)} />
+          <Stat label={t('Sets')} value={workoutSetCount(w)} />
+          <Stat label={t('Records')} value={prSets.length} />
         </div>
         {justFinished && backupDue(state) && (
           <div className="backup-banner" role="status">
             <span>
-              <strong>Save a backup?</strong> Your workouts are stored only on this phone. Last backup: {fmtBackupAge(state)}.
+              <strong>{t('Save a backup?')}</strong>{' '}{t('Your workouts are stored only on this phone. Last backup:')}{' '}{fmtBackupAge(state)}.
             </span>
-            <button className="btn btn-small btn-primary" onClick={() => saveBackup(state, update)}>
-              Save backup
-            </button>
+            <button className="btn btn-small btn-primary" onClick={() => saveBackup(state, update)}>{t('Save backup')}</button>
           </div>
         )}
         {w.note && <p className="note-block">{w.note}</p>}
@@ -131,9 +130,9 @@ export function WorkoutDetail({ id }: { id: string }) {
               <table className="set-table">
                 <thead>
                   <tr>
-                    <th>Set</th>
-                    <th>{SET_HEADER[kind]}</th>
-                    {show1rm && <th className="num-col">Est. 1RM</th>}
+                    <th>{t('Set')}</th>
+                    <th>{t(SET_HEADER[kind])}</th>
+                    {show1rm && <th className="num-col">{t('Est. 1RM')}</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -141,19 +140,19 @@ export function WorkoutDetail({ id }: { id: string }) {
                     const kinds = prs.get(s.id);
                     const label =
                       s.type === 'warmup'
-                        ? 'W'
+                        ? t('W')
                         : s.type === 'drop'
-                          ? 'D'
+                          ? t('D')
                           : String(we.sets.slice(0, i + 1).filter((x) => x.type === 'normal' || x.type === 'failure').length) +
-                            (s.type === 'failure' ? 'F' : '');
+                            (s.type === 'failure' ? t('F') : '');
                     return (
                       <tr key={s.id}>
                         <td className={'set-type-cell t-' + s.type}>{label}</td>
                         <td>
                           {fmtSet(s, kind, unit)}
                           {kinds && (
-                            <span className="pr-pill" title={kinds.map((k) => PR_LABEL[k]).join(', ')}>
-                              <Icon name="trophy" size={12} /> {kinds.map((k) => PR_LABEL[k]).join(' · ')}
+                            <span className="pr-pill" title={kinds.map((k) => t(PR_LABEL[k])).join(', ')}>
+                              <Icon name="trophy" size={12} /> {kinds.map((k) => t(PR_LABEL[k])).join(' · ')}
                             </span>
                           )}
                         </td>
@@ -176,21 +175,18 @@ export function WorkoutDetail({ id }: { id: string }) {
       <Sheet open={menu} onClose={() => setMenu(false)} title={w.name}>
         <div className="menu">
           <button className="menu-item" onClick={() => { setMenu(false); go('edit/' + w.id); }}>
-            <Icon name="edit" size={18} /> Edit workout
-          </button>
+            <Icon name="edit" size={18} />{' '}{t('Edit workout')}</button>
           <button className="menu-item" onClick={saveAsRoutine}>
-            <Icon name="copy" size={18} /> Save as routine
-          </button>
+            <Icon name="copy" size={18} />{' '}{t('Save as routine')}</button>
           <button className="menu-item danger" onClick={() => { setMenu(false); setConfirmDelete(true); }}>
-            <Icon name="trash" size={18} /> Delete workout
-          </button>
+            <Icon name="trash" size={18} />{' '}{t('Delete workout')}</button>
         </div>
       </Sheet>
       <Confirm
         open={confirmDelete}
-        title="Delete workout?"
-        message="This workout and its records will be removed from your history."
-        confirmLabel="Delete"
+        title={t('Delete workout?')}
+        message={t('This workout and its records will be removed from your history.')}
+        confirmLabel={t('Delete')}
         danger
         onConfirm={() => {
           update((s) => ({ ...s, workouts: s.workouts.filter((x) => x.id !== id) }));

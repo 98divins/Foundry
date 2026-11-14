@@ -7,6 +7,7 @@ import type { NameLang, Settings, Unit } from '../types';
 import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
+import { t, detectLang, type AppLang } from '../i18n';
 
 type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about';
 
@@ -38,29 +39,29 @@ export function SettingsHub() {
   const open = (p: Page) => go('settings/' + p);
   return (
     <>
-      <Header title="Settings" onBack={() => back('profile')} />
+      <Header title={t('Settings')} onBack={() => back('profile')} />
       <main className="page settings-page">
-        <h2 className="settings-group">Account</h2>
+        <h2 className="settings-group">{t('Account')}</h2>
         <ul className="settings-list">
-          <Row icon="user" label="Profile" value={state.profile?.name || undefined} onClick={() => open('profile')} />
-          <Row icon="lock" label="Account" value={c.user?.email ?? undefined} onClick={() => open('account')} />
+          <Row icon="user" label={t('Profile')} value={state.profile?.name || undefined} onClick={() => open('profile')} />
+          <Row icon="lock" label={t('Account')} value={c.user?.email ?? undefined} onClick={() => open('account')} />
         </ul>
-        <h2 className="settings-group">Preferences</h2>
+        <h2 className="settings-group">{t('Preferences')}</h2>
         <ul className="settings-list">
-          <Row icon="dumbbell" label="Workouts" onClick={() => open('workouts')} />
-          <Row icon="ruler" label="Units" value={`${s.unit} · ${s.distanceUnit ?? 'km'} · ${s.heightUnit ?? 'cm'}`} onClick={() => open('units')} />
-          <Row icon="globe" label="Language" value={s.exerciseLang === 'fr' ? 'Français' : 'English'} onClick={() => open('language')} />
-          <Row icon="moon" label="Theme" value={{ system: 'System', light: 'Light', dark: 'Dark' }[s.theme ?? 'system'] + (s.accent || s.pureBlack ? ' · Custom' : '')} onClick={() => open('theme')} />
+          <Row icon="dumbbell" label={t('Workouts')} onClick={() => open('workouts')} />
+          <Row icon="ruler" label={t('Units')} value={`${s.unit} · ${s.distanceUnit ?? 'km'} · ${s.heightUnit ?? 'cm'}`} onClick={() => open('units')} />
+          <Row icon="globe" label={t('Language')} value={(s.appLang ?? detectLang()) === 'fr' ? 'Français' : 'English'} onClick={() => open('language')} />
+          <Row icon="moon" label={t('Theme')} value={t({ system: 'System', light: 'Light', dark: 'Dark' }[s.theme ?? 'system']) + (s.accent || s.pureBlack ? ' · ' + t('Custom') : '')} onClick={() => open('theme')} />
         </ul>
-        <h2 className="settings-group">Data</h2>
+        <h2 className="settings-group">{t('Data')}</h2>
         <ul className="settings-list">
-          <Row icon="download" label="Export & import data" onClick={() => open('data')} />
+          <Row icon="download" label={t('Export & import data')} onClick={() => open('data')} />
         </ul>
-        <h2 className="settings-group">Help</h2>
+        <h2 className="settings-group">{t('Help')}</h2>
         <ul className="settings-list">
-          <Row icon="info" label="Getting started guide" onClick={() => open('guide')} />
-          <Row icon="help" label="Frequently asked questions" onClick={() => open('faq')} />
-          <Row icon="logo" label="About Foundry" onClick={() => open('about')} />
+          <Row icon="info" label={t('Getting started guide')} onClick={() => open('guide')} />
+          <Row icon="help" label={t('Frequently asked questions')} onClick={() => open('faq')} />
+          <Row icon="logo" label={t('About Foundry')} onClick={() => open('about')} />
         </ul>
         {c.user && (
           <button
@@ -69,9 +70,7 @@ export function SettingsHub() {
               const e = await c.signOut();
               if (e) setMsg(e);
             }}
-          >
-            Log out
-          </button>
+          >{t('Log out')}</button>
         )}
         {msg && <p className="field-error center">{msg}</p>}
       </main>
@@ -158,17 +157,15 @@ function ProfilePage() {
   const [error, setError] = useState('');
   const setP = (patch: Partial<typeof p>) => update((s) => ({ ...s, profile: { ...p, ...s.profile, ...patch } }));
   return (
-    <Sub title="Profile">
+    <Sub title={t('Profile')}>
       <div className="profile-photo">
         <Avatar size={112} />
         <div className="profile-photo-actions">
           <button className="link-btn" onClick={() => file.current?.click()}>
-            {p.avatar ? 'Change picture' : 'Add a picture'}
+            {p.avatar ? t('Change picture') : t('Add a picture')}
           </button>
           {p.avatar && (
-            <button className="link-btn muted" onClick={() => setP({ avatar: null })}>
-              Remove
-            </button>
+            <button className="link-btn muted" onClick={() => setP({ avatar: null })}>{t('Remove')}</button>
           )}
         </div>
         <input
@@ -185,24 +182,21 @@ function ProfilePage() {
               setP({ avatar: await avatarFrom(f) });
               setError('');
             } catch {
-              setError('This picture could not be read. Try a JPEG or PNG.');
+              setError(t('This picture could not be read. Try a JPEG or PNG.'));
             }
           }}
         />
         {error && <p className="field-error">{error}</p>}
       </div>
       <label className="field">
-        <span>Name</span>
-        <input id="profile-name" value={p.name} placeholder="Your name" onChange={(e) => setP({ name: e.target.value })} />
+        <span>{t('Name')}</span>
+        <input id="profile-name" value={p.name} placeholder={t('Your name')} onChange={(e) => setP({ name: e.target.value })} />
       </label>
       <label className="field">
-        <span>Bio</span>
-        <textarea id="profile-bio" rows={3} value={p.bio} placeholder="Describe yourself" onChange={(e) => setP({ bio: e.target.value })} />
+        <span>{t('Bio')}</span>
+        <textarea id="profile-bio" rows={3} value={p.bio} placeholder={t('Describe yourself')} onChange={(e) => setP({ bio: e.target.value })} />
       </label>
-      <p className="muted small">
-        Sex, age, height and activity used for your calorie targets are in Nutrition → Plan. Your profile is private for now;
-        it will be what friends see once social features arrive.
-      </p>
+      <p className="muted small">{t('Sex, age, height and activity used for your calorie targets are in Nutrition → Plan. Your profile is private for now; it will be what friends see once social features arrive.')}</p>
     </Sub>
   );
 }
@@ -216,72 +210,63 @@ function AccountPage() {
   const [msg, setMsg] = useState<{ text: string; error?: boolean } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const status: Record<string, string> = {
-    syncing: 'Syncing…',
-    synced: 'All changes saved to your account',
-    offline: 'Offline: changes are kept and sent when you are back online',
-    error: 'Sync problem',
-    conflict: 'Waiting for you to choose which version to keep',
+    syncing: t('Syncing…'),
+    synced: t('All changes saved to your account'),
+    offline: t('Offline: changes are kept and sent when you are back online'),
+    error: t('Sync problem'),
+    conflict: t('Waiting for you to choose which version to keep'),
   };
   return (
-    <Sub title="Account">
+    <Sub title={t('Account')}>
       <section className="panel">
-        <p>
-          Signed in as <strong>{c.user?.email}</strong>
+        <p>{t('Signed in as')}{' '}<strong>{c.user?.email}</strong>
         </p>
         <p className={'sync-status ' + c.status}>
           <span className="sync-dot" aria-hidden="true" /> {status[c.status] ?? ''}
         </p>
         {c.error && <p className="field-error">{c.error}</p>}
-        <button className="btn btn-small" onClick={() => c.syncNow()} disabled={c.status === 'syncing'}>
-          Sync now
-        </button>
+        <button className="btn btn-small" onClick={() => c.syncNow()} disabled={c.status === 'syncing'}>{t('Sync now')}</button>
       </section>
       <form
         className="panel form"
         onSubmit={async (e) => {
           e.preventDefault();
           const err = await c.changeEmail(email.trim());
-          setMsg(err ? { text: err, error: true } : { text: `Open the link sent to ${email.trim()} to confirm the change.` });
+          setMsg(err ? { text: err, error: true } : { text: t('Open the link sent to {email} to confirm the change.', { email: email.trim() }) });
           if (!err) setEmail('');
         }}
       >
-        <h2 className="panel-title">Change email</h2>
+        <h2 className="panel-title">{t('Change email')}</h2>
         <label className="field">
-          <span>New email</span>
+          <span>{t('New email')}</span>
           <input id="acc-new-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <button className="btn" type="submit" disabled={!email.includes('@')}>
-          Change email
-        </button>
+        <button className="btn" type="submit" disabled={!email.includes('@')}>{t('Change email')}</button>
       </form>
       <form
         className="panel form"
         onSubmit={async (e) => {
           e.preventDefault();
           const err = await c.setNewPassword(password);
-          setMsg(err ? { text: err, error: true } : { text: 'Password updated.' });
+          setMsg(err ? { text: err, error: true } : { text: t('Password updated.') });
           if (!err) setPassword('');
         }}
       >
-        <h2 className="panel-title">Update password</h2>
+        <h2 className="panel-title">{t('Update password')}</h2>
         <label className="field">
-          <span>New password</span>
+          <span>{t('New password')}</span>
           <input id="acc-new-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <span className="muted small">At least 8 characters.</span>
+          <span className="muted small">{t('At least 8 characters.')}</span>
         </label>
-        <button className="btn" type="submit" disabled={password.length < 8}>
-          Update password
-        </button>
+        <button className="btn" type="submit" disabled={password.length < 8}>{t('Update password')}</button>
       </form>
       {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
-      <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>
-        Delete account
-      </button>
+      <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete account')}</button>
       <Confirm
         open={confirmDelete}
-        title="Delete your account?"
-        message="Your account and all its data (workouts, routines, nutrition) are deleted for good, here and in the cloud."
-        confirmLabel="Delete account"
+        title={t('Delete your account?')}
+        message={t('Your account and all its data (workouts, routines, nutrition) are deleted for good, here and in the cloud.')}
+        confirmLabel={t('Delete account')}
         danger
         onConfirm={async () => {
           const e = await c.deleteAccount();
@@ -298,24 +283,24 @@ function AccountPage() {
 function WorkoutPrefs() {
   const { s, set } = useSetting();
   return (
-    <Sub title="Workouts">
+    <Sub title={t('Workouts')}>
       <section className="panel">
         <label className="setting">
-          <span>Default rest timer</span>
+          <span>{t('Default rest timer')}</span>
           <select id="default-rest" value={s.defaultRest} onChange={(e) => set('defaultRest', Number(e.target.value))}>
             {[0, 30, 45, 60, 90, 120, 150, 180, 240].map((r) => (
               <option key={r} value={r}>
-                {r ? fmtClock(r) : 'Off'}
+                {r ? fmtClock(r) : t('Off')}
               </option>
             ))}
           </select>
         </label>
         <label className="setting">
-          <span>Beep when rest is over</span>
+          <span>{t('Beep when rest is over')}</span>
           <input id="sound" type="checkbox" className="switch" checked={s.sound} onChange={(e) => set('sound', e.target.checked)} />
         </label>
         <label className="setting">
-          <span>Keep the screen on during a workout</span>
+          <span>{t('Keep the screen on during a workout')}</span>
           <input
             id="keep-awake"
             type="checkbox"
@@ -325,14 +310,14 @@ function WorkoutPrefs() {
           />
         </label>
         <label className="setting">
-          <span>First day of the week</span>
+          <span>{t('First day of the week')}</span>
           <select id="week-start" value={s.weekStartsOn ?? 1} onChange={(e) => set('weekStartsOn', Number(e.target.value) as 0 | 1)}>
-            <option value={1}>Monday</option>
-            <option value={0}>Sunday</option>
+            <option value={1}>{t('Monday')}</option>
+            <option value={0}>{t('Sunday')}</option>
           </select>
         </label>
       </section>
-      <p className="muted small">The first day of the week sets where weekly stats and streaks start.</p>
+      <p className="muted small">{t('The first day of the week sets where weekly stats and streaks start.')}</p>
     </Sub>
   );
 }
@@ -340,46 +325,46 @@ function WorkoutPrefs() {
 function UnitsPage() {
   const { s, set } = useSetting();
   return (
-    <Sub title="Units">
+    <Sub title={t('Units')}>
       <section className="panel">
         <div className="setting">
-          <span>Weight</span>
+          <span>{t('Weight')}</span>
           <Segmented<Unit>
-            label="Weight unit"
+            label={t('Weight unit')}
             value={s.unit}
             onChange={(v) => set('unit', v)}
             options={[
-              { value: 'kg', label: 'kg' },
-              { value: 'lb', label: 'lb' },
+              { value: 'kg', label: t('kg') },
+              { value: 'lb', label: t('lb') },
             ]}
           />
         </div>
         <div className="setting">
-          <span>Distance</span>
+          <span>{t('Distance')}</span>
           <Segmented<'km' | 'mi'>
-            label="Distance unit"
+            label={t('Distance unit')}
             value={s.distanceUnit ?? 'km'}
             onChange={(v) => set('distanceUnit', v)}
             options={[
-              { value: 'km', label: 'km' },
-              { value: 'mi', label: 'miles' },
+              { value: 'km', label: t('km') },
+              { value: 'mi', label: t('miles') },
             ]}
           />
         </div>
         <div className="setting">
-          <span>Body measurements</span>
+          <span>{t('Body measurements')}</span>
           <Segmented<'cm' | 'in'>
-            label="Body measurement unit"
+            label={t('Body measurement unit')}
             value={s.heightUnit ?? 'cm'}
             onChange={(v) => set('heightUnit', v)}
             options={[
-              { value: 'cm', label: 'cm' },
-              { value: 'in', label: 'ft / in' },
+              { value: 'cm', label: t('cm') },
+              { value: 'in', label: t('ft / in') },
             ]}
           />
         </div>
       </section>
-      <p className="muted small">Values are stored in metric, so switching units never changes your data.</p>
+      <p className="muted small">{t('Values are stored in metric, so switching units never changes your data.')}</p>
     </Sub>
   );
 }
@@ -387,22 +372,34 @@ function UnitsPage() {
 function LanguagePage() {
   const { s, set } = useSetting();
   return (
-    <Sub title="Language">
+    <Sub title={t('Language')}>
       <section className="panel">
         <div className="setting">
-          <span>Exercise names</span>
-          <Segmented<NameLang>
-            label="Exercise names"
-            value={s.exerciseLang}
-            onChange={(v) => set('exerciseLang', v)}
+          <span>{t('App language')}</span>
+          <Segmented<AppLang>
+            label={t('App language')}
+            value={s.appLang ?? detectLang()}
+            onChange={(v) => set('appLang', v)}
             options={[
               { value: 'fr', label: 'Français' },
               { value: 'en', label: 'English' },
             ]}
           />
         </div>
+        <div className="setting">
+          <span>{t('Exercise names')}</span>
+          <Segmented<NameLang>
+            label={t('Exercise names')}
+            value={s.exerciseLang}
+            onChange={(v) => set('exerciseLang', v)}
+            options={[
+              { value: 'fr', label: t('Français') },
+              { value: 'en', label: t('English') },
+            ]}
+          />
+        </div>
       </section>
-      <p className="muted small">The rest of the app is in English for now. A full French version is planned.</p>
+      <p className="muted small">{t('Exercise names can stay in another language than the app.')}</p>
     </Sub>
   );
 }
@@ -410,15 +407,15 @@ function LanguagePage() {
 function ThemePage() {
   const { s, set } = useSetting();
   const options: { value: NonNullable<Settings['theme']>; label: string; text: string }[] = [
-    { value: 'system', label: 'System', text: 'Follows your phone: light by day, dark at night if you set it so.' },
-    { value: 'light', label: 'Light', text: 'Always light.' },
-    { value: 'dark', label: 'Dark', text: 'Always dark. Easier on the eyes in a dim gym.' },
+    { value: 'system', label: t('System'), text: t('Follows your phone: light by day, dark at night if you set it so.') },
+    { value: 'light', label: t('Light'), text: t('Always light.') },
+    { value: 'dark', label: t('Dark'), text: t('Always dark. Easier on the eyes in a dim gym.') },
   ];
   const accent = (s.accent ?? DEFAULT_ACCENT).toLowerCase();
   const isPreset = ACCENTS.some((a) => a.hex === accent);
   return (
-    <Sub title="Theme">
-      <h2 className="settings-group">Mode</h2>
+    <Sub title={t('Theme')}>
+      <h2 className="settings-group">{t('Mode')}</h2>
       <ul className="settings-list">
         {options.map((o) => (
           <li key={o.value}>
@@ -427,47 +424,41 @@ function ThemePage() {
                 {o.label}
                 <span className="muted small">{o.text}</span>
               </span>
-              {(s.theme ?? 'system') === o.value && <Icon name="check" />}
+              {(s.theme ?? t('system')) === o.value && <Icon name="check" />}
             </button>
           </li>
         ))}
       </ul>
 
-      <h2 className="settings-group">Accent colour</h2>
+      <h2 className="settings-group">{t('Accent colour')}</h2>
       <div className="swatches">
         {ACCENTS.map((a) => (
           <button key={a.hex} className="swatch" aria-pressed={accent === a.hex} onClick={() => set('accent', a.hex === DEFAULT_ACCENT ? undefined : a.hex)}>
             <span className="swatch-dot" style={{ background: a.hex }}>
               {accent === a.hex && <Icon name="check" size={18} />}
             </span>
-            {a.name}
+            {t(a.name)}
           </button>
         ))}
         <label className="swatch" data-on={!isPreset}>
           <span className="swatch-dot swatch-custom" style={!isPreset ? { background: accent } : undefined}>
             {!isPreset && <Icon name="check" size={18} />}
-          </span>
-          Custom
-          <input type="color" value={accent} aria-label="Custom colour" onChange={(e) => set('accent', e.target.value)} />
+          </span>{t('Custom')}<input type="color" value={accent} aria-label={t('Custom colour')} onChange={(e) => set('accent', e.target.value)} />
         </label>
       </div>
       <div className="theme-preview">
         <Avatar size={40} />
-        <span className="small">
-          Preview
-          <br />
-          <span className="muted">Colours adjust a little in light and dark mode to stay readable.</span>
+        <span className="small">{t('Preview')}<br />
+          <span className="muted">{t('Colours adjust a little in light and dark mode to stay readable.')}</span>
         </span>
-        <span className="btn btn-primary">Start</span>
+        <span className="btn btn-primary">{t('Start')}</span>
       </div>
 
-      <h2 className="settings-group">Background</h2>
+      <h2 className="settings-group">{t('Background')}</h2>
       <section className="panel">
         <label className="setting">
-          <span>
-            Pure black
-            <br />
-            <span className="muted small">Dark mode only. Saves battery on OLED screens.</span>
+          <span>{t('Pure black')}<br />
+            <span className="muted small">{t('Dark mode only. Saves battery on OLED screens.')}</span>
           </span>
           <input type="checkbox" className="switch" checked={!!s.pureBlack} onChange={(e) => set('pureBlack', e.target.checked)} />
         </label>
@@ -479,9 +470,7 @@ function ThemePage() {
             set('accent', undefined);
             set('pureBlack', undefined);
           }}
-        >
-          Reset to Foundry colours
-        </button>
+        >{t('Reset to Foundry colours')}</button>
       )}
     </Sub>
   );
@@ -491,15 +480,15 @@ function ThemePage() {
 
 function GuidePage() {
   const steps: [string, string][] = [
-    ['Set up your routines', 'Workout tab → New routine, or Explore programs for a ready-made plan. Group routines in folders, pair exercises as supersets from their ⋯ menu, and set target reps like 8-12.'],
-    ['Train', 'Start a routine and tick each set as you go. The rest timer starts by itself. Empty sets reuse last time’s numbers when you tick them. Change a set’s type (warm-up, drop, failure) by tapping its number.'],
-    ['Finish', 'Tap Finish at any time: sets you filled in are saved, empty ones are dropped. Records are marked with a trophy.'],
-    ['Eat to your goal', 'Nutrition tab → set up your plan, weigh in most mornings and log your meals. Save meals you eat often and star your favourite foods.'],
-    ['Weekly check-in', 'Once a week Foundry compares what you ate with how your weight moved, and adjusts your calorie and macro targets.'],
-    ['Track progress', 'Progress tab: strength trends per lift, weekly volume per muscle, records, and how your diet lines up with your strength.'],
+    [t('Set up your routines'), t('Workout tab → New routine, or Explore programs for a ready-made plan. Group routines in folders, pair exercises as supersets from their ⋯ menu, and set target reps like 8-12.')],
+    [t('Train'), t('Start a routine and tick each set as you go. The rest timer starts by itself. Empty sets reuse last time’s numbers when you tick them. Change a set’s type (warm-up, drop, failure) by tapping its number.')],
+    [t('Finish'), t('Tap Finish at any time: sets you filled in are saved, empty ones are dropped. Records are marked with a trophy.')],
+    [t('Eat to your goal'), t('Nutrition tab → set up your plan, weigh in most mornings and log your meals. Save meals you eat often and star your favourite foods.')],
+    [t('Weekly check-in'), t('Once a week Foundry compares what you ate with how your weight moved, and adjusts your calorie and macro targets.')],
+    [t('Track progress'), t('Progress tab: strength trends per lift, weekly volume per muscle, records, and how your diet lines up with your strength.')],
   ];
   return (
-    <Sub title="Getting started">
+    <Sub title={t('Getting started')}>
       <ol className="guide">
         {steps.map(([t, d]) => (
           <li key={t}>
@@ -514,16 +503,16 @@ function GuidePage() {
 
 function FaqPage() {
   const qa: [string, string][] = [
-    ['Where is my data stored?', 'In your Foundry account, and on your phone for offline use. Each person can only read their own data.'],
-    ['Can I use Foundry on several devices?', 'Yes: log in with the same account and your data follows. If two devices changed things at the same time, Foundry asks which version to keep.'],
-    ['Does it work without internet?', 'Yes. Log workouts and meals offline; changes are sent to your account when you are back online. Brand search and barcode lookup need a connection.'],
-    ['How is my expenditure estimated?', 'It starts from your age, height, weight, sex and activity, then learns from your data: what you ate over the last 3 weeks against how your weight moved (about 7 700 kcal per kg). Days you mark as not fully logged are left out.'],
-    ['Why didn’t the rest timer ring with the app closed?', 'Phones pause web apps in the background. When you come back, Foundry shows when the rest ended. On iPhone, Guided Access keeps you in the app during a workout.'],
-    ['How do I bring my Hevy history?', 'In Hevy: Settings → Export & Import Data → Export workouts. Then in Foundry: Settings → Export & import data → Import CSV.'],
-    ['How do I share a routine?', 'Open the routine → Copy link, or a folder’s ⋯ menu → Copy share link. Whoever opens it can add the routines to their Foundry.'],
+    [t('Where is my data stored?'), t('In your Foundry account, and on your phone for offline use. Each person can only read their own data.')],
+    [t('Can I use Foundry on several devices?'), t('Yes: log in with the same account and your data follows. If two devices changed things at the same time, Foundry asks which version to keep.')],
+    [t('Does it work without internet?'), t('Yes. Log workouts and meals offline; changes are sent to your account when you are back online. Brand search and barcode lookup need a connection.')],
+    [t('How is my expenditure estimated?'), t('It starts from your age, height, weight, sex and activity, then learns from your data: what you ate over the last 3 weeks against how your weight moved (about 7 700 kcal per kg). Days you mark as not fully logged are left out.')],
+    [t('Why didn’t the rest timer ring with the app closed?'), t('Phones pause web apps in the background. When you come back, Foundry shows when the rest ended. On iPhone, Guided Access keeps you in the app during a workout.')],
+    [t('How do I bring my Hevy history?'), t('In Hevy: Settings → Export & Import Data → Export workouts. Then in Foundry: Settings → Export & import data → Import CSV.')],
+    [t('How do I share a routine?'), t('Open the routine → Copy link, or a folder’s ⋯ menu → Copy share link. Whoever opens it can add the routines to their Foundry.')],
   ];
   return (
-    <Sub title="FAQ">
+    <Sub title={t('FAQ')}>
       <div className="faq">
         {qa.map(([q, a]) => (
           <details key={q}>
@@ -538,22 +527,22 @@ function FaqPage() {
 
 function AboutPage() {
   return (
-    <Sub title="About">
+    <Sub title={t('About')}>
       <div className="about-head">
         <Logo size={56} />
-        <strong className="brand">Foundry</strong>
-        <span className="muted small">Version {__APP_VERSION__}</span>
+        <strong className="brand">{t('Foundry')}</strong>
+        <span className="muted small">{t('Version {0}', { 0: __APP_VERSION__ })}</span>
       </div>
       <section className="panel">
-        <h2 className="panel-title">Credits</h2>
+        <h2 className="panel-title">{t('Credits')}</h2>
         <ul className="credits">
-          <li>Exercise photos: Free Exercise DB (public domain).</li>
-          <li>Basic foods: USDA FoodData Central (public domain), via the TempoLife food dataset (tempolife.app, CC-BY-4.0).</li>
-          <li>Brands and barcodes: Open Food Facts, © its contributors (Open Database License).</li>
-          <li>Typefaces: Archivo and IBM Plex Sans (SIL Open Font License).</li>
+          <li>{t('Exercise photos: Free Exercise DB (public domain).')}</li>
+          <li>{t('Basic foods: USDA FoodData Central (public domain), via the TempoLife food dataset (tempolife.app, CC-BY-4.0).')}</li>
+          <li>{t('Brands and barcodes: Open Food Facts, © its contributors (Open Database License).')}</li>
+          <li>{t('Typefaces: Archivo and IBM Plex Sans (SIL Open Font License).')}</li>
         </ul>
       </section>
-      <p className="muted small">Foundry is an estimate tool for healthy adults, not medical advice.</p>
+      <p className="muted small">{t('Foundry is an estimate tool for healthy adults, not medical advice.')}</p>
     </Sub>
   );
 }

@@ -1,3 +1,4 @@
+import { tk } from './i18n';
 /**
  * Nutrition engine: food log totals, weight trend, an adaptive estimate of energy
  * expenditure, and calorie/macro targets refreshed at a weekly check-in.
@@ -363,12 +364,12 @@ export function recentStats(n: NutritionState, days = 14, today = dayKey()) {
 }
 
 export const MEAL_LABEL: Record<Meal, string> = {
-  breakfast: 'Breakfast',
-  snack_breakfast: 'Snacks after breakfast',
-  lunch: 'Lunch',
-  snacks: 'Snacks after lunch',
-  dinner: 'Dinner',
-  snack_dinner: 'Snacks after dinner',
+  breakfast: tk('Breakfast'),
+  snack_breakfast: tk('Snacks after breakfast'),
+  lunch: tk('Lunch'),
+  snacks: tk('Snacks after lunch'),
+  dinner: tk('Dinner'),
+  snack_dinner: tk('Snacks after dinner'),
 };
 export const MEALS: Meal[] = ['breakfast', 'snack_breakfast', 'lunch', 'snacks', 'dinner', 'snack_dinner'];
 

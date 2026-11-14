@@ -6,6 +6,7 @@ import { back, go } from '../hooks';
 import { useStore } from '../store';
 import type { Routine } from '../types';
 import { uid } from '../utils';
+import { t } from '../i18n';
 
 export function RoutineEditor({ id, folderId }: { id: string; folderId?: string }) {
   const { state, update } = useStore();
@@ -25,16 +26,16 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
   if (id !== 'new' && !existing) {
     return (
       <>
-        <Header title="Routine" onBack={() => back()} />
+        <Header title={t('Routine')} onBack={() => back()} />
         <main className="page">
-          <p className="muted">This routine no longer exists.</p>
+          <p className="muted">{t('This routine no longer exists.')}</p>
         </main>
       </>
     );
   }
 
   const save = () => {
-    const r = { ...draft, name: draft.name.trim() || 'Untitled routine', updatedAt: Date.now() };
+    const r = { ...draft, name: draft.name.trim() || t('Untitled routine'), updatedAt: Date.now() };
     update((s) => ({
       ...s,
       routines: existing ? s.routines.map((x) => (x.id === r.id ? r : x)) : [...s.routines, r],
@@ -45,33 +46,31 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
   return (
     <>
       <Header
-        title={existing ? 'Edit routine' : 'New routine'}
+        title={existing ? t('Edit routine') : t('New routine')}
         onBack={() => back()}
         right={
-          <button className="btn btn-primary btn-small" onClick={save}>
-            Save
-          </button>
+          <button className="btn btn-primary btn-small" onClick={save}>{t('Save')}</button>
         }
       />
       <main className="page">
         <label className="field">
-          <span>Routine name</span>
+          <span>{t('Routine name')}</span>
           <input
             id="routine-name"
             value={draft.name}
-            placeholder="e.g. Upper A"
+            placeholder={t('e.g. Upper A')}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
         </label>
         {state.folders.length > 0 && (
           <label className="field">
-            <span>Folder</span>
+            <span>{t('Folder')}</span>
             <select
               id="routine-folder"
               value={draft.folderId && state.folders.some((f) => f.id === draft.folderId) ? draft.folderId : ''}
               onChange={(e) => setDraft({ ...draft, folderId: e.target.value || undefined })}
             >
-              <option value="">My routines (no folder)</option>
+              <option value="">{t('My routines (no folder)')}</option>
               {state.folders.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.name}
@@ -80,11 +79,7 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
             </select>
           </label>
         )}
-        <p className="muted small">
-          Set target reps per set, as a number or a range such as 8-12, and a weight if you like. During the workout the
-          target shows in the reps field and the Previous column shows what you did last time. Use an exercise’s ⋯ menu to
-          pair it with the next one as a superset.
-        </p>
+        <p className="muted small">{t('Set target reps per set, as a number or a range such as 8-12, and a weight if you like. During the workout the target shows in the reps field and the Previous column shows what you did last time. Use an exercise’s ⋯ menu to pair it with the next one as a superset.')}</p>
         <WorkoutEditor
           exercises={draft.exercises}
           mode="routine"
@@ -93,16 +88,14 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
         />
         {draft.exercises.length > 0 && <RoutineSummaryPanel routine={draft} />}
         {existing && (
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>
-            Delete routine
-          </button>
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete routine')}</button>
         )}
       </main>
       <Confirm
         open={confirmDelete}
-        title="Delete routine?"
-        message={`“${existing?.name}” will be removed. Past workouts stay in your history.`}
-        confirmLabel="Delete"
+        title={t('Delete routine?')}
+        message={t('“{name}” will be removed. Past workouts stay in your history.', { name: existing?.name ?? '' })}
+        confirmLabel={t('Delete')}
         danger
         onConfirm={() => {
           update((s) => ({ ...s, routines: s.routines.filter((r) => r.id !== id) }));

@@ -5,6 +5,7 @@ import type { Equipment, Exercise, ExerciseKind, Muscle } from '../types';
 import { uid } from '../utils';
 import { ExerciseImage } from './ExerciseImage';
 import { Icon, Sheet } from './ui';
+import { t } from '../i18n';
 
 export interface ExerciseFilter {
   query: string;
@@ -48,12 +49,12 @@ export function ExerciseFilters({
         <Icon name="search" size={18} />
         <input
           id={idPrefix + '-search'}
-          placeholder={lang === 'fr' ? 'Rechercher (FR ou EN)' : 'Search (English or French)'}
+          placeholder={t('Search (English or French)')}
           value={value.query}
           onChange={(e) => onChange({ ...value, query: e.target.value })}
         />
         {value.query && (
-          <button className="icon-btn search-clear" aria-label="Clear search" onClick={() => onChange({ ...value, query: '' })}>
+          <button className="icon-btn search-clear" aria-label={t('Clear search')} onClick={() => onChange({ ...value, query: '' })}>
             <Icon name="x" size={16} />
           </button>
         )}
@@ -61,11 +62,11 @@ export function ExerciseFilters({
       <div className="filter-row">
         <select
           id={idPrefix + '-muscle'}
-          aria-label="Muscle"
+          aria-label={t('Muscle')}
           value={value.muscle}
           onChange={(e) => onChange({ ...value, muscle: e.target.value as Muscle | 'all' })}
         >
-          <option value="all">{lang === 'fr' ? 'Tous les muscles' : 'All muscles'}</option>
+          <option value="all">{t('All muscles')}</option>
           {MUSCLES.map((m) => (
             <option key={m} value={m}>
               {muscleLabel(m, lang)}
@@ -74,11 +75,11 @@ export function ExerciseFilters({
         </select>
         <select
           id={idPrefix + '-equipment'}
-          aria-label="Equipment"
+          aria-label={t('Equipment')}
           value={value.equipment}
           onChange={(e) => onChange({ ...value, equipment: e.target.value as Equipment | 'all' })}
         >
-          <option value="all">{lang === 'fr' ? 'Tout l’équipement' : 'All equipment'}</option>
+          <option value="all">{t('All equipment')}</option>
           {EQUIPMENT.map((m) => (
             <option key={m} value={m}>
               {equipmentLabel(m, lang)}
@@ -97,7 +98,7 @@ export function ExerciseRowText({ e }: { e: Exercise }) {
     <span className="picker-text">
       <span className="picker-name">
         {e.label ?? e.name}
-        {e.custom && <span className="tag">Custom</span>}
+        {e.custom && <span className="tag">{t('Custom')}</span>}
       </span>
       <span className="muted small">
         {muscleLabel(e.muscle, lang)} · {equipmentLabel(e.equipment, lang)}
@@ -131,10 +132,10 @@ export function ExercisePicker({
   };
 
   return (
-    <Sheet open={open} onClose={close} title={replacing ? `Replace ${replacing.label ?? replacing.name}` : 'Add exercises'} tall>
+    <Sheet open={open} onClose={close} title={replacing ? t('Replace {name}', { name: replacing.label ?? replacing.name }) : t('Add exercises')} tall>
       <div className="picker-tools">
         <ExerciseFilters value={filter} onChange={setFilter} idPrefix="picker" />
-        <span className="muted small">{list.length} exercises</span>
+        <span className="muted small">{t('{0} exercises', { 0: list.length })}</span>
       </div>
       <ul className="picker-list">
         {list.map((e) => {
@@ -165,12 +166,10 @@ export function ExercisePicker({
             </li>
           );
         })}
-        {!list.length && <li className="muted empty-line">No exercise matches these filters.</li>}
+        {!list.length && <li className="muted empty-line">{t('No exercise matches these filters.')}</li>}
       </ul>
       <div className="sheet-actions sticky-actions">
-        <button className="btn" onClick={() => setCreating(true)}>
-          New exercise
-        </button>
+        <button className="btn" onClick={() => setCreating(true)}>{t('New exercise')}</button>
         {!replacing && (
         <button
           className="btn btn-primary"
@@ -180,7 +179,7 @@ export function ExercisePicker({
             close();
           }}
         >
-          {picked.length ? `Add ${picked.length}` : 'Add'}
+          {picked.length ? t('Add {n}', { n: picked.length }) : t('Add')}
         </button>
         )}
       </div>
@@ -221,7 +220,7 @@ export function CreateExercise({
   );
 
   return (
-    <Sheet open={open} onClose={onClose} title="New exercise">
+    <Sheet open={open} onClose={onClose} title={t('New exercise')}>
       <form
         className="form"
         onSubmit={(ev) => {
@@ -235,12 +234,12 @@ export function CreateExercise({
         }}
       >
         <label className="field">
-          <span>Name</span>
-          <input id="new-ex-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Pendlay Row" autoFocus />
-          {clash && <span className="field-error">An exercise with this name already exists.</span>}
+          <span>{t('Name')}</span>
+          <input id="new-ex-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Pendlay Row')} autoFocus />
+          {clash && <span className="field-error">{t('An exercise with this name already exists.')}</span>}
         </label>
         <label className="field">
-          <span>Primary muscle</span>
+          <span>{t('Primary muscle')}</span>
           <select id="new-ex-muscle" value={muscle} onChange={(e) => setMuscle(e.target.value as Muscle)}>
             {MUSCLES.map((m) => (
               <option key={m} value={m}>
@@ -250,7 +249,7 @@ export function CreateExercise({
           </select>
         </label>
         <label className="field">
-          <span>Equipment</span>
+          <span>{t('Equipment')}</span>
           <select id="new-ex-equipment" value={equipment} onChange={(e) => setEquipment(e.target.value as Equipment)}>
             {EQUIPMENT.map((m) => (
               <option key={m} value={m}>
@@ -260,22 +259,18 @@ export function CreateExercise({
           </select>
         </label>
         <label className="field">
-          <span>Tracking</span>
+          <span>{t('Tracking')}</span>
           <select id="new-ex-kind" value={kind} onChange={(e) => setKind(e.target.value as ExerciseKind)}>
             {(Object.keys(KIND_LABEL) as ExerciseKind[]).map((k) => (
               <option key={k} value={k}>
-                {KIND_LABEL[k]}
+                {t(KIND_LABEL[k])}
               </option>
             ))}
           </select>
         </label>
         <div className="sheet-actions">
-          <button type="button" className="btn" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={!name.trim() || clash}>
-            Create
-          </button>
+          <button type="button" className="btn" onClick={onClose}>{t('Cancel')}</button>
+          <button type="submit" className="btn btn-primary" disabled={!name.trim() || clash}>{t('Create')}</button>
         </div>
       </form>
     </Sheet>

@@ -4,6 +4,7 @@ import { defaultState, parseBackup, useStore } from '../store';
 import type { State } from '../types';
 import { appUrl, cloudConfigured, SUPABASE_KEY, SUPABASE_URL } from './config';
 import { emptyMeta, loadMeta, loginAction, refreshAction, saveMeta, summary, type SyncMeta } from './sync';
+import { t } from '../i18n';
 
 export type SyncStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error' | 'conflict';
 
@@ -56,12 +57,12 @@ async function getClient(): Promise<SupabaseClient | null> {
 /** Supabase answers in English with technical wording; say what to do instead. */
 function explain(message: string): string {
   const m = message.toLowerCase();
-  if (m.includes('invalid login')) return 'Wrong email or password.';
-  if (m.includes('email not confirmed')) return 'Confirm your email first: open the link we sent you.';
-  if (m.includes('already registered')) return 'An account already exists with this email. Log in instead.';
-  if (m.includes('password should be')) return 'Choose a password of at least 8 characters.';
-  if (m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Wait a few minutes and try again.';
-  if (m.includes('failed to fetch') || m.includes('network')) return 'No connection. Check your internet and try again.';
+  if (m.includes('invalid login')) return t('Wrong email or password.');
+  if (m.includes('email not confirmed')) return t('Confirm your email first: open the link we sent you.');
+  if (m.includes('already registered')) return t('An account already exists with this email. Log in instead.');
+  if (m.includes('password should be')) return t('Choose a password of at least 8 characters.');
+  if (m.includes('rate limit') || m.includes('too many')) return t('Too many attempts. Wait a few minutes and try again.');
+  if (m.includes('failed to fetch') || m.includes('network')) return t('No connection. Check your internet and try again.');
   return message;
 }
 
@@ -260,38 +261,38 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     recovering,
     signIn: async (email, password) => {
       const sb = await getClient();
-      if (!sb) return 'Cloud sync is not set up.';
+      if (!sb) return t('Cloud sync is not set up.');
       const { error: e } = await sb.auth.signInWithPassword({ email, password });
       return e ? explain(e.message) : null;
     },
     signUp: async (email, password) => {
       const sb = await getClient();
-      if (!sb) return 'Cloud sync is not set up.';
+      if (!sb) return t('Cloud sync is not set up.');
       const { data, error: e } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: appUrl() } });
       if (e) return explain(e.message);
       return data.session ? null : 'CHECK_EMAIL';
     },
     changeEmail: async (email) => {
       const sb = await getClient();
-      if (!sb) return 'Cloud sync is not set up.';
+      if (!sb) return t('Cloud sync is not set up.');
       const { error: e } = await sb.auth.updateUser({ email }, { emailRedirectTo: appUrl() });
       return e ? explain(e.message) : null;
     },
     resendConfirmation: async (email) => {
       const sb = await getClient();
-      if (!sb) return 'Cloud sync is not set up.';
+      if (!sb) return t('Cloud sync is not set up.');
       const { error: e } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: appUrl() } });
       return e ? explain(e.message) : null;
     },
     resetPassword: async (email) => {
       const sb = await getClient();
-      if (!sb) return 'Cloud sync is not set up.';
+      if (!sb) return t('Cloud sync is not set up.');
       const { error: e } = await sb.auth.resetPasswordForEmail(email, { redirectTo: appUrl() });
       return e ? explain(e.message) : null;
     },
     setNewPassword: async (password) => {
       const sb = await getClient();
-      if (!sb) return 'Cloud sync is not set up.';
+      if (!sb) return t('Cloud sync is not set up.');
       const { error: e } = await sb.auth.updateUser({ password });
       if (!e) setRecovering(false);
       return e ? explain(e.message) : null;
@@ -303,7 +304,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
         try {
           await upload(user.id);
         } catch {
-          return 'You have changes that are not saved to your account yet. Connect to the internet, then log out.';
+          return t('You have changes that are not saved to your account yet. Connect to the internet, then log out.');
         }
       }
       await sb?.auth.signOut();
@@ -312,7 +313,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     },
     deleteAccount: async () => {
       const sb = await getClient();
-      if (!sb || !user) return 'Not signed in.';
+      if (!sb || !user) return t('Not signed in.');
       const { error: e } = await sb.rpc('delete_my_account');
       if (e) return explain(e.message);
       await sb.auth.signOut();

@@ -1,5 +1,6 @@
 import { EXERCISE_ROWS } from './exerciseData';
 import type { Equipment, Exercise, ExerciseKind, Muscle, NameLang } from './types';
+import { getLang, tk } from './i18n';
 
 export const LIBRARY: Exercise[] = EXERCISE_ROWS.map(([id, name, nameFr, muscle, equipment, kind, image]) => ({
   id,
@@ -61,13 +62,14 @@ const EQUIPMENT_FR: Record<Equipment, string> = {
   kettlebell: 'Kettlebell', band: 'Élastique', plate: 'Disque', suspension: 'Suspension', other: 'Autre',
 };
 
-export const muscleLabel = (m: Muscle, lang: NameLang) => (lang === 'fr' ? MUSCLE_FR : MUSCLE_EN)[m] ?? m;
-export const equipmentLabel = (e: Equipment, lang: NameLang) => (lang === 'fr' ? EQUIPMENT_FR : EQUIPMENT_EN)[e] ?? e;
+/** Muscle and equipment names follow the app language (the second argument is kept for older calls). */
+export const muscleLabel = (m: Muscle, _lang?: NameLang) => (getLang() === 'fr' ? MUSCLE_FR : MUSCLE_EN)[m] ?? m;
+export const equipmentLabel = (e: Equipment, _lang?: NameLang) => (getLang() === 'fr' ? EQUIPMENT_FR : EQUIPMENT_EN)[e] ?? e;
 
 export const KIND_LABEL: Record<ExerciseKind, string> = {
-  weight: 'Weight × reps',
-  bodyweight: 'Bodyweight reps (optional added weight)',
-  assisted: 'Assisted reps (weight is the assistance)',
-  duration: 'Duration',
-  cardio: 'Distance and time',
+  weight: tk('Weight × reps'),
+  bodyweight: tk('Bodyweight reps (optional added weight)'),
+  assisted: tk('Assisted reps (weight is the assistance)'),
+  duration: tk('Duration'),
+  cardio: tk('Distance and time'),
 };

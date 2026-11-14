@@ -5,6 +5,7 @@ import { back, go } from '../hooks';
 import { useStore } from '../store';
 import type { Workout } from '../types';
 import { defaultWorkoutName, uid } from '../utils';
+import { t } from '../i18n';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 function toLocalInput(ts: number) {
@@ -27,9 +28,9 @@ export function EditWorkout({ id }: { id: string }) {
   if (id !== 'new' && !existing) {
     return (
       <>
-        <Header title="Edit workout" onBack={() => back('history')} />
+        <Header title={t('Edit workout')} onBack={() => back('history')} />
         <main className="page">
-          <p className="muted">This workout no longer exists.</p>
+          <p className="muted">{t('This workout no longer exists.')}</p>
         </main>
       </>
     );
@@ -40,12 +41,12 @@ export function EditWorkout({ id }: { id: string }) {
       .map((we) => ({ ...we, sets: we.sets.filter((s) => (s.reps ?? 0) > 0).map((s) => ({ ...s, done: true })) }))
       .filter((we) => we.sets.length);
     if (!exercises.length) {
-      setError('Enter reps for at least one set before saving.');
+      setError(t('Enter reps for at least one set before saving.'));
       return;
     }
     const w: Workout = {
       ...draft,
-      name: draft.name.trim() || 'Workout',
+      name: draft.name.trim() || t('Workout'),
       exercises,
       endedAt: draft.startedAt + Math.max(1, minutes) * 60000,
     };
@@ -60,22 +61,20 @@ export function EditWorkout({ id }: { id: string }) {
   return (
     <>
       <Header
-        title={existing ? 'Edit workout' : 'Log past workout'}
+        title={existing ? t('Edit workout') : t('Log past workout')}
         onBack={() => back('history')}
         right={
-          <button className="btn btn-primary btn-small" onClick={save}>
-            Save
-          </button>
+          <button className="btn btn-primary btn-small" onClick={save}>{t('Save')}</button>
         }
       />
       <main className="page">
         <label className="field">
-          <span>Name</span>
+          <span>{t('Name')}</span>
           <input id="edit-name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
         </label>
         <div className="field-row">
           <label className="field">
-            <span>Started</span>
+            <span>{t('Started')}</span>
             <input
               id="edit-start"
               type="datetime-local"
@@ -87,7 +86,7 @@ export function EditWorkout({ id }: { id: string }) {
             />
           </label>
           <label className="field field-narrow">
-            <span>Duration (min)</span>
+            <span>{t('Duration (min)')}</span>
             <input
               id="edit-duration"
               inputMode="numeric"
@@ -97,7 +96,7 @@ export function EditWorkout({ id }: { id: string }) {
           </label>
         </div>
         <label className="field">
-          <span>Notes</span>
+          <span>{t('Notes')}</span>
           <textarea
             id="edit-note"
             rows={2}
@@ -115,7 +114,7 @@ export function EditWorkout({ id }: { id: string }) {
             setDraft({ ...draft, exercises });
           }}
         />
-        <p className="muted small">Sets without reps are left out when you save.</p>
+        <p className="muted small">{t('Sets without reps are left out when you save.')}</p>
       </main>
     </>
   );

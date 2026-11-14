@@ -4,6 +4,7 @@ import { back, go } from '../hooks';
 import { decodeRoutines, routineSummary, type SharedRoutines } from '../routines';
 import { exerciseName, useStore } from '../store';
 import { uid } from '../utils';
+import { t, tp } from '../i18n';
 
 /** Opened from a share link (#/import/<code>): preview, then add to this device. */
 export function ImportRoutines({ code }: { code: string }) {
@@ -34,32 +35,23 @@ export function ImportRoutines({ code }: { code: string }) {
 
   return (
     <>
-      <Header title="Add routines" onBack={() => back()} />
+      <Header title={t('Add routines')} onBack={() => back()} />
       <main className="page">
         {error && (
           <div className="empty-card">
             <p>{error}</p>
-            <button className="btn" onClick={() => go('', { replace: true })}>
-              Back to workouts
-            </button>
+            <button className="btn" onClick={() => go('', { replace: true })}>{t('Back to workouts')}</button>
           </div>
         )}
-        {!error && !data && <p className="muted">Reading the link…</p>}
+        {!error && !data && <p className="muted">{t('Reading the link…')}</p>}
         {data && (
           <>
             <p>
               {data.folder ? (
-                <>
-                  This link holds the folder <strong>{data.folder}</strong> with {data.routines.length} routine
-                  {data.routines.length > 1 ? 's' : ''}.
-                </>
+                <>{tp(data.routines.length, 'This link holds the folder “{folder}” with {n} routine.', 'This link holds the folder “{folder}” with {n} routines.', { folder: data.folder })}</>
               ) : (
-                <>
-                  This link holds {data.routines.length} routine{data.routines.length > 1 ? 's' : ''}.
-                </>
-              )}{' '}
-              They will be added to the routines already on this device.
-            </p>
+                <>{tp(data.routines.length, 'This link holds {n} routine.', 'This link holds {n} routines.')}</>
+              )}{' '}{t('They will be added to the routines already on this device.')}</p>
             <ul className="routine-list">
               {data.routines.map((r) => {
                 const sum = routineSummary(r.exercises, exMap);
@@ -67,8 +59,7 @@ export function ImportRoutines({ code }: { code: string }) {
                   <li key={r.id} className="import-card">
                     <span className="routine-name">{r.name}</span>
                     <span className="muted small">
-                      {sum.exercises} exercises · {sum.sets} sets · about {Math.round(sum.seconds / 60)} min
-                    </span>
+                      {t('{0} exercises · {1} sets · about {2} min', { 0: sum.exercises, 1: sum.sets, 2: Math.round(sum.seconds / 60) })}</span>
                     <span className="small routine-ex">
                       {r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ')}
                     </span>
@@ -78,12 +69,10 @@ export function ImportRoutines({ code }: { code: string }) {
             </ul>
             {unknown.length > 0 && (
               <p className="field-error">
-                {unknown.length} exercise{unknown.length > 1 ? 's are' : ' is'} not in this app’s library and will show as
-                “Deleted exercise”. Update the app, or replace {unknown.length > 1 ? 'them' : 'it'} after adding.
-              </p>
+                {tp(unknown.length, '{n} exercise is not in this app’s library and will show as “Deleted exercise”. Update the app, or replace it after adding.', '{n} exercises are not in this app’s library and will show as “Deleted exercise”. Update the app, or replace them after adding.')}</p>
             )}
             <button className="btn btn-primary btn-wide" onClick={add}>
-              <Icon name="plus" size={18} /> Add {data.routines.length > 1 ? `${data.routines.length} routines` : 'routine'}
+              <Icon name="plus" size={18} />{' '}{t('Add')}{' '}{data.routines.length > 1 ? tp(data.routines.length, '{n} routine', '{n} routines') : t('routine')}
             </button>
           </>
         )}

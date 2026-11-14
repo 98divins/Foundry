@@ -20,6 +20,7 @@ import {
 } from '../../nutrition';
 import { useNutrition, useStore } from '../../store';
 import { fmtNum, fromDisplay, toDisplay } from '../../utils';
+import { locale, t, tk } from '../../i18n';
 
 const ts = (key: string) => parseDay(key).getTime();
 
@@ -39,37 +40,34 @@ export function WeightPage() {
 
   return (
     <>
-      <Header title="Weight" onBack={() => back('n')} />
+      <Header title={t('Weight')} onBack={() => back('n')} />
       <main className="page">
         <div className="stats-row">
-          <Stat label="Trend" value={trend.length ? `${d(trend[trend.length - 1].trend)} ${unit}` : '–'} />
+          <Stat label={t('Trend')} value={trend.length ? `${d(trend[trend.length - 1].trend)} ${unit}` : '–'} />
           <Stat
-            label="Per week (14 d)"
+            label={t('Per week (14 d)')}
             value={stats.weeklyChange != null ? `${stats.weeklyChange > 0 ? '+' : ''}${fmtNum(d(stats.weeklyChange))} ${unit}` : '–'}
           />
-          <Stat label="Weigh-ins" value={n.weights.length} />
+          <Stat label={t('Weigh-ins')} value={n.weights.length} />
         </div>
         <section className="panel">
           <Segmented
-            label="Period"
+            label={t('Period')}
             value={range}
             onChange={setRange}
             options={[
-              { value: '30', label: '30 days' },
-              { value: '90', label: '90 days' },
-              { value: 'all', label: 'All' },
+              { value: '30', label: t('30 days') },
+              { value: '90', label: t('90 days') },
+              { value: 'all', label: t('All') },
             ]}
           />
           <LineChart
             points={shown.map((t) => ({ x: ts(t.date), y: d(t.trend) }))}
             scatter={shown.filter((t) => t.scale != null).map((t) => ({ x: ts(t.date), y: d(t.scale!) }))}
             format={(v) => fmtNum(v)}
-            emptyText="Weigh in on at least two days to see your trend."
+            emptyText={t('Weigh in on at least two days to see your trend.')}
           />
-          <p className="muted small">
-            Dots are your scale readings; the line is the trend, which smooths out day-to-day water changes. Judge
-            progress by the line.
-          </p>
+          <p className="muted small">{t('Dots are your scale readings; the line is the trend, which smooths out day-to-day water changes. Judge progress by the line.')}</p>
         </section>
 
         <form
@@ -82,32 +80,30 @@ export function WeightPage() {
             setValue(null);
           }}
         >
-          <h2 className="panel-title">Add a weigh-in</h2>
+          <h2 className="panel-title">{t('Add a weigh-in')}</h2>
           <div className="field-row">
             <label className="field">
-              <span>Date</span>
+              <span>{t('Date')}</span>
               <input id="w-date" type="date" value={date} max={dayKey()} onChange={(e) => setDate(e.target.value)} />
             </label>
             <label className="field field-narrow">
-              <span>Weight ({unit})</span>
-              <NumInput id="w-value" label={`Weight in ${unit}`} value={value} onChange={setValue} />
+              <span>{t('Weight ({0})', { 0: unit })}</span>
+              <NumInput id="w-value" label={t('Weight in {unit}', { unit })} value={value} onChange={setValue} />
             </label>
           </div>
-          <button className="btn btn-primary" type="submit" disabled={!value || !date}>
-            Save
-          </button>
+          <button className="btn btn-primary" type="submit" disabled={!value || !date}>{t('Save')}</button>
         </form>
 
         <ul className="weigh-list">
           {list.slice(0, 60).map((w) => (
             <li key={w.date}>
-              <span>{parseDay(w.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+              <span>{parseDay(w.date).toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' })}</span>
               <strong>
                 {fmtNum(d(w.kg))} {unit}
               </strong>
               <button
                 className="icon-btn"
-                aria-label={`Delete weigh-in of ${w.date}`}
+                aria-label={t('Delete weigh-in of {date}', { date: w.date })}
                 onClick={() => setN((x) => ({ ...x, weights: x.weights.filter((y) => y.date !== w.date) }))}
               >
                 <Icon name="trash" size={18} />
@@ -133,49 +129,45 @@ export function InsightsPage() {
 
   return (
     <>
-      <Header title="Expenditure" onBack={() => back('n')} />
+      <Header title={t('Expenditure')} onBack={() => back('n')} />
       <main className="page">
         <div className="stats-row">
-          <Stat label="Expenditure" value={current != null ? `${current} kcal` : '–'} />
-          <Stat label="Avg intake (14 d)" value={stats.avgIntake != null ? `${stats.avgIntake} kcal` : '–'} />
-          <Stat label="Logged days" value={`${stats.loggedDays}/14`} />
+          <Stat label={t('Expenditure')} value={current != null ? `${current} kcal` : '–'} />
+          <Stat label={t('Avg intake (14 d)')} value={stats.avgIntake != null ? `${stats.avgIntake} kcal` : '–'} />
+          <Stat label={t('Logged days')} value={`${stats.loggedDays}/14`} />
         </div>
         <section className="panel">
-          <h2 className="panel-title">Estimated daily expenditure</h2>
+          <h2 className="panel-title">{t('Estimated daily expenditure')}</h2>
           <LineChart
             points={recent.map((p) => ({ x: ts(p.date), y: p.estimate }))}
             format={(v) => String(Math.round(v))}
-            emptyText="Log your weight and food for a few days to see the estimate."
+            emptyText={t('Log your weight and food for a few days to see the estimate.')}
           />
           <p className="muted small">
             {adapted
-              ? 'Each day the estimate moves toward what your intake and weight trend of the last 3 weeks imply.'
-              : `This is still the starting estimate from your profile (${seed ?? '–'} kcal). It starts adapting after 7 fully logged days with at least 4 weigh-ins.`}
+              ? t('Each day the estimate moves toward what your intake and weight trend of the last 3 weeks imply.')
+              : t('This is still the starting estimate from your profile ({n} kcal). It starts adapting after 7 fully logged days with at least 4 weigh-ins.', { n: seed ?? '–' })}
           </p>
         </section>
         <section className="panel">
-          <h2 className="panel-title">How it works</h2>
+          <h2 className="panel-title">{t('How it works')}</h2>
           <ol className="how">
-            <li>The starting point comes from your age, height, weight, sex and activity (Mifflin-St Jeor).</li>
-            <li>Every day, it compares what you ate over the last 3 weeks with how your weight moved.</li>
-            <li>
-              Losing 1 kg of body mass frees about 7 700 kcal. If you ate 2 100 kcal a day and lost 0.5 kg a week, you
-              burned about 2 650 kcal a day.
-            </li>
-            <li>Days you mark as not fully logged are left out, so a forgotten snack does not skew the result.</li>
-            <li>At the weekly check-in, your targets are recalculated from this estimate and your goal.</li>
+            <li>{t('The starting point comes from your age, height, weight, sex and activity (Mifflin-St Jeor).')}</li>
+            <li>{t('Every day, it compares what you ate over the last 3 weeks with how your weight moved.')}</li>
+            <li>{t('Losing 1 kg of body mass frees about 7 700 kcal. If you ate 2 100 kcal a day and lost 0.5 kg a week, you burned about 2 650 kcal a day.')}</li>
+            <li>{t('Days you mark as not fully logged are left out, so a forgotten snack does not skew the result.')}</li>
+            <li>{t('At the weekly check-in, your targets are recalculated from this estimate and your goal.')}</li>
           </ol>
         </section>
         {n.checkIns.length > 0 && (
           <section className="panel">
-            <h2 className="panel-title">Check-ins</h2>
+            <h2 className="panel-title">{t('Check-ins')}</h2>
             <ul className="weigh-list">
               {[...n.checkIns].reverse().slice(0, 12).map((c) => (
                 <li key={c.date}>
-                  <span>{parseDay(c.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
+                  <span>{parseDay(c.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}</span>
                   <span className="small">
-                    {c.targets.kcal} kcal · P {c.targets.protein} · C {c.targets.carbs} · F {c.targets.fat}
-                  </span>
+                    {t('{0} kcal · P {1} · C {2} · F {3}', { 0: c.targets.kcal, 1: c.targets.protein, 2: c.targets.carbs, 3: c.targets.fat })}</span>
                   <span className="muted small">{c.expenditure}</span>
                 </li>
               ))}
@@ -190,14 +182,14 @@ export function InsightsPage() {
 /* ---------- Plan (setup and settings) ---------- */
 
 const ACTIVITY_LABEL: Record<Activity, string> = {
-  sedentary: 'Sedentary (desk job, little walking)',
-  light: 'Light (some walking, 1–3 workouts a week)',
-  moderate: 'Moderate (on your feet, 3–5 workouts a week)',
-  active: 'Active (physical job or daily training)',
-  very_active: 'Very active (physical job and hard training)',
+  sedentary: t('Sedentary (desk job, little walking)'),
+  light: t('Light (some walking, 1–3 workouts a week)'),
+  moderate: t('Moderate (on your feet, 3–5 workouts a week)'),
+  active: t('Active (physical job or daily training)'),
+  very_active: t('Very active (physical job and hard training)'),
 };
 const RATES = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5];
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS = [tk('Sunday'), tk('Monday'), tk('Tuesday'), tk('Wednesday'), tk('Thursday'), tk('Friday'), tk('Saturday')];
 
 export function PlanPage({ setup }: { setup?: boolean }) {
   const { n, setN, unit } = useNutrition();
@@ -244,41 +236,41 @@ export function PlanPage({ setup }: { setup?: boolean }) {
 
   return (
     <>
-      <Header title={setup ? 'Set up my plan' : 'Plan'} onBack={() => back('n')} />
+      <Header title={setup ? t('Set up my plan') : t('Plan')} onBack={() => back('n')} />
       <main className="page">
         <section className="panel form">
-          <h2 className="panel-title">About you</h2>
+          <h2 className="panel-title">{t('About you')}</h2>
           <div className="field-row">
             <label className="field">
-              <span>Sex</span>
+              <span>{t('Sex')}</span>
               <select id="p-sex" value={profile.sex} onChange={(e) => setProfile({ ...profile, sex: e.target.value as Sex })}>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="male">{t('Male')}</option>
+                <option value="female">{t('Female')}</option>
               </select>
             </label>
             <label className="field">
-              <span>Birth year</span>
+              <span>{t('Birth year')}</span>
               <NumInput
                 id="p-year"
-                label="Birth year"
+                label={t('Birth year')}
                 decimal={false}
                 value={profile.birthYear}
                 onChange={(v) => setProfile({ ...profile, birthYear: v ?? 0 })}
               />
             </label>
             <label className="field">
-              <span>Height ({heightUnit === 'cm' ? 'cm' : 'ft, in'})</span>
+              <span>{heightUnit === 'cm' ? t('Height (cm)') : t('Height (ft, in)')}</span>
               <HeightInput id="p-height" cm={profile.heightCm} unit={heightUnit} onChange={(heightCm) => setProfile({ ...profile, heightCm })} />
             </label>
           </div>
           {needsWeight && (
             <label className="field">
-              <span>Weight today ({unit})</span>
-              <NumInput id="p-weight" label={`Weight in ${unit}`} value={weight} onChange={setWeight} />
+              <span>{t('Weight today ({0})', { 0: unit })}</span>
+              <NumInput id="p-weight" label={t('Weight in {unit}', { unit })} value={weight} onChange={setWeight} />
             </label>
           )}
           <label className="field">
-            <span>Activity outside your workouts and training</span>
+            <span>{t('Activity outside your workouts and training')}</span>
             <select id="p-activity" value={profile.activity} onChange={(e) => setProfile({ ...profile, activity: e.target.value as Activity })}>
               {(Object.keys(ACTIVITY_FACTOR) as Activity[]).map((a) => (
                 <option key={a} value={a}>
@@ -287,13 +279,13 @@ export function PlanPage({ setup }: { setup?: boolean }) {
               ))}
             </select>
           </label>
-          <p className="muted small">Only used for the first estimate. After a few weeks your own data takes over.</p>
+          <p className="muted small">{t('Only used for the first estimate. After a few weeks your own data takes over.')}</p>
         </section>
 
         <section className="panel form">
-          <h2 className="panel-title">Goal</h2>
+          <h2 className="panel-title">{t('Goal')}</h2>
           <label className="field">
-            <span>Weight change per week</span>
+            <span>{t('Weight change per week')}</span>
             <select
               id="p-rate"
               value={draft.rateKgPerWeek}
@@ -301,14 +293,14 @@ export function PlanPage({ setup }: { setup?: boolean }) {
             >
               {RATES.map((r) => (
                 <option key={r} value={r}>
-                  {r === 0 ? 'Maintain' : `${r > 0 ? 'Gain' : 'Lose'} ${fmtNum(Math.abs(toDisplay(r, unit)))} ${unit} / week`}
+                  {r === 0 ? t('Maintain') : r > 0 ? t('Gain {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit }) : t('Lose {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit })}
                 </option>
               ))}
             </select>
           </label>
           <div className="field-row">
             <label className="field">
-              <span>Protein (g per kg)</span>
+              <span>{t('Protein (g per kg)')}</span>
               <select
                 id="p-protein"
                 value={draft.proteinPerKg}
@@ -316,13 +308,12 @@ export function PlanPage({ setup }: { setup?: boolean }) {
               >
                 {[1.6, 1.8, 2, 2.2, 2.4].map((p) => (
                   <option key={p} value={p}>
-                    {p} g/kg
-                  </option>
+                    {t('{0} g/kg', { 0: p })}</option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span>Fat (share of calories)</span>
+              <span>{t('Fat (share of calories)')}</span>
               <select id="p-fat" value={draft.fatShare} onChange={(e) => setDraft({ ...draft, fatShare: Number(e.target.value) })}>
                 {[0.2, 0.25, 0.28, 0.3, 0.35, 0.4].map((f) => (
                   <option key={f} value={f}>
@@ -333,11 +324,11 @@ export function PlanPage({ setup }: { setup?: boolean }) {
             </label>
           </div>
           <label className="field">
-            <span>Weekly check-in day</span>
+            <span>{t('Weekly check-in day')}</span>
             <select id="p-day" value={draft.checkInDay} onChange={(e) => setDraft({ ...draft, checkInDay: Number(e.target.value) })}>
               {DAYS.map((d, i) => (
                 <option key={d} value={i}>
-                  {d}
+                  {t(d)}
                 </option>
               ))}
             </select>
@@ -346,26 +337,22 @@ export function PlanPage({ setup }: { setup?: boolean }) {
 
         {preview?.ci && (
           <section className="panel">
-            <h2 className="panel-title">Your targets</h2>
-            <p className="small muted">
-              Based on an expenditure of {preview.exp} kcal/day{current ? `; currently ${current.kcal} kcal` : ''}.
+            <h2 className="panel-title">{t('Your targets')}</h2>
+            <p className="small muted">{t('Based on an expenditure of {n} kcal/day', { n: preview.exp })}{current ? t('; currently {n} kcal', { n: current.kcal }) : ''}.
             </p>
             <div className="summary-stats">
-              <Stat label="Calories" value={preview.ci.targets.kcal} />
-              <Stat label="Protein" value={`${preview.ci.targets.protein} g`} />
-              <Stat label="Carbs" value={`${preview.ci.targets.carbs} g`} />
+              <Stat label={t('Calories')} value={preview.ci.targets.kcal} />
+              <Stat label={t('Protein')} value={`${preview.ci.targets.protein} g`} />
+              <Stat label={t('Carbs')} value={`${preview.ci.targets.carbs} g`} />
             </div>
-            <p className="small">Fat {preview.ci.targets.fat} g</p>
+            <p className="small">{t('Fat {0} g', { 0: preview.ci.targets.fat })}</p>
           </section>
         )}
 
         <button className="btn btn-primary btn-wide" disabled={!valid} onClick={save}>
-          {setup ? 'Start my plan' : 'Save plan'}
+          {setup ? t('Start my plan') : t('Save plan')}
         </button>
-        <p className="muted small">
-          This is an estimate for healthy adults, not medical advice. The app never sets calories below 1 200 (women) or
-          1 500 (men) kcal a day.
-        </p>
+        <p className="muted small">{t('This is an estimate for healthy adults, not medical advice. The app never sets calories below 1 200 (women) or 1 500 (men) kcal a day.')}</p>
       </main>
     </>
   );

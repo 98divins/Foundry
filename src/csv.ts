@@ -1,5 +1,6 @@
 import type { Equipment, Exercise, SetType, Workout, WorkoutExercise } from './types';
 import { uid } from './utils';
+import { t } from './i18n';
 
 /** RFC 4180-style parser: quoted fields, escaped quotes, CRLF or LF. */
 export function parseCSV(text: string): string[][] {
@@ -87,12 +88,12 @@ export interface ImportResult {
  */
 export function importWorkoutCsv(text: string, known: Exercise[], existing: Workout[]): ImportResult {
   const rows = parseCSV(text.replace(/^﻿/, ''));
-  if (rows.length < 2) throw new Error('The file has no workout rows.');
+  if (rows.length < 2) throw new Error(t('The file has no workout rows.'));
   const header = rows[0].map((h) => h.trim().toLowerCase());
   const col = (name: string) => header.indexOf(name);
   const need = ['title', 'start_time', 'exercise_title'];
   const missing = need.filter((n) => col(n) < 0);
-  if (missing.length) throw new Error(`Missing column(s): ${missing.join(', ')}. Is this a workout CSV export?`);
+  if (missing.length) throw new Error(t('Missing column(s): {cols}. Is this a workout CSV export?', { cols: missing.join(', ') }));
 
   const get = (r: string[], name: string) => (col(name) >= 0 ? (r[col(name)] ?? '').trim() : '');
   const num = (v: string) => (v === '' || Number.isNaN(Number(v)) ? null : Number(v));

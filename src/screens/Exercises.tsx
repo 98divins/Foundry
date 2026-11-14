@@ -4,6 +4,7 @@ import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon } from '../components/ui';
 import { go } from '../hooks';
 import { useStore } from '../store';
+import { t } from '../i18n';
 
 export function Exercises() {
   const { state } = useStore();
@@ -26,20 +27,17 @@ export function Exercises() {
   return (
     <>
       <Header
-        title="Exercises"
+        title={t('Exercises')}
         right={
           <button className="btn btn-small" onClick={() => setCreating(true)}>
-            <Icon name="plus" size={16} /> New
-          </button>
+            <Icon name="plus" size={16} />{' '}{t('New')}</button>
         }
       />
       <main className="page">
         <ExerciseFilters value={filter} onChange={setFilter} idPrefix="ex" />
         <div className="list-meta">
           <label className="toggle-line">
-            <input id="only-logged" type="checkbox" checked={onlyLogged} onChange={(e) => setOnlyLogged(e.target.checked)} />
-            Only exercises I have logged
-          </label>
+            <input id="only-logged" type="checkbox" checked={onlyLogged} onChange={(e) => setOnlyLogged(e.target.checked)} />{t('Only exercises I have logged')}</label>
           <span className="muted small">{shown.length}</span>
         </div>
         <ul className="ex-list">
@@ -52,7 +50,7 @@ export function Exercises() {
               </button>
             </li>
           ))}
-          {!shown.length && <li className="muted empty-line">No exercise matches these filters.</li>}
+          {!shown.length && <li className="muted empty-line">{t('No exercise matches these filters.')}</li>}
         </ul>
       </main>
       <CreateExercise open={creating} initialName={filter.query} onClose={() => setCreating(false)} />

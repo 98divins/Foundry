@@ -1,5 +1,6 @@
 import type { State } from './types';
 import { download } from './utils';
+import { t } from './i18n';
 
 const DAY = 86400000;
 
@@ -16,8 +17,8 @@ export const backupDue = (state: State, now = Date.now()) =>
   !state.settings.lastBackupAt || now - state.settings.lastBackupAt > 7 * DAY;
 
 export function fmtBackupAge(state: State, now = Date.now()): string {
-  const t = state.settings.lastBackupAt;
-  if (!t) return 'never';
-  const days = Math.floor((now - t) / DAY);
-  return days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+  const last = state.settings.lastBackupAt;
+  if (!last) return t('never');
+  const days = Math.floor((now - last) / DAY);
+  return days === 0 ? t('today') : days === 1 ? t('yesterday') : t('{n} days ago', { n: days });
 }

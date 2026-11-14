@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NumInput, Sheet } from '../../components/ui';
 import { MEAL_LABEL, MEALS, round1, type FoodEntry, type Meal } from '../../nutrition';
 import { useNutrition } from '../../store';
+import { t } from '../../i18n';
 
 /** Edit or delete a logged food: change the amount (macros scale with it) or the meal. */
 export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClose: () => void }) {
@@ -48,14 +49,14 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
       <div className="form">
         {entry.grams != null ? (
           <label className="field">
-            <span>Amount (g)</span>
-            <NumInput id="edit-grams" label="Amount in grams" value={grams} onChange={setGrams} />
+            <span>{t('Amount (g)')}</span>
+            <NumInput id="edit-grams" label={t('Amount in grams')} value={grams} onChange={setGrams} />
           </label>
         ) : (
           <div className="quick-grid">
             {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
               <label key={k} className="field">
-                <span>{k === 'kcal' ? 'kcal' : `${k} (g)`}</span>
+                <span>{k === 'kcal' ? t('kcal') : `${k} (g)`}</span>
                 <NumInput
                   id={'edit-' + k}
                   label={k}
@@ -67,25 +68,21 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
           </div>
         )}
         <label className="field">
-          <span>Meal</span>
+          <span>{t('Meal')}</span>
           <select id="edit-meal" value={meal} onChange={(e) => setMeal(e.target.value as Meal)}>
             {MEALS.map((m) => (
               <option key={m} value={m}>
-                {MEAL_LABEL[m]}
+                {t(MEAL_LABEL[m])}
               </option>
             ))}
           </select>
         </label>
         <p className="macro-line">
-          <strong>{preview.kcal} kcal</strong> · P {preview.protein} g · C {preview.carbs} g · F {preview.fat} g
+          <strong>{t('{0} kcal', { 0: preview.kcal })}</strong> · P {preview.protein} g · C {preview.carbs} g · F {preview.fat} g
         </p>
         <div className="sheet-actions">
-          <button className="btn btn-ghost-danger" onClick={remove}>
-            Delete
-          </button>
-          <button className="btn btn-primary" onClick={save} disabled={entry.grams != null && !grams}>
-            Save
-          </button>
+          <button className="btn btn-ghost-danger" onClick={remove}>{t('Delete')}</button>
+          <button className="btn btn-primary" onClick={save} disabled={entry.grams != null && !grams}>{t('Save')}</button>
         </div>
       </div>
     </Sheet>

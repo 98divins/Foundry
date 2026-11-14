@@ -1,6 +1,7 @@
 import { fold } from './exercises';
 import { FR_FOODS } from './foodsFr';
 import { kcalFromMacros, type Food } from './nutrition';
+import { t } from './i18n';
 
 /* ---------- Built-in foods ---------- */
 
@@ -104,7 +105,7 @@ async function offFetch(url: string, retries = 1): Promise<unknown> {
   try {
     res = await fetch(url, { headers: { Accept: 'application/json' } });
   } catch {
-    throw new OffError('No connection to Open Food Facts. Check your internet connection, or add the food yourself.');
+    throw new OffError(t('No connection to Open Food Facts. Check your internet connection, or add the food yourself.'));
   }
   // Open Food Facts' search is sometimes briefly overloaded: try once more before giving up.
   if ((res.status === 502 || res.status === 503 || res.status === 504) && retries > 0) {
@@ -112,15 +113,15 @@ async function offFetch(url: string, retries = 1): Promise<unknown> {
     return offFetch(url, retries - 1);
   }
   if (res.status === 404) return null;
-  if (res.status === 429) throw new OffError('Open Food Facts is limiting searches. Wait a minute and try again.');
-  if (!res.ok) throw new OffError(`Open Food Facts did not answer (error ${res.status}). Try again later.`);
+  if (res.status === 429) throw new OffError(t('Open Food Facts is limiting searches. Wait a minute and try again.'));
+  if (!res.ok) throw new OffError(t('Open Food Facts did not answer (error {code}). Try again later.', { code: res.status }));
   return res.json();
 }
 
 /** Product by barcode (EAN/UPC). Null when Open Food Facts does not know it. */
 export async function offByBarcode(code: string): Promise<Food | null> {
   const clean = code.replace(/\D/g, '');
-  if (clean.length < 6) throw new OffError('A barcode has at least 8 digits.');
+  if (clean.length < 6) throw new OffError(t('A barcode has at least 8 digits.'));
   const data = (await offFetch(`https://world.openfoodfacts.org/api/v2/product/${clean}.json?fields=${OFF_FIELDS}`)) as
     | { status?: number; product?: OffProduct }
     | null;

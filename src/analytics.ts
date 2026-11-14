@@ -6,6 +6,7 @@
 import { addDays, dayKey, dayTotals, fitSlope, weightTrend, type NutritionState } from './nutrition';
 import type { Exercise, Muscle, PRKind, SetEntry, Workout } from './types';
 import { countsForStats, epley, exerciseKind, finished, setVolume, weekStart } from './utils';
+import { t } from './i18n';
 
 const DAY = 86400000;
 
@@ -245,7 +246,7 @@ export function crossInsights(index: (number | null)[], diet: DietWeek[], protei
   }
   const out: Insight[] = [];
   if (rows.length < 5) return out;
-  const fmt = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)} pts`;
+  const fmt = (v: number) => t('{v} pts', { v: `${v > 0 ? '+' : ''}${v.toFixed(1)}` });
 
   const withP = rows.filter((r) => r.d.proteinPerKg != null);
   const hi = withP.filter((r) => r.d.proteinPerKg! >= proteinGoalPerKg * 0.9);
@@ -253,8 +254,8 @@ export function crossInsights(index: (number | null)[], diet: DietWeek[], protei
   if (hi.length >= 2 && lo.length >= 2) {
     const [h, l] = [mean(hi.map((r) => r.delta)), mean(lo.map((r) => r.delta))];
     out.push({
-      title: h > l ? 'Your strength moves more in high-protein weeks' : 'Protein does not explain your strength changes yet',
-      detail: `Weeks near your protein goal (${hi.length}): strength index ${fmt(h)} per week. Weeks below it (${lo.length}): ${fmt(l)}.`,
+      title: h > l ? t('Your strength moves more in high-protein weeks') : t('Protein does not explain your strength changes yet'),
+      detail: t('Weeks near your protein goal ({a}): strength index {b} per week. Weeks below it ({c}): {d}.', { a: hi.length, b: fmt(h), c: lo.length, d: fmt(l) }),
     });
   }
 
@@ -264,8 +265,8 @@ export function crossInsights(index: (number | null)[], diet: DietWeek[], protei
   if (cut.length >= 2 && notCut.length >= 2) {
     const [c, m] = [mean(cut.map((r) => r.delta)), mean(notCut.map((r) => r.delta))];
     out.push({
-      title: c < m - 0.5 ? 'Strength slows in your faster-loss weeks' : 'You keep your strength while losing weight',
-      detail: `Weeks losing 0.2 kg or more (${cut.length}): ${fmt(c)} per week. Other weeks (${notCut.length}): ${fmt(m)}.`,
+      title: c < m - 0.5 ? t('Strength slows in your faster-loss weeks') : t('You keep your strength while losing weight'),
+      detail: t('Weeks losing 0.2 kg or more ({a}): {b} per week. Other weeks ({c}): {d}.', { a: cut.length, b: fmt(c), c: notCut.length, d: fmt(m) }),
     });
   }
   return out;

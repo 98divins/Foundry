@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { photoUrls } from '../exercises';
 import type { Exercise } from '../types';
+import { t } from '../i18n';
 
 /**
  * Exercise photo with fallbacks: CDN, then GitHub, then the first letter of the name.
@@ -31,7 +32,7 @@ export function ExerciseImage({
     <img
       className={cls}
       src={urls[attempt]}
-      alt={size === 'large' ? `${label}, ${frame ? 'end' : 'start'} position` : ''}
+      alt={size === 'large' ? frame ? t('{name}, end position', { name: label }) : t('{name}, start position', { name: label }) : ''}
       loading="lazy"
       decoding="async"
       crossOrigin="anonymous"

@@ -9,6 +9,7 @@ import { exerciseName, useStore } from '../store';
 import type { Routine } from '../types';
 import { fmtClock, fmtSet } from '../utils';
 import { startWorkout } from './WorkoutTab';
+import { t } from '../i18n';
 
 export function RoutineSummaryPanel({ routine }: { routine: Pick<Routine, 'exercises'> }) {
   const { state, exMap } = useStore();
@@ -16,17 +17,17 @@ export function RoutineSummaryPanel({ routine }: { routine: Pick<Routine, 'exerc
   const max = Math.max(1, ...sum.muscles.map((m) => m[1]));
   return (
     <section className="panel">
-      <h2 className="panel-title">Routine summary</h2>
+      <h2 className="panel-title">{t('Routine summary')}</h2>
       <div className="summary-stats">
-        <Stat label="Exercises" value={sum.exercises} />
-        <Stat label="Sets" value={sum.sets} />
-        <Stat label="Est. time" value={`${Math.round(sum.seconds / 60)} min`} />
+        <Stat label={t('Exercises')} value={sum.exercises} />
+        <Stat label={t('Sets')} value={sum.sets} />
+        <Stat label={t('Est. time')} value={`${Math.round(sum.seconds / 60)} min`} />
       </div>
       {sum.muscles.length > 0 && (
         <>
           <div className="muscle-head muted small">
-            <span>Muscle</span>
-            <span>Sets</span>
+            <span>{t('Muscle')}</span>
+            <span>{t('Sets')}</span>
           </div>
           <ul className="muscle-bars">
             {sum.muscles.map(([m, n]) => (
@@ -41,7 +42,7 @@ export function RoutineSummaryPanel({ routine }: { routine: Pick<Routine, 'exerc
           </ul>
         </>
       )}
-      <p className="muted small">Time counts about 45 s per set plus each exercise’s rest. Warm-up sets are left out of the muscle count.</p>
+      <p className="muted small">{t('Time counts about 45 s per set plus each exercise’s rest. Warm-up sets are left out of the muscle count.')}</p>
     </section>
   );
 }
@@ -55,9 +56,9 @@ export function RoutineView({ id }: { id: string }) {
   if (!r) {
     return (
       <>
-        <Header title="Routine" onBack={() => back()} />
+        <Header title={t('Routine')} onBack={() => back()} />
         <main className="page">
-          <p className="muted">This routine no longer exists.</p>
+          <p className="muted">{t('This routine no longer exists.')}</p>
         </main>
       </>
     );
@@ -70,23 +71,20 @@ export function RoutineView({ id }: { id: string }) {
     <>
       <Header title={r.name} onBack={() => back()} />
       <main className="page">
-        {folder && <p className="muted small">In folder {folder.name}</p>}
+        {folder && <p className="muted small">{t('In folder {0}', { 0: folder.name })}</p>}
         <div className="routine-actions">
           <button
             className="btn btn-primary"
             disabled={!!state.active || !r.exercises.length}
             onClick={() => startWorkout(update, r)}
           >
-            <Icon name="play" size={16} /> Start routine
-          </button>
+            <Icon name="play" size={16} />{' '}{t('Start routine')}</button>
           <button className="btn" onClick={() => go('r/' + r.id)}>
-            <Icon name="edit" size={16} /> Edit
-          </button>
+            <Icon name="edit" size={16} />{' '}{t('Edit')}</button>
           <button className="btn" onClick={() => share(undefined, [r])}>
-            <Icon name="link" size={16} /> Copy link
-          </button>
+            <Icon name="link" size={16} />{' '}{t('Copy link')}</button>
         </div>
-        {state.active && <p className="muted small">Finish the workout in progress to start this routine.</p>}
+        {state.active && <p className="muted small">{t('Finish the workout in progress to start this routine.')}</p>}
         <ShareResult shared={shared} onClose={clear} />
 
         <div className="routine-layout">
@@ -99,14 +97,14 @@ export function RoutineView({ id }: { id: string }) {
               const plan = timed ? we.sets.map((s) => fmtSet(s, kind, unit)).filter((t) => t !== '–')[0] : null;
               return (
                 <div key={we.id} className={supersetClass(slots[i])}>
-                  {slots[i].first && <span className={'ss-label ss-c' + ((slots[i].group ?? 0) % 4)}>Superset</span>}
+                  {slots[i].first && <span className={'ss-label ss-c' + ((slots[i].group ?? 0) % 4)}>{t('Superset')}</span>}
                   <button className="plan-row" onClick={() => go('e/' + we.exerciseId)}>
                     <ExerciseImage ex={ex} label={exerciseName(exMap, we.exerciseId)} />
                     <span className="plan-text">
                       <span className="plan-name">{exerciseName(exMap, we.exerciseId)}</span>
                       <span className="plan-meta">
-                        {we.sets.length} {we.sets.length > 1 ? 'sets' : 'set'}
-                        {range && <> · {range} reps</>}
+                        {we.sets.length} {we.sets.length > 1 ? t('sets') : t('set')}
+                        {range && <> {t('· {0} reps', { 0: range })}</>}
                         {plan && <> · {plan}</>}
                         {we.restSec > 0 && (
                           <span className="plan-rest">
@@ -120,7 +118,7 @@ export function RoutineView({ id }: { id: string }) {
                 </div>
               );
             })}
-            {!r.exercises.length && <p className="muted">No exercises yet. Use Edit to add some.</p>}
+            {!r.exercises.length && <p className="muted">{t('No exercises yet. Use Edit to add some.')}</p>}
           </section>
           <RoutineSummaryPanel routine={r} />
         </div>

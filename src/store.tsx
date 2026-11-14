@@ -3,6 +3,7 @@ import { displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
 import { registerKinds, registerPrefs } from './utils';
 import { defaultNutrition, type NutritionState } from './nutrition';
+import { t, setLang, detectLang } from './i18n';
 
 const KEY = 'foundry:v1';
 
@@ -41,7 +42,7 @@ function load(): State {
 export function parseBackup(text: string): State {
   const data = JSON.parse(text);
   if (!data || data.version !== 1 || !Array.isArray(data.workouts) || !Array.isArray(data.routines)) {
-    throw new Error('This file is not a Foundry backup.');
+    throw new Error(t('This file is not a Foundry backup.'));
   }
   const base = defaultState();
   return { ...base, ...data, settings: { ...base.settings, ...data.settings }, nutrition: { ...base.nutrition, ...data.nutrition } };
@@ -75,6 +76,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     navigator.storage?.persist?.().catch(() => {});
   }, []);
 
+  setLang(state.settings.appLang ?? detectLang());
   registerPrefs({ weekStartsOn: state.settings.weekStartsOn ?? 1, distanceUnit: state.settings.distanceUnit ?? 'km' });
   const lang = state.settings.exerciseLang;
   const custom = state.customExercises;
@@ -83,7 +85,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const exMap = new Map(exercises.map((e) => [e.id, e]));
     registerKinds((id) => exMap.get(id)?.kind ?? 'weight');
     return { exercises, exMap };
-  }, [custom, lang]);
+  }, [custom, lang, state.settings.appLang]);
 
   const value = useMemo<Ctx>(() => ({ state, update: setState, ...lib, saveError }), [state, lib, saveError]);
 
@@ -98,7 +100,7 @@ export function useStore(): Ctx {
 
 export function exerciseName(exMap: Map<string, Exercise>, id: string) {
   const e = exMap.get(id);
-  return e?.label ?? e?.name ?? 'Deleted exercise';
+  return e?.label ?? e?.name ?? t('Deleted exercise');
 }
 
 /** The nutrition part of the state, with an updater scoped to it. */

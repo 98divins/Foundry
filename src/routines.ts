@@ -1,5 +1,6 @@
 import type { Exercise, Muscle, Routine, RoutineFolder, SetEntry, WorkoutExercise } from './types';
 import { uid } from './utils';
+import { t } from './i18n';
 
 /* ---------- Supersets ---------- */
 
@@ -153,7 +154,7 @@ function toPack(folder: RoutineFolder | undefined, routines: Routine[]): PackV1 
 }
 
 function fromPack(p: PackV1): SharedRoutines {
-  if (p?.v !== 1 || !Array.isArray(p.r)) throw new Error('This link does not contain routines.');
+  if (p?.v !== 1 || !Array.isArray(p.r)) throw new Error(t('This link does not contain routines.'));
   return {
     folder: typeof p.f === 'string' ? p.f : undefined,
     routines: p.r.map((r) => {
@@ -221,8 +222,8 @@ export async function decodeRoutines(code: string): Promise<SharedRoutines> {
     else throw new Error();
     return fromPack(JSON.parse(new TextDecoder().decode(json)));
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith('This link')) throw e;
-    throw new Error('This link is incomplete or damaged. Copy the whole link and try again.');
+    if (e instanceof Error && e.message === t('This link does not contain routines.')) throw e;
+    throw new Error(t('This link is incomplete or damaged. Copy the whole link and try again.'));
   }
 }
 

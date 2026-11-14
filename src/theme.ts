@@ -1,16 +1,17 @@
+import { tk } from './i18n';
 /** Custom accent colour: one hex picked by the user, adjusted per mode so text and buttons stay readable. */
 
 type RGB = [number, number, number];
 
 export const ACCENTS: { name: string; hex: string }[] = [
-  { name: 'Cobalt', hex: '#3d5bff' },
-  { name: 'Copper', hex: '#e08a4c' },
-  { name: 'Emerald', hex: '#2fbf86' },
-  { name: 'Crimson', hex: '#ef4552' },
-  { name: 'Violet', hex: '#8b5cf6' },
-  { name: 'Pink', hex: '#ec4899' },
-  { name: 'Teal', hex: '#14b8c4' },
-  { name: 'Gold', hex: '#f2c230' },
+  { name: tk('Cobalt'), hex: '#3d5bff' },
+  { name: tk('Copper'), hex: '#e08a4c' },
+  { name: tk('Emerald'), hex: '#2fbf86' },
+  { name: tk('Crimson'), hex: '#ef4552' },
+  { name: tk('Violet'), hex: '#8b5cf6' },
+  { name: tk('Pink'), hex: '#ec4899' },
+  { name: tk('Teal'), hex: '#14b8c4' },
+  { name: tk('Gold'), hex: '#f2c230' },
 ];
 export const DEFAULT_ACCENT = ACCENTS[0].hex;
 

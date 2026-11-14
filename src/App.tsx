@@ -26,13 +26,14 @@ import { AddFood } from './screens/nutrition/AddFood';
 import { MealEditor, MealsPage } from './screens/nutrition/SavedMeals';
 import { InsightsPage, PlanPage, WeightPage } from './screens/nutrition/NutritionPages';
 import { fmtClock } from './utils';
+import { t, tk } from './i18n';
 
 const TABS: { path: string; label: string; icon: IconName }[] = [
-  { path: '', label: 'Workout', icon: 'dumbbell' },
-  { path: 'n', label: 'Nutrition', icon: 'apple' },
-  { path: 'history', label: 'History', icon: 'history' },
-  { path: 'exercises', label: 'Exercises', icon: 'list' },
-  { path: 'profile', label: 'Progress', icon: 'chart' },
+  { path: '', label: tk('Workout'), icon: 'dumbbell' },
+  { path: 'n', label: tk('Nutrition'), icon: 'apple' },
+  { path: 'history', label: tk('History'), icon: 'history' },
+  { path: 'exercises', label: tk('Exercises'), icon: 'list' },
+  { path: 'profile', label: tk('Progress'), icon: 'chart' },
 ];
 
 export function App() {
@@ -58,7 +59,7 @@ export function App() {
   }, [pureBlack]);
   const { state, saveError } = useStore();
   const nutritionDay = section === 'n' && (!param || /^\d{4}-\d{2}-\d{2}$/.test(param));
-  const isTab = TABS.some((t) => t.path === (section ?? '')) && (section !== 'n' || nutritionDay);
+  const isTab = TABS.some((tab) => tab.path === (section ?? '')) && (section !== 'n' || nutritionDay);
   const now = useNow(1000, !!state.active && section !== 'active');
 
   const cloud = useCloud();
@@ -129,11 +130,9 @@ export function App() {
   }
 
   return (
-    <div className={'app' + (isTab ? ' with-tabs' : '') + (state.active && section !== 'active' ? ' with-mini' : '')}>
+    <div key={state.settings.appLang ?? 'auto'} className={'app' + (isTab ? ' with-tabs' : '') + (state.active && section !== 'active' ? ' with-mini' : '')}>
       {saveError && (
-        <div className="banner" role="alert">
-          This browser refused to save your data. Export a backup (Progress → Settings) so nothing is lost.
-        </div>
+        <div className="banner" role="alert">{t('This browser refused to save your data. Export a backup (Progress → Settings) so nothing is lost.')}</div>
       )}
       {screen}
       <CloudDialogs />
@@ -142,22 +141,22 @@ export function App() {
           <span className="mini-dot" aria-hidden="true" />
           <span className="mini-name">{state.active.name}</span>
           <span className="mini-clock">{fmtClock((now - state.active.startedAt) / 1000)}</span>
-          <span className="mini-cta">Resume</span>
+          <span className="mini-cta">{t('Resume')}</span>
         </button>
       )}
       {isTab && (
-        <nav className="tabs" aria-label="Main">
-          {TABS.map((t) => {
-            const on = (section ?? '') === t.path;
+        <nav className="tabs" aria-label={t('Main')}>
+          {TABS.map((tab) => {
+            const on = (section ?? '') === tab.path;
             return (
               <button
-                key={t.path}
+                key={tab.path}
                 className={'tab' + (on ? ' on' : '')}
                 aria-current={on ? 'page' : undefined}
-                onClick={() => go(t.path, { replace: true })}
+                onClick={() => go(tab.path, { replace: true })}
               >
-                <Icon name={t.icon} />
-                <span>{t.label}</span>
+                <Icon name={tab.icon} />
+                <span>{t(tab.label)}</span>
               </button>
             );
           })}
