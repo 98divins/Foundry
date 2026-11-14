@@ -102,9 +102,15 @@
 * {
   box-sizing: border-box;
 }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 html,
 body {
   margin: 0;
+  /* Nothing may push the page wider than the screen. */
+  overflow-x: clip;
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-body);
@@ -130,6 +136,14 @@ textarea {
 }
 button {
   cursor: pointer;
+}
+/* iOS zooms into any field under 16px and stays zoomed: keep fields at 16px on touch screens. */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='color']),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
 }
 button:disabled {
   cursor: default;
@@ -179,6 +193,8 @@ ul {
 .app {
   max-width: 560px;
   margin: 0 auto;
+  /* Start below the iPhone status bar / notch (the app runs full screen). */
+  padding-top: env(safe-area-inset-top, 0px);
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -1984,9 +2000,16 @@ span.ex-photo {
 
 .routine-entry {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   margin-top: 6px;
+}
+.routine-entry .btn {
+  min-width: 0;
+  padding: 0 10px;
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
 }
 .program-card {
   width: 100%;
@@ -2396,7 +2419,8 @@ span.ex-photo {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  padding-block: 48px 32px;
+  padding-top: calc(48px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
   padding-left: max(24px, env(safe-area-inset-left, 0px));
   padding-right: max(24px, env(safe-area-inset-right, 0px));
 }

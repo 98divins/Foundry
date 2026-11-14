@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultState } from '../store';
 import type { State } from '../types';
-import { emptyMeta, hasData, loginAction, refreshAction } from './sync';
+import { emptyMeta, hasData, loginAction, refreshAction, sameTime } from './sync';
 
 const empty = defaultState();
 const withData: State = { ...defaultState(), routines: [{ id: 'r', name: 'Push', exercises: [], updatedAt: 0 }] };
@@ -43,5 +43,14 @@ describe('sync decisions', () => {
     expect(refreshAction({ ...m, dirty: true }, 'A')).toBe('upload');
     expect(refreshAction({ ...m, dirty: true }, 'B')).toBe('ask');
     expect(refreshAction({ ...m, dirty: true, remoteUpdatedAt: null }, null)).toBe('upload');
+  });
+});
+
+describe('timestamps from Postgres', () => {
+  it('treats "…Z" and "…+00:00" for the same instant as unchanged', () => {
+    const meta = { userId: 'u', remoteUpdatedAt: '2026-11-14T17:15:16.123Z', dirty: true, lastSyncAt: 1 };
+    expect(sameTime('2026-11-14T17:15:16.123+00:00', meta.remoteUpdatedAt)).toBe(true);
+    expect(refreshAction(meta, '2026-11-14T17:15:16.123+00:00')).toBe('upload');
+    expect(refreshAction(meta, '2026-11-14T17:20:00+00:00')).toBe('ask');
   });
 });

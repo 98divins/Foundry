@@ -50,6 +50,14 @@ export function summary(s: State) {
   };
 }
 
+/** Same instant? The app writes "…Z", Postgres answers "…+00:00": compare times, not strings. */
+export function sameTime(a: string | null, b: string | null): boolean {
+  if (!a || !b) return a === b;
+  const x = Date.parse(a);
+  const y = Date.parse(b);
+  return Number.isNaN(x) || Number.isNaN(y) ? a === b : x === y;
+}
+
 export type LoginAction = 'upload' | 'download' | 'ask' | 'none';
 
 /**
@@ -68,7 +76,7 @@ export function loginAction(
   if (!remote) return hasData(local) ? 'upload' : 'none';
   if (!hasData(local)) return 'download';
   if (meta.userId === userId) {
-    const remoteChanged = remote.updatedAt !== meta.remoteUpdatedAt;
+    const remoteChanged = !sameTime(remote.updatedAt, meta.remoteUpdatedAt);
     if (!meta.dirty) return remoteChanged ? 'download' : 'none';
     return remoteChanged ? 'ask' : 'upload';
   }
@@ -77,7 +85,7 @@ export function loginAction(
 
 /** When the app comes back to the foreground or the network returns. */
 export function refreshAction(meta: SyncMeta, remoteUpdatedAt: string | null): 'upload' | 'download' | 'ask' | 'none' {
-  const remoteChanged = !!remoteUpdatedAt && remoteUpdatedAt !== meta.remoteUpdatedAt;
+  const remoteChanged = !!remoteUpdatedAt && !sameTime(remoteUpdatedAt, meta.remoteUpdatedAt);
   if (meta.dirty) return remoteChanged ? 'ask' : 'upload';
   return remoteChanged ? 'download' : 'none';
 }
