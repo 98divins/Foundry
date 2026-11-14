@@ -16,6 +16,9 @@ import { WorkoutDetail } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 import { useStore } from './store';
 import { CloudDialogs } from './components/Account';
+import { QuickStart, Splash, Welcome } from './components/Onboarding';
+import { useCloud } from './cloud/cloud';
+import { hasData } from './cloud/sync';
 import { dayKey, type Meal } from './nutrition';
 import { NutritionHome } from './screens/nutrition/NutritionHome';
 import { AddFood } from './screens/nutrition/AddFood';
@@ -42,6 +45,23 @@ export function App() {
   const nutritionDay = section === 'n' && (!param || /^\d{4}-\d{2}-\d{2}$/.test(param));
   const isTab = TABS.some((t) => t.path === (section ?? '')) && (section !== 'n' || nutritionDay);
   const now = useNow(1000, !!state.active && section !== 'active');
+
+  const cloud = useCloud();
+  // Accounts are required: nothing but the welcome flow until someone is signed in.
+  if (cloud.configured) {
+    if (!cloud.authReady) return <Splash />;
+    if (!cloud.user)
+      return (
+        <>
+          <Welcome />
+          <CloudDialogs />
+        </>
+      );
+    // A brand-new, empty account gets the quick start once (after its first sync, so a
+    // returning user on a new phone is not asked again).
+    if (cloud.initialSynced && !state.settings.onboarded && !hasData(state) && cloud.status !== 'conflict')
+      return <QuickStart />;
+  }
 
   let screen;
   switch (section) {

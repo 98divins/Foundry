@@ -117,6 +117,8 @@ export interface Settings {
   exerciseLang: NameLang;
   /** When the last backup file was saved (data otherwise lives only on this device). */
   lastBackupAt?: number | null;
+  /** Set once a new account has gone through the quick start. */
+  onboarded?: boolean;
 }
 
 export interface RestTimer {

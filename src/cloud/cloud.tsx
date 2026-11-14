@@ -1,6 +1,6 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { parseBackup, useStore } from '../store';
+import { defaultState, parseBackup, useStore } from '../store';
 import type { State } from '../types';
 import { appUrl, cloudConfigured, SUPABASE_KEY, SUPABASE_URL } from './config';
 import { emptyMeta, loadMeta, loginAction, refreshAction, saveMeta, summary, type SyncMeta } from './sync';
@@ -16,6 +16,10 @@ interface Conflict {
 
 interface CloudCtx {
   configured: boolean;
+  /** False until the saved session (if any) has been read: avoids flashing the welcome screen. */
+  authReady: boolean;
+  /** True once the first sync after sign-in has finished (or is waiting on a conflict choice). */
+  initialSynced: boolean;
   user: User | null;
   status: SyncStatus;
   error: string;
@@ -25,8 +29,10 @@ interface CloudCtx {
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string) => Promise<string | null>;
   resetPassword: (email: string) => Promise<string | null>;
+  resendConfirmation: (email: string) => Promise<string | null>;
   setNewPassword: (password: string) => Promise<string | null>;
-  signOut: () => Promise<void>;
+  /** Returns an error when unsent changes cannot be uploaded (offline): signing out would lose them. */
+  signOut: () => Promise<string | null>;
   deleteAccount: () => Promise<string | null>;
   syncNow: () => Promise<void>;
   resolve: (keep: 'local' | 'remote') => Promise<void>;
@@ -66,6 +72,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState('');
   const [conflict, setConflict] = useState<Conflict | null>(null);
   const [recovering, setRecovering] = useState(false);
+  const [authReady, setAuthReady] = useState(!configured);
+  const [initialSynced, setInitialSynced] = useState(false);
   const [meta, setMetaState] = useState<SyncMeta>(loadMeta);
   const metaRef = useRef(meta);
   const stateRef = useRef(state);
@@ -137,6 +145,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
         setError('');
       } catch (e) {
         fail(e);
+      } finally {
+        setInitialSynced(true);
       }
     },
     [fetchRemote, upload, applyRemote, setMeta, fail],
@@ -173,14 +183,15 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     if (!configured) return;
     let unsub = () => {};
     getClient().then(async (sb) => {
-      if (!sb) return;
-      const { data } = await sb.auth.getSession();
+      if (!sb) return setAuthReady(true);
+      const { data } = await sb.auth.getSession().catch(() => ({ data: { session: null } }));
       // The email links come back with ?code=…; drop it from the address once used.
       if (location.search.includes('code=')) history.replaceState(history.state, '', location.pathname + location.hash);
       if (data.session?.user) {
         setUser(data.session.user);
         onLogin(data.session.user);
       }
+      setAuthReady(true);
       const { data: sub } = sb.auth.onAuthStateChange((event, session) => {
         if (event === 'PASSWORD_RECOVERY') setRecovering(true);
         if (event === 'SIGNED_IN' && session?.user) {
@@ -192,6 +203,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
         if (event === 'SIGNED_OUT') {
           setUser(null);
           ready.current = false;
+          setInitialSynced(false);
           setStatus('signed-out');
         }
       });
@@ -229,8 +241,16 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     };
   }, [user, refresh]);
 
+  /** Accounts are required: once signed out, this device keeps no one's data. */
+  const clearDevice = () => {
+    setMeta(emptyMeta());
+    update(() => defaultState());
+  };
+
   const value: CloudCtx = {
     configured,
+    authReady,
+    initialSynced,
     user,
     status,
     error,
@@ -250,6 +270,12 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       if (e) return explain(e.message);
       return data.session ? null : 'CHECK_EMAIL';
     },
+    resendConfirmation: async (email) => {
+      const sb = await getClient();
+      if (!sb) return 'Cloud sync is not set up.';
+      const { error: e } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: appUrl() } });
+      return e ? explain(e.message) : null;
+    },
     resetPassword: async (email) => {
       const sb = await getClient();
       if (!sb) return 'Cloud sync is not set up.';
@@ -265,10 +291,17 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     },
     signOut: async () => {
       const sb = await getClient();
-      // Send anything pending first, so nothing is lost on this account.
-      if (user && metaRef.current.dirty && navigator.onLine) await upload(user.id).catch(() => {});
+      // Send anything pending first; with no connection, keep the session rather than lose changes.
+      if (user && metaRef.current.dirty) {
+        try {
+          await upload(user.id);
+        } catch {
+          return 'You have changes that are not saved to your account yet. Connect to the internet, then log out.';
+        }
+      }
       await sb?.auth.signOut();
-      setMeta(emptyMeta());
+      clearDevice();
+      return null;
     },
     deleteAccount: async () => {
       const sb = await getClient();
@@ -276,7 +309,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       const { error: e } = await sb.rpc('delete_my_account');
       if (e) return explain(e.message);
       await sb.auth.signOut();
-      setMeta(emptyMeta());
+      clearDevice();
       return null;
     },
     syncNow: refresh,

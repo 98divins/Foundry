@@ -50,13 +50,19 @@ export function AccountSection() {
         {c.error && <p className="field-error">{c.error}</p>}
         <p className="muted small">
           Your workouts, routines and nutrition are saved to your account and follow you on every device where you sign
-          in.
+          in. Logging out removes them from this phone (they stay in your account).
         </p>
         <div className="btn-grid">
           <button className="btn" onClick={() => c.syncNow()} disabled={c.status === 'syncing'}>
             Sync now
           </button>
-          <button className="btn" onClick={() => c.signOut()}>
+          <button
+            className="btn"
+            onClick={async () => {
+              const e = await c.signOut();
+              if (e) setMsg({ text: e, error: true });
+            }}
+          >
             Log out
           </button>
         </div>
