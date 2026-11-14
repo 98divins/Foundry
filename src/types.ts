@@ -119,6 +119,8 @@ export interface Settings {
   lastBackupAt?: number | null;
   /** Set once a new account has gone through the quick start. */
   onboarded?: boolean;
+  /** Height entry: centimetres, or feet and inches. Stored in cm either way. */
+  heightUnit?: 'cm' | 'in';
 }
 
 export interface RestTimer {

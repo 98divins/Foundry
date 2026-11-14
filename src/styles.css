@@ -2462,3 +2462,12 @@ span.ex-photo {
   place-items: center;
   animation: fade 0.4s ease-out;
 }
+
+.height-ftin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.height-ftin .num {
+  width: 56px;
+}

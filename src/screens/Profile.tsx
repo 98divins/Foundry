@@ -75,6 +75,18 @@ export function SettingsPage() {
             </select>
           </label>
           <div className="setting">
+            <span>Height</span>
+            <Segmented<'cm' | 'in'>
+              label="Height unit"
+              value={state.settings.heightUnit ?? 'cm'}
+              onChange={(heightUnit) => update((s) => ({ ...s, settings: { ...s.settings, heightUnit } }))}
+              options={[
+                { value: 'cm', label: 'cm' },
+                { value: 'in', label: 'ft / in' },
+              ]}
+            />
+          </div>
+          <div className="setting">
             <span>Exercise names</span>
             <Segmented<NameLang>
               label="Exercise names"

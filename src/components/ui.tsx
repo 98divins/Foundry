@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { fmtClock, parseTime } from '../utils';
+import { cmToFtIn, fmtClock, ftInToCm, parseTime } from '../utils';
 
 /* ---------- Icons (24px stroke set) ---------- */
 
@@ -308,5 +308,19 @@ export function Logo({ size = 26 }: { size?: number }) {
       <path d="M206 214h112v36h-74v20h60v34h-60v52h-38z" fill="var(--bg)" />
       <path d="M376 116l14 26 26 14-26 14-14 26-14-26-26-14 26-14z" fill="var(--gold)" />
     </svg>
+  );
+}
+
+/** Height in the user's unit: one field in cm, or feet + inches. Always reports centimetres. */
+export function HeightInput({ cm, unit, onChange, id }: { cm: number; unit: 'cm' | 'in'; onChange: (cm: number) => void; id: string }) {
+  if (unit === 'cm') return <NumInput id={id} label="Height in cm" value={cm || null} onChange={(v) => onChange(v ?? 0)} />;
+  const { ft, inch } = cmToFtIn(cm);
+  return (
+    <span className="height-ftin">
+      <NumInput id={id + '-ft'} label="Feet" decimal={false} value={cm ? ft : null} onChange={(v) => onChange(ftInToCm(v ?? 0, inch))} />
+      <span className="muted small">ft</span>
+      <NumInput id={id + '-in'} label="Inches" decimal={false} value={cm ? inch : null} onChange={(v) => onChange(ftInToCm(ft, Math.min(11, v ?? 0)))} />
+      <span className="muted small">in</span>
+    </span>
   );
 }

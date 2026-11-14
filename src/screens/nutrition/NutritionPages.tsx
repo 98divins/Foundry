@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LineChart } from '../../components/Charts';
-import { Header, Icon, NumInput, Segmented, Stat } from '../../components/ui';
+import { Header, HeightInput, Icon, NumInput, Segmented, Stat } from '../../components/ui';
 import { back, go } from '../../hooks';
 import {
   ACTIVITY_FACTOR,
@@ -18,7 +18,7 @@ import {
   type NutritionState,
   type Sex,
 } from '../../nutrition';
-import { useNutrition } from '../../store';
+import { useNutrition, useStore } from '../../store';
 import { fmtNum, fromDisplay, toDisplay } from '../../utils';
 
 const ts = (key: string) => parseDay(key).getTime();
@@ -201,6 +201,8 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 
 export function PlanPage({ setup }: { setup?: boolean }) {
   const { n, setN, unit } = useNutrition();
+  const { state } = useStore();
+  const heightUnit = state.settings.heightUnit ?? 'cm';
   const [draft, setDraft] = useState<NutritionState>(n);
   const [profile, setProfile] = useState(
     n.profile ?? { sex: 'male' as Sex, birthYear: new Date().getFullYear() - 30, heightCm: 175, activity: 'moderate' as Activity },
@@ -265,8 +267,8 @@ export function PlanPage({ setup }: { setup?: boolean }) {
               />
             </label>
             <label className="field">
-              <span>Height (cm)</span>
-              <NumInput id="p-height" label="Height in cm" value={profile.heightCm} onChange={(v) => setProfile({ ...profile, heightCm: v ?? 0 })} />
+              <span>Height ({heightUnit === 'cm' ? 'cm' : 'ft, in'})</span>
+              <HeightInput id="p-height" cm={profile.heightCm} unit={heightUnit} onChange={(heightCm) => setProfile({ ...profile, heightCm })} />
             </label>
           </div>
           {needsWeight && (

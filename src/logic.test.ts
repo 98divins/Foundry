@@ -228,3 +228,15 @@ describe('csv', () => {
     expect(() => importWorkoutCsv('name,value\na,1', LIBRARY, [])).toThrow(/Missing column/);
   });
 });
+
+describe('height units', () => {
+  it('converts between cm and feet + inches', async () => {
+    const { cmToFtIn, ftInToCm, fmtHeight } = await import('./utils');
+    expect(cmToFtIn(180)).toEqual({ ft: 5, inch: 11 });
+    expect(cmToFtIn(152.4)).toEqual({ ft: 5, inch: 0 });
+    expect(ftInToCm(5, 11)).toBe(180.3);
+    expect(cmToFtIn(ftInToCm(6, 2))).toEqual({ ft: 6, inch: 2 });
+    expect(fmtHeight(180, 'in')).toBe('5′11″');
+    expect(fmtHeight(180.3)).toBe('180 cm');
+  });
+});

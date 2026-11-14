@@ -298,3 +298,17 @@ export function download(filename: string, content: string, type: string) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/** 180 cm → { ft: 5, inch: 11 } (rounded to the nearest inch). */
+export function cmToFtIn(cm: number): { ft: number; inch: number } {
+  const total = Math.round(cm / 2.54);
+  return { ft: Math.floor(total / 12), inch: total % 12 };
+}
+
+export const ftInToCm = (ft: number, inch: number) => Math.round((ft * 12 + inch) * 2.54 * 10) / 10;
+
+export function fmtHeight(cm: number, unit: 'cm' | 'in' = 'cm'): string {
+  if (unit === 'cm') return `${Math.round(cm)} cm`;
+  const { ft, inch } = cmToFtIn(cm);
+  return `${ft}′${inch}″`;
+}
