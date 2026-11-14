@@ -721,6 +721,8 @@ export const FR: Record<string, string> = {
   "{n} empty sets will be left out, along with exercises you did not start. Nothing you logged is lost.": "{n} séries vides seront ignorées, ainsi que les exercices non commencés. Rien de ce que tu as noté n’est perdu.",
   "{n} exercise is not in this app’s library and will show as “Deleted exercise”. Update the app, or replace it after adding.": "{n} exercice n’est pas dans la bibliothèque de l’app et s’affichera comme « Exercice supprimé ». Mets l’app à jour, ou remplace-le après l’ajout.",
   "{n} exercises are not in this app’s library and will show as “Deleted exercise”. Update the app, or replace them after adding.": "{n} exercices ne sont pas dans la bibliothèque de l’app et s’afficheront comme « Exercice supprimé ». Mets l’app à jour, ou remplace-les après l’ajout.",
+  "{n} food": "{n} aliment",
+  "{n} foods": "{n} aliments",
   "{n} servings": "{n} portions",
   "{n} workout": "{n} séance",
   "{n} workouts": "{n} séances",

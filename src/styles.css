@@ -2826,3 +2826,37 @@ span.ex-photo {
   justify-content: center;
   text-align: center;
 }
+
+/* Folded meals: the header shows the totals, a tap shows the foods. */
+.meal-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 4px 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+}
+.meal-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.meal-title svg {
+  flex: none;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+.meal-toggle[aria-expanded='true'] .meal-title svg {
+  transform: rotate(90deg);
+}
+.meal-toggle .muted.small {
+  padding-left: 22px;
+}
+.meal-head h2.meal-title-empty {
+  padding-left: 22px;
+}

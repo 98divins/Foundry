@@ -20,7 +20,7 @@ import {
 import { useNutrition } from '../../store';
 import { fmtNum, fromDisplay, toDisplay, uid } from '../../utils';
 import { EntrySheet } from './EntrySheet';
-import { locale, t } from '../../i18n';
+import { locale, t, tp } from '../../i18n';
 
 export function fmtDay(key: string): string {
   const today = dayKey();
@@ -215,6 +215,9 @@ function EntryRow({ e, onEdit }: { e: FoodEntry; onEdit: (e: FoodEntry) => void 
   );
 }
 
+/** Meals the user unfolded during this session. */
+const openMeals = new Set<Meal>();
+
 function MealSection({
   meal,
   entries,
@@ -231,6 +234,14 @@ function MealSection({
   const [groupMenu, setGroupMenu] = useState<FoodEntry[] | null>(null);
   const [naming, setNaming] = useState<string | null>(null);
   const kcal = entries.reduce((t, e) => t + e.kcal, 0);
+  const sum = (k: 'protein' | 'carbs' | 'fat') => fmtNum(Math.round(entries.reduce((t, e) => t + e[k], 0)));
+  // Meals start folded so the day stays short; the choice is kept while the app is open.
+  const [expanded, setExpandedState] = useState(() => openMeals.has(meal));
+  const setExpanded = (v: boolean) => {
+    if (v) openMeals.add(meal);
+    else openMeals.delete(meal);
+    setExpandedState(v);
+  };
 
   // Entries logged together from a saved meal show as one block.
   const blocks: (FoodEntry | FoodEntry[])[] = [];
@@ -258,12 +269,23 @@ function MealSection({
   return (
     <section className="meal">
       <div className="meal-head">
-        <h2>{t(MEAL_LABEL[meal])}</h2>
-        <span className="muted small">{kcal ? `${Math.round(kcal)} kcal` : ''}</span>
+        {entries.length ? (
+          <button className="meal-toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+            <span className="meal-title">
+              <Icon name="chevron" size={16} />
+              <h2>{t(MEAL_LABEL[meal])}</h2>
+            </span>
+            <span className="muted small">
+              {tp(entries.length, '{n} food', '{n} foods')} · {Math.round(kcal)} kcal · {t('P {p} · C {c} · F {f}', { p: sum('protein'), c: sum('carbs'), f: sum('fat') })}
+            </span>
+          </button>
+        ) : (
+          <h2 className="meal-title-empty">{t(MEAL_LABEL[meal])}</h2>
+        )}
         <button className="btn btn-small" onClick={onAdd} aria-label={t('Add food to {meal}', { meal: t(MEAL_LABEL[meal]) })}>
           <Icon name="plus" size={16} />{' '}{t('Add')}</button>
       </div>
-      {blocks.length > 0 && (
+      {expanded && blocks.length > 0 && (
         <ul className="entries">
           {blocks.map((b) =>
             Array.isArray(b) ? (
@@ -296,7 +318,7 @@ function MealSection({
           )}
         </ul>
       )}
-      {entries.length > 1 && (
+      {expanded && entries.length > 1 && (
         <button className="add-in-folder" onClick={() => setNaming('')}>
           <Icon name="copy" size={15} />{' '}{t('Save as meal')}</button>
       )}
