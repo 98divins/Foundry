@@ -466,8 +466,27 @@ textarea:focus {
   gap: 12px;
   flex-wrap: wrap;
 }
+.field-row > .field {
+  flex: 1 1 0;
+  min-width: 0;
+}
 .field-narrow {
-  flex: 0 1 140px;
+  flex: 0 1 120px !important;
+}
+/* iOS gives date and time fields a fixed minimum width: let them shrink to their column. */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
+}
+input::-webkit-date-and-time-value {
+  text-align: left;
 }
 .field-error {
   color: var(--danger);
