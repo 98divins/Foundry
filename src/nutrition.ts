@@ -16,7 +16,8 @@
 
 export type Sex = 'male' | 'female';
 export type Activity = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+/** 'snacks' is the after-lunch slot (it was the only snack slot before, so old entries land there). */
+export type Meal = 'breakfast' | 'snack_breakfast' | 'lunch' | 'snacks' | 'dinner' | 'snack_dinner';
 
 export interface Macros {
   kcal: number;
@@ -52,7 +53,20 @@ export interface FoodEntry {
   carbs: number;
   fat: number;
   createdAt: number;
+  /** Set when the entry was logged as part of a saved meal. */
+  group?: { id: string; savedMealId: string; name: string; servings: number };
 }
+
+/** A meal saved to log in one go. Logging copies its items, so past days keep what was eaten. */
+export interface SavedMeal {
+  id: string;
+  name: string;
+  items: MealItem[];
+  updatedAt: number;
+}
+
+/** One ingredient of a saved meal, for one serving of the meal. */
+export type MealItem = Omit<FoodEntry, 'id' | 'date' | 'meal' | 'createdAt' | 'group'>;
 
 export interface WeighIn {
   date: string;
@@ -88,6 +102,9 @@ export interface NutritionState {
   /** Days the user marked as not fully logged: left out of the expenditure estimate. */
   incompleteDays: string[];
   checkIns: CheckIn[];
+  /** Food ids starred by the user. */
+  favorites: string[];
+  savedMeals: SavedMeal[];
 }
 
 export const defaultNutrition = (): NutritionState => ({
@@ -101,6 +118,8 @@ export const defaultNutrition = (): NutritionState => ({
   weights: [],
   incompleteDays: [],
   checkIns: [],
+  favorites: [],
+  savedMeals: [],
 });
 
 export const KCAL_PER_KG = 7700;
@@ -345,8 +364,95 @@ export function recentStats(n: NutritionState, days = 14, today = dayKey()) {
 
 export const MEAL_LABEL: Record<Meal, string> = {
   breakfast: 'Breakfast',
+  snack_breakfast: 'Snacks after breakfast',
   lunch: 'Lunch',
+  snacks: 'Snacks after lunch',
   dinner: 'Dinner',
-  snacks: 'Snacks',
+  snack_dinner: 'Snacks after dinner',
 };
-export const MEALS: Meal[] = ['breakfast', 'lunch', 'dinner', 'snacks'];
+export const MEALS: Meal[] = ['breakfast', 'snack_breakfast', 'lunch', 'snacks', 'dinner', 'snack_dinner'];
+
+/* ---------- Saved meals ---------- */
+
+export function mealTotals(items: MealItem[], servings = 1): Macros {
+  const t = items.reduce(
+    (a, i) => ({ kcal: a.kcal + i.kcal, protein: a.protein + i.protein, carbs: a.carbs + i.carbs, fat: a.fat + i.fat }),
+    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+  return {
+    kcal: Math.round(t.kcal * servings),
+    protein: round1(t.protein * servings),
+    carbs: round1(t.carbs * servings),
+    fat: round1(t.fat * servings),
+  };
+}
+
+const scaleItem = (i: MealItem, k: number): MealItem => ({
+  ...i,
+  grams: i.grams != null ? round1(i.grams * k) : null,
+  kcal: Math.round(i.kcal * k),
+  protein: round1(i.protein * k),
+  carbs: round1(i.carbs * k),
+  fat: round1(i.fat * k),
+});
+
+/** Entries for one logging of a saved meal: a copy of its items × servings, grouped together. */
+export function entriesFromMeal(
+  sm: SavedMeal,
+  servings: number,
+  date: string,
+  meal: Meal,
+  makeId: () => string,
+  now = Date.now(),
+): FoodEntry[] {
+  const group = { id: makeId(), savedMealId: sm.id, name: sm.name, servings };
+  return sm.items.map((i, k) => ({ ...scaleItem(i, servings), id: makeId(), date, meal, createdAt: now + k, group }));
+}
+
+/** Items for a new saved meal from logged entries (e.g. "save this lunch as a meal"). */
+export function itemsFromEntries(entries: FoodEntry[]): MealItem[] {
+  return entries.map(({ foodId, name, brand, grams, kcal, protein, carbs, fat }) => ({
+    ...(foodId ? { foodId } : {}),
+    ...(brand ? { brand } : {}),
+    name,
+    grams,
+    kcal,
+    protein,
+    carbs,
+    fat,
+  }));
+}
+
+/**
+ * Optional retroactive update: every past logging of this meal gets the new items (at the
+ * servings it was logged with), keeping its day, slot and position. Returns the new log and the
+ * number of loggings changed.
+ */
+export function applyMealToLog(log: FoodEntry[], sm: SavedMeal, makeId: () => string): { log: FoodEntry[]; groups: number } {
+  const groups = new Map<string, FoodEntry[]>();
+  for (const e of log) if (e.group?.savedMealId === sm.id) groups.set(e.group.id, [...(groups.get(e.group.id) ?? []), e]);
+  if (!groups.size) return { log, groups: 0 };
+  const out: FoodEntry[] = [];
+  const done = new Set<string>();
+  for (const e of log) {
+    const g = e.group?.savedMealId === sm.id ? e.group : undefined;
+    if (!g) {
+      out.push(e);
+      continue;
+    }
+    if (done.has(g.id)) continue;
+    done.add(g.id);
+    const first = groups.get(g.id)![0];
+    out.push(
+      ...sm.items.map((i, k) => ({
+        ...scaleItem(i, g.servings),
+        id: makeId(),
+        date: first.date,
+        meal: first.meal,
+        createdAt: first.createdAt + k,
+        group: { ...g, name: sm.name },
+      })),
+    );
+  }
+  return { log: out, groups: groups.size };
+}

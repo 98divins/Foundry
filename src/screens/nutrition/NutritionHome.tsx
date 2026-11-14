@@ -12,12 +12,13 @@ import {
   MEAL_LABEL,
   MEALS,
   parseDay,
+  itemsFromEntries,
   type FoodEntry,
   type Macros,
   type Meal,
 } from '../../nutrition';
 import { useNutrition } from '../../store';
-import { fmtNum, fromDisplay, toDisplay } from '../../utils';
+import { fmtNum, fromDisplay, toDisplay, uid } from '../../utils';
 import { EntrySheet } from './EntrySheet';
 
 export function fmtDay(key: string): string {
@@ -153,7 +154,11 @@ export function NutritionHome({ date }: { date: string }) {
             <MacroBar label="Carbs" value={totals.carbs} target={targets?.carbs} tone="c" />
             <MacroBar label="Fat" value={totals.fat} target={targets?.fat} tone="f" />
           </div>
-          {!targets && <p className="muted small">Log a weigh-in to get your first targets.</p>}
+          {!targets && (
+            <p className="muted small">
+              {n.weights.length ? 'Open the weekly check-in above to get your targets.' : 'Log a weigh-in to get your first targets.'}
+            </p>
+          )}
         </section>
 
         <WeighInCard date={date} weigh={weigh?.kg ?? null} trend={trend} unit={unit} />
@@ -194,6 +199,9 @@ export function NutritionHome({ date }: { date: string }) {
           <button className="btn" onClick={() => go('n/insights')}>
             Expenditure
           </button>
+          <button className="btn" onClick={() => go('n/meals')}>
+            Meals
+          </button>
           <button className="btn" onClick={() => go('n/plan')}>
             Plan
           </button>
@@ -203,6 +211,23 @@ export function NutritionHome({ date }: { date: string }) {
       <EntrySheet entry={editing} onClose={() => setEditing(null)} />
       <CheckInSheet open={checkIn} onClose={() => setCheckIn(false)} current={targets} />
     </>
+  );
+}
+
+function EntryRow({ e, onEdit }: { e: FoodEntry; onEdit: (e: FoodEntry) => void }) {
+  return (
+    <li>
+      <button className="entry" onClick={() => onEdit(e)}>
+        <span className="entry-text">
+          <span className="entry-name">{e.name}</span>
+          <span className="muted small">
+            {e.grams != null ? `${fmtNum(e.grams)} g · ` : 'Quick add · '}P {fmtNum(Math.round(e.protein))} · C{' '}
+            {fmtNum(Math.round(e.carbs))} · F {fmtNum(Math.round(e.fat))}
+          </span>
+        </span>
+        <span className="entry-kcal">{Math.round(e.kcal)}</span>
+      </button>
+    </li>
   );
 }
 
@@ -217,7 +242,35 @@ function MealSection({
   onAdd: () => void;
   onEdit: (e: FoodEntry) => void;
 }) {
+  const { setN } = useNutrition();
+  const [open, setOpen] = useState<string | null>(null);
+  const [groupMenu, setGroupMenu] = useState<FoodEntry[] | null>(null);
+  const [naming, setNaming] = useState<string | null>(null);
   const kcal = entries.reduce((t, e) => t + e.kcal, 0);
+
+  // Entries logged together from a saved meal show as one block.
+  const blocks: (FoodEntry | FoodEntry[])[] = [];
+  const seen = new Map<string, FoodEntry[]>();
+  for (const e of entries) {
+    if (!e.group) blocks.push(e);
+    else if (seen.has(e.group.id)) seen.get(e.group.id)!.push(e);
+    else {
+      const g = [e];
+      seen.set(e.group.id, g);
+      blocks.push(g);
+    }
+  }
+
+  const saveAsMeal = (name: string) => {
+    const id = uid();
+    setN((x) => ({
+      ...x,
+      savedMeals: [...x.savedMeals, { id, name: name.trim() || MEAL_LABEL[meal], items: itemsFromEntries(entries), updatedAt: Date.now() }],
+    }));
+    setNaming(null);
+    go('n/meals/' + id);
+  };
+
   return (
     <section className="meal">
       <div className="meal-head">
@@ -227,24 +280,100 @@ function MealSection({
           <Icon name="plus" size={16} /> Add
         </button>
       </div>
-      {entries.length > 0 && (
+      {blocks.length > 0 && (
         <ul className="entries">
-          {entries.map((e) => (
-            <li key={e.id}>
-              <button className="entry" onClick={() => onEdit(e)}>
-                <span className="entry-text">
-                  <span className="entry-name">{e.name}</span>
-                  <span className="muted small">
-                    {e.grams != null ? `${fmtNum(e.grams)} g · ` : 'Quick add · '}P {fmtNum(Math.round(e.protein))} · C{' '}
-                    {fmtNum(Math.round(e.carbs))} · F {fmtNum(Math.round(e.fat))}
-                  </span>
-                </span>
-                <span className="entry-kcal">{Math.round(e.kcal)}</span>
-              </button>
-            </li>
-          ))}
+          {blocks.map((b) =>
+            Array.isArray(b) ? (
+              <li key={b[0].group!.id} className="meal-block">
+                <div className="entry">
+                  <button className="entry-text block-toggle" onClick={() => setOpen(open === b[0].group!.id ? null : b[0].group!.id)} aria-expanded={open === b[0].group!.id}>
+                    <span className="entry-name">
+                      <Icon name="chevron" size={14} /> {b[0].group!.name}
+                      {b[0].group!.servings !== 1 && <span className="muted"> × {b[0].group!.servings}</span>}
+                    </span>
+                    <span className="muted small">
+                      {b.length} foods · P {fmtNum(Math.round(b.reduce((t, e) => t + e.protein, 0)))} · C{' '}
+                      {fmtNum(Math.round(b.reduce((t, e) => t + e.carbs, 0)))} · F {fmtNum(Math.round(b.reduce((t, e) => t + e.fat, 0)))}
+                    </span>
+                  </button>
+                  <span className="entry-kcal">{Math.round(b.reduce((t, e) => t + e.kcal, 0))}</span>
+                  <button className="icon-btn" aria-label={`Options for ${b[0].group!.name}`} onClick={() => setGroupMenu(b)}>
+                    <Icon name="dots" />
+                  </button>
+                </div>
+                {open === b[0].group!.id && (
+                  <ul className="entries nested">
+                    {b.map((e) => (
+                      <EntryRow key={e.id} e={e} onEdit={onEdit} />
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ) : (
+              <EntryRow key={b.id} e={b} onEdit={onEdit} />
+            ),
+          )}
         </ul>
       )}
+      {entries.length > 1 && (
+        <button className="add-in-folder" onClick={() => setNaming('')}>
+          <Icon name="copy" size={15} /> Save as meal
+        </button>
+      )}
+
+      <Sheet open={!!groupMenu} onClose={() => setGroupMenu(null)} title={groupMenu?.[0].group?.name}>
+        {groupMenu && (
+          <div className="menu">
+            <button
+              className="menu-item"
+              onClick={() => {
+                const gid = groupMenu[0].group!.id;
+                setN((x) => ({ ...x, log: x.log.map((e) => (e.group?.id === gid ? { ...e, group: undefined } : e)) }));
+                setGroupMenu(null);
+              }}
+            >
+              <Icon name="unlink" size={18} /> Show as separate foods
+            </button>
+            <button className="menu-item" onClick={() => { go('n/meals/' + groupMenu[0].group!.savedMealId); setGroupMenu(null); }}>
+              <Icon name="edit" size={18} /> Edit the saved meal
+            </button>
+            <button
+              className="menu-item danger"
+              onClick={() => {
+                const gid = groupMenu[0].group!.id;
+                setN((x) => ({ ...x, log: x.log.filter((e) => e.group?.id !== gid) }));
+                setGroupMenu(null);
+              }}
+            >
+              <Icon name="trash" size={18} /> Remove from this day
+            </button>
+          </div>
+        )}
+      </Sheet>
+
+      <Sheet open={naming != null} onClose={() => setNaming(null)} title="Save as meal">
+        <form
+          className="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveAsMeal(naming ?? '');
+          }}
+        >
+          <p className="muted small">The {entries.length} foods of this {MEAL_LABEL[meal].toLowerCase()} become a meal you can log in one tap.</p>
+          <label className="field">
+            <span>Meal name</span>
+            <input id="save-meal-name" autoFocus placeholder="e.g. Usual breakfast" value={naming ?? ''} onChange={(e) => setNaming(e.target.value)} />
+          </label>
+          <div className="sheet-actions">
+            <button type="button" className="btn" onClick={() => setNaming(null)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={!naming?.trim()}>
+              Save meal
+            </button>
+          </div>
+        </form>
+      </Sheet>
     </section>
   );
 }

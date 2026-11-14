@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDays,
+  applyMealToLog,
+  entriesFromMeal,
+  itemsFromEntries,
+  mealTotals,
   checkInDue,
   computeTargets,
   currentExpenditure,
@@ -120,5 +124,54 @@ describe('targets and check-ins', () => {
     expect(checkInDue(after, '2026-09-13')).toBe(false); // Sunday
     expect(checkInDue(after, '2026-09-14')).toBe(true); // Monday
     expect(checkInDue({ ...after, checkInDay: 3 }, '2026-09-17')).toBe(true); // a week later anyway
+  });
+});
+
+describe('saved meals', () => {
+  let k = 0;
+  const id = () => 'id' + ++k;
+  const meal = {
+    id: 'm1',
+    name: 'Bowl',
+    updatedAt: 0,
+    items: [
+      { foodId: 'rice', name: 'Rice', grams: 150, kcal: 195, protein: 4, carbs: 42, fat: 0.5 },
+      { foodId: 'chicken', name: 'Chicken', grams: 120, kcal: 198, protein: 37, carbs: 0, fat: 4.3 },
+    ],
+  };
+
+  it('logs a copy of the items × servings, grouped', () => {
+    const e = entriesFromMeal(meal, 1.5, '2026-11-10', 'lunch', id, 1000);
+    expect(e).toHaveLength(2);
+    expect(e[0]).toMatchObject({ name: 'Rice', grams: 225, kcal: 293, date: '2026-11-10', meal: 'lunch' });
+    expect(e[0].group).toEqual(e[1].group);
+    expect(e[0].group).toMatchObject({ savedMealId: 'm1', servings: 1.5 });
+    expect(mealTotals(meal.items, 2).kcal).toBe(786);
+  });
+
+  it('leaves past days alone unless asked, then updates every logging at its servings', () => {
+    const past = [
+      ...entriesFromMeal(meal, 1, '2026-11-03', 'lunch', id, 1),
+      { id: 'other', date: '2026-11-03', meal: 'dinner' as const, name: 'Soup', grams: null, kcal: 300, protein: 10, carbs: 30, fat: 10, createdAt: 5 },
+      ...entriesFromMeal(meal, 2, '2026-11-04', 'dinner', id, 10),
+    ];
+    const edited = { ...meal, name: 'Bowl v2', items: [meal.items[0], { name: 'Avocado', grams: 50, kcal: 80, protein: 1, carbs: 4, fat: 7.5 }] };
+    // Editing the saved meal by itself changes nothing in the log (the log holds copies).
+    expect(past.filter((e) => e.name === 'Chicken')).toHaveLength(2);
+    const { log, groups } = applyMealToLog(past, edited, id);
+    expect(groups).toBe(2);
+    expect(log.filter((e) => e.name === 'Chicken')).toHaveLength(0);
+    const day2 = log.filter((e) => e.date === '2026-11-04');
+    expect(day2.map((e) => [e.name, e.kcal, e.meal])).toEqual([
+      ['Rice', 390, 'dinner'],
+      ['Avocado', 160, 'dinner'],
+    ]);
+    expect(day2[0].group?.name).toBe('Bowl v2');
+    expect(log.find((e) => e.id === 'other')).toBeTruthy();
+  });
+
+  it('turns logged entries into meal items', () => {
+    const items = itemsFromEntries(entriesFromMeal(meal, 1, '2026-11-10', 'lunch', id));
+    expect(items).toEqual(meal.items);
   });
 });

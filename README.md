@@ -31,6 +31,8 @@ All data stays on your device.
 
 ## Nutrition
 
+- **Six meal slots**: breakfast, snacks after breakfast, lunch, snacks after lunch, dinner, snacks after dinner.
+- **Favourite foods** (star) listed first, and **saved meals** logged in one tap with a number of servings. Create them from scratch or with “Save as meal” on a slot. Logging copies the meal, so editing it later changes future logs only, unless you tick “also update the days where it is already logged”.
 - **Food log** by meal: search 150 common foods with French names (built in, works offline), 5 900 more basic foods in English, and branded products from Open Food Facts by name or **barcode** (camera or typed). Quick add for calories and macros, and your own foods from the label.
 - **Weight trend**: daily weigh-ins smoothed into a trend line, so water swings do not hide progress.
 - **Adaptive expenditure**: starts from Mifflin-St Jeor × activity, then learns from your data. Each day it compares the last 3 weeks of intake with the slope of your weight and moves 10 % toward what that implies (7 700 kcal per kg). Days marked as not fully logged are left out.

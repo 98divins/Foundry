@@ -18,6 +18,7 @@ import { useStore } from './store';
 import { dayKey, type Meal } from './nutrition';
 import { NutritionHome } from './screens/nutrition/NutritionHome';
 import { AddFood } from './screens/nutrition/AddFood';
+import { MealEditor, MealsPage } from './screens/nutrition/SavedMeals';
 import { InsightsPage, PlanPage, WeightPage } from './screens/nutrition/NutritionPages';
 import { fmtClock } from './utils';
 
@@ -51,6 +52,7 @@ export function App() {
       else if (param === 'add') screen = <AddFood key={extra + extra2} date={extra ?? dayKey()} meal={(extra2 ?? 'snacks') as Meal} />;
       else if (param === 'weight') screen = <WeightPage />;
       else if (param === 'insights') screen = <InsightsPage />;
+      else if (param === 'meals') screen = extra ? <MealEditor key={extra} id={extra} /> : <MealsPage />;
       else screen = <PlanPage key={param} setup={param === 'setup'} />;
       break;
     case 'history':

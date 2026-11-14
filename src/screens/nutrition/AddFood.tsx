@@ -3,12 +3,23 @@ import { BarcodeScanner } from '../../components/BarcodeScanner';
 import { Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { back } from '../../hooks';
 import { FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods } from '../../foods';
-import { kcalFromMacros, MEAL_LABEL, MEALS, scaleFood, type Food, type FoodEntry, type Meal } from '../../nutrition';
+import {
+  entriesFromMeal,
+  kcalFromMacros,
+  MEAL_LABEL,
+  MEALS,
+  scaleFood,
+  type Food,
+  type FoodEntry,
+  type Meal,
+  type NutritionState,
+} from '../../nutrition';
+import { SavedMealsList } from './SavedMeals';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { fmtDay } from './NutritionHome';
 
-type Mode = 'search' | 'scan' | 'quick' | 'create';
+type Mode = 'search' | 'meals' | 'scan' | 'quick' | 'create';
 
 export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal }) {
   const { n, setN } = useNutrition();
@@ -47,9 +58,10 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
           onChange={setMode}
           options={[
             { value: 'search', label: 'Search' },
-            { value: 'scan', label: 'Barcode' },
-            { value: 'quick', label: 'Quick add' },
-            { value: 'create', label: 'New food' },
+            { value: 'meals', label: 'Meals' },
+            { value: 'scan', label: 'Scan' },
+            { value: 'quick', label: 'Quick' },
+            { value: 'create', label: 'New' },
           ]}
         />
         {added.length > 0 && (
@@ -64,7 +76,15 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
           </div>
         )}
 
-        {mode === 'search' && <SearchFoods foods={n.foods} log={n.log} onPick={setPicked} />}
+        {mode === 'search' && <SearchFoods foods={n.foods} log={n.log} favorites={n.favorites} onPick={setPicked} />}
+        {mode === 'meals' && (
+          <SavedMealsList
+            onLog={(sm, servings) => {
+              setN((x) => ({ ...x, log: [...x.log, ...entriesFromMeal(sm, servings, date, meal, uid)] }));
+              setAdded((a) => [...a, sm.name]);
+            }}
+          />
+        )}
         {mode === 'scan' && <ScanFood foods={n.foods} onPick={setPicked} onCreate={() => setMode('create')} />}
         {mode === 'quick' && <QuickAdd onAdd={(e) => log(e)} />}
         {mode === 'create' && (
@@ -80,6 +100,8 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
 
       <AmountSheet
         food={picked}
+        favorite={!!picked && n.favorites.includes(picked.id)}
+        onToggleFavorite={(f) => setN((x) => toggleFavorite(x, f))}
         onClose={() => setPicked(null)}
         onAdd={(food, grams) => {
           log({ foodId: food.id, name: food.name, brand: food.brand, grams, ...scaleFood(food, grams) }, food);
@@ -90,13 +112,14 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
   );
 }
 
-function FoodRow({ food, onPick }: { food: Food; onPick: (f: Food) => void }) {
+export function FoodRow({ food, onPick, favorite }: { food: Food; onPick: (f: Food) => void; favorite?: boolean }) {
   const p = food.per100;
   return (
     <li>
       <button className="food-row" onClick={() => onPick(food)}>
         <span className="entry-text">
           <span className="entry-name">
+            {favorite && <span className="fav-star" aria-label="Favourite">★ </span>}
             {food.name}
             {food.source === 'custom' && <span className="tag">Mine</span>}
           </span>
@@ -111,7 +134,17 @@ function FoodRow({ food, onPick }: { food: Food; onPick: (f: Food) => void }) {
   );
 }
 
-function SearchFoods({ foods, log, onPick }: { foods: Food[]; log: FoodEntry[]; onPick: (f: Food) => void }) {
+export function SearchFoods({
+  foods,
+  log,
+  favorites,
+  onPick,
+}: {
+  foods: Food[];
+  log: FoodEntry[];
+  favorites: string[];
+  onPick: (f: Food) => void;
+}) {
   const [query, setQuery] = useState('');
   const [generic, setGeneric] = useState<Food[] | null>(null);
   const [online, setOnline] = useState<{ q: string; foods: Food[] } | null>(null);
@@ -134,7 +167,15 @@ function SearchFoods({ foods, log, onPick }: { foods: Food[]; log: FoodEntry[]; 
     return out;
   }, [local, log]);
 
+  const favs = useMemo(() => {
+    const byId = new Map(local.map((f) => [f.id, f]));
+    return favorites.map((id) => byId.get(id)).filter((f): f is Food => !!f);
+  }, [local, favorites]);
+  const isFav = (f: Food) => favorites.includes(f.id);
+
   const results = query.trim() ? searchFoods(local, query) : [];
+  // Favourites first among matches.
+  results.sort((a, b) => Number(isFav(b)) - Number(isFav(a)));
   const more = query.trim() && generic ? searchFoods(generic, query, 30).filter((f) => !results.includes(f)) : [];
 
   const loadMore = async () => {
@@ -186,13 +227,23 @@ function SearchFoods({ foods, log, onPick }: { foods: Food[]; log: FoodEntry[]; 
       </form>
       {error && <p className="field-error">{error}</p>}
 
+      {!query.trim() && favs.length > 0 && (
+        <>
+          <h3 className="list-title">Favourites</h3>
+          <ul className="food-list">
+            {favs.map((f) => (
+              <FoodRow key={f.id} food={f} onPick={onPick} favorite />
+            ))}
+          </ul>
+        </>
+      )}
       {!query.trim() && (
         <>
           <h3 className="list-title">Recent</h3>
           {recent.length ? (
             <ul className="food-list">
               {recent.map((f) => (
-                <FoodRow key={f.id} food={f} onPick={onPick} />
+                <FoodRow key={f.id} food={f} onPick={onPick} favorite={isFav(f)} />
               ))}
             </ul>
           ) : (
@@ -205,7 +256,7 @@ function SearchFoods({ foods, log, onPick }: { foods: Food[]; log: FoodEntry[]; 
         <>
           <ul className="food-list">
             {results.map((f) => (
-              <FoodRow key={f.id} food={f} onPick={onPick} />
+              <FoodRow key={f.id} food={f} onPick={onPick} favorite={isFav(f)} />
             ))}
             {more.map((f) => (
               <FoodRow key={f.id} food={f} onPick={onPick} />
@@ -444,7 +495,21 @@ function CreateFood({ onCreate }: { onCreate: (f: Food) => void }) {
   );
 }
 
-function AmountSheet({ food, onClose, onAdd }: { food: Food | null; onClose: () => void; onAdd: (f: Food, grams: number) => void }) {
+export function AmountSheet({
+  food,
+  onClose,
+  onAdd,
+  favorite,
+  onToggleFavorite,
+  addLabel = 'Add',
+}: {
+  food: Food | null;
+  onClose: () => void;
+  onAdd: (f: Food, grams: number) => void;
+  favorite?: boolean;
+  onToggleFavorite?: (f: Food) => void;
+  addLabel?: string;
+}) {
   const [grams, setGrams] = useState<number | null>(null);
   const [lastId, setLastId] = useState<string | null>(null);
   if (food && food.id !== lastId) {
@@ -467,7 +532,19 @@ function AmountSheet({ food, onClose, onAdd }: { food: Food | null; onClose: () 
           if (grams) onAdd(food, grams);
         }}
       >
-        {food.brand && <p className="muted small">{food.brand}</p>}
+        <div className="amount-head">
+          <span className="muted small">{food.brand ?? ''}</span>
+          {onToggleFavorite && (
+            <button
+              type="button"
+              className={'fav-btn' + (favorite ? ' on' : '')}
+              aria-pressed={favorite}
+              onClick={() => onToggleFavorite(food)}
+            >
+              {favorite ? '★ Favourite' : '☆ Add to favourites'}
+            </button>
+          )}
+        </div>
         <div className="chips wrap">
           {presets.map((p) => (
             <button type="button" key={p.label} className={'chip' + (grams === p.g ? ' on' : '')} onClick={() => setGrams(p.g)}>
@@ -488,10 +565,20 @@ function AmountSheet({ food, onClose, onAdd }: { food: Food | null; onClose: () 
             Cancel
           </button>
           <button type="submit" className="btn btn-primary" disabled={!grams}>
-            Add
+            {addLabel}
           </button>
         </div>
       </form>
     </Sheet>
   );
+}
+
+/** Stars or unstars a food; foods from outside the built-in list are kept so the star survives. */
+export function toggleFavorite(n: NutritionState, f: Food): NutritionState {
+  const on = n.favorites.includes(f.id);
+  return {
+    ...n,
+    favorites: on ? n.favorites.filter((id) => id !== f.id) : [...n.favorites, f.id],
+    foods: !on && !f.id.startsWith('g-fr-') && !n.foods.some((x) => x.id === f.id) ? [...n.foods, f] : n.foods,
+  };
 }
