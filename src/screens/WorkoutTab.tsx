@@ -171,17 +171,23 @@ export function WorkoutTab() {
           )}
         </section>
 
+        <div className="routine-entry">
+          <button className="btn" onClick={() => go('r/new')}>
+            <Icon name="plus" size={18} /> New routine
+          </button>
+          <button className="btn" onClick={() => go('explore')}>
+            <Icon name="search" size={18} /> Explore programs
+          </button>
+        </div>
+
         <div className="section-head">
-          <h2>Routines</h2>
+          <h2>My routines</h2>
           <div className="section-actions">
             <button className="btn btn-small" onClick={() => setImporting(true)} aria-label="Import routines from a link">
               <Icon name="link" size={16} />
             </button>
             <button className="btn btn-small" onClick={() => setFolderForm({ name: '' })}>
               <Icon name="folder" size={16} /> Folder
-            </button>
-            <button className="btn btn-small" onClick={() => go('r/new')}>
-              <Icon name="plus" size={16} /> Routine
             </button>
           </div>
         </div>
@@ -222,13 +228,16 @@ export function WorkoutTab() {
 
         {(unfiled.length > 0 || !folders.length) && (
           <section className="folder">
-            {folders.length > 0 && <h3 className="folder-plain">My routines</h3>}
+            {folders.length > 0 && <h3 className="folder-plain">Not in a folder</h3>}
             {!routines.length && (
               <div className="empty-card">
                 <p>
-                  Routines are workout templates. Create one for each training day, group them in folders (for example
-                  “Upper/Lower x2”), then start one in a tap.
+                  Routines are your workout templates. Create one for each training day, or start from a ready-made
+                  program in Explore programs.
                 </p>
+                <button className="btn btn-primary" onClick={() => go('explore')}>
+                  Explore programs
+                </button>
               </div>
             )}
             {renderRoutines(unfiled)}
@@ -306,7 +315,7 @@ export function WorkoutTab() {
             <>
               <p className="muted sheet-text">
                 {n
-                  ? `“${folderDelete.name}” holds ${n} routine${n > 1 ? 's' : ''}. Keep them (they move to My routines) or delete them with the folder. Past workouts stay in your history either way.`
+                  ? `“${folderDelete.name}” holds ${n} routine${n > 1 ? 's' : ''}. Keep them (they move out of the folder) or delete them with the folder. Past workouts stay in your history either way.`
                   : `“${folderDelete.name}” is empty.`}
               </p>
               <div className="menu">
@@ -357,7 +366,7 @@ export function WorkoutTab() {
       <Sheet open={!!moving} onClose={() => setMoving(null)} title={`Move “${moving?.name ?? ''}”`}>
         {moving && (
           <div className="menu">
-            {[{ id: undefined as string | undefined, name: 'My routines (no folder)' }, ...folders].map((f) => {
+            {[{ id: undefined as string | undefined, name: 'No folder' }, ...folders].map((f) => {
               const current = folderOf(moving, folders) === f.id;
               return (
                 <button

@@ -1,65 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { displayName, LIBRARY } from './exercises';
-import type { Exercise, Routine, State, WorkoutExercise } from './types';
-import { registerKinds, uid } from './utils';
+import type { Exercise, State } from './types';
+import { registerKinds } from './utils';
 import { defaultNutrition, type NutritionState } from './nutrition';
 
 const KEY = 'foundry:v1';
-
-const block = (exerciseId: string, sets: number, reps: number, restSec = 120): WorkoutExercise => ({
-  id: uid(),
-  exerciseId,
-  restSec,
-  sets: Array.from({ length: sets }, () => ({ id: uid(), type: 'normal' as const, weight: null, reps, done: false })),
-});
-
-function starterRoutines(): Routine[] {
-  const now = Date.now();
-  return [
-    {
-      id: uid(),
-      name: 'Push',
-      updatedAt: now,
-      exercises: [
-        block('bench_bb', 3, 8, 150),
-        block('ohp_bb', 3, 8, 150),
-        block('incline_bench_db', 3, 10),
-        block('lateral_raise_db', 3, 12, 60),
-        block('pushdown', 3, 12, 60),
-      ],
-    },
-    {
-      id: uid(),
-      name: 'Pull',
-      updatedAt: now,
-      exercises: [
-        block('deadlift_bb', 3, 5, 180),
-        block('pull_up', 3, 8),
-        block('row_bb', 3, 8),
-        block('face_pull', 3, 15, 60),
-        block('curl_db', 3, 10, 60),
-      ],
-    },
-    {
-      id: uid(),
-      name: 'Legs',
-      updatedAt: now,
-      exercises: [
-        block('squat_bb', 3, 6, 180),
-        block('rdl_bb', 3, 8, 150),
-        block('leg_press', 3, 10),
-        block('lying_leg_curl', 3, 12, 60),
-        block('standing_calf_raise', 3, 12, 60),
-      ],
-    },
-  ];
-}
 
 export function defaultState(): State {
   return {
     version: 1,
     workouts: [],
-    routines: starterRoutines(),
+    routines: [],
     folders: [],
     customExercises: [],
     active: null,

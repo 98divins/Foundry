@@ -45,6 +45,30 @@ export function WorkoutEditor({
     else next.splice(i, 1);
     onChange(next);
   };
+  /** Swaps in another exercise. Sets already done stay on the old one, so the history stays true. */
+  const replaceExercise = (i: number, exerciseId: string) => {
+    const we = exercises[i];
+    const done = we.sets.filter((s) => s.done);
+    const todo = we.sets.filter((s) => !s.done);
+    const fresh: WorkoutExercise = {
+      id: uid(),
+      exerciseId,
+      restSec: we.restSec,
+      ...(we.supersetId ? { supersetId: we.supersetId } : {}),
+      sets: (todo.length ? todo : [{ ...we.sets[we.sets.length - 1], done: false }]).map((s) => ({
+        ...s,
+        id: uid(),
+        weight: null,
+        duration: null,
+        distance: null,
+        done: false,
+      })),
+    };
+    const next = [...exercises];
+    if (done.length) next.splice(i, 1, { ...we, sets: done }, fresh);
+    else next.splice(i, 1, fresh);
+    onChange(next);
+  };
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
     if (j < 0 || j >= exercises.length) return;
@@ -67,6 +91,7 @@ export function WorkoutEditor({
             inSuperset={slots[i].group != null}
             canLink={i < exercises.length - 1}
             onLink={() => onChange(linkWithNext(exercises, i))}
+            onReplace={(id) => replaceExercise(i, id)}
             onUnlink={() => onChange(unlink(exercises, i))}
             onMove={(d) => move(i, d)}
             onChange={(n) => replace(i, n)}
@@ -119,6 +144,7 @@ function ExerciseCard({
   canLink,
   onLink,
   onUnlink,
+  onReplace,
   onMove,
   onChange,
   onSetCompleted,
@@ -132,6 +158,7 @@ function ExerciseCard({
   canLink: boolean;
   onLink: () => void;
   onUnlink: () => void;
+  onReplace: (exerciseId: string) => void;
   onMove: (d: -1 | 1) => void;
   onChange: (we: WorkoutExercise | null) => void;
   onSetCompleted: () => void;
@@ -141,6 +168,7 @@ function ExerciseCard({
   const ex = exMap.get(we.exerciseId);
   const kind: ExerciseKind = ex?.kind ?? 'weight';
   const [menu, setMenu] = useState(false);
+  const [replacing, setReplacing] = useState(false);
   const [noteOpen, setNoteOpen] = useState(!!we.note);
   const [flash, setFlash] = useState<string | null>(null);
   const showCheck = mode === 'live';
@@ -266,9 +294,12 @@ function ExerciseCard({
             <div className={rowCls} key={s.id} role="group" aria-label={`Set ${i + 1}`}>
               <label className={'set-type t-' + s.type}>
                 <span aria-hidden="true">{setLabel(we.sets, i)}</span>
+                <span className="set-type-cue" aria-hidden="true">
+                  <Icon name="edit" size={9} />
+                </span>
                 <select
                   id={'type-' + s.id}
-                  aria-label="Set type"
+                  aria-label="Set type, or remove this set"
                   value={s.type}
                   onChange={(e) => {
                     if (e.target.value === 'remove') onChange({ ...we, sets: we.sets.filter((x) => x.id !== s.id) });
@@ -404,11 +435,17 @@ function ExerciseCard({
           <button className="menu-item" disabled={!canDown} onClick={() => { onMove(1); setMenu(false); }}>
             <Icon name="down" size={18} /> Move down
           </button>
+          <button className="menu-item" onClick={() => { setMenu(false); setReplacing(true); }}>
+            <Icon name="swap" size={18} /> Replace exercise{mode === 'live' && <span className="muted small"> · this workout only</span>}
+          </button>
           <button className="menu-item danger" onClick={() => { setMenu(false); onChange(null); }}>
             <Icon name="trash" size={18} /> Remove exercise
           </button>
         </div>
       </Sheet>
+      {replacing && ex && (
+        <ExercisePicker open replacing={ex} onClose={() => setReplacing(false)} onPick={([id]) => id && onReplace(id)} />
+      )}
     </section>
   );
 }

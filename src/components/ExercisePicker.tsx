@@ -110,37 +110,47 @@ export function ExercisePicker({
   open,
   onClose,
   onPick,
+  replacing,
 }: {
   open: boolean;
   onClose: () => void;
   onPick: (ids: string[]) => void;
+  /** Replace mode: one tap picks, and the list starts on the same muscle. */
+  replacing?: Exercise;
 }) {
-  const [filter, setFilter] = useState<ExerciseFilter>(emptyFilter);
+  const startFilter = replacing ? { ...emptyFilter, muscle: replacing.muscle } : emptyFilter;
+  const [filter, setFilter] = useState<ExerciseFilter>(startFilter);
   const [picked, setPicked] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
   const list = useFilteredExercises(filter);
 
   const close = () => {
     setPicked([]);
-    setFilter(emptyFilter);
+    setFilter(startFilter);
     onClose();
   };
 
   return (
-    <Sheet open={open} onClose={close} title="Add exercises" tall>
+    <Sheet open={open} onClose={close} title={replacing ? `Replace ${replacing.label ?? replacing.name}` : 'Add exercises'} tall>
       <div className="picker-tools">
         <ExerciseFilters value={filter} onChange={setFilter} idPrefix="picker" />
         <span className="muted small">{list.length} exercises</span>
       </div>
       <ul className="picker-list">
         {list.map((e) => {
+          if (replacing && e.id === replacing.id) return null;
           const on = picked.includes(e.id);
           return (
             <li key={e.id}>
               <button
                 className={'picker-row' + (on ? ' on' : '')}
                 aria-pressed={on}
-                onClick={() => setPicked(on ? picked.filter((p) => p !== e.id) : [...picked, e.id])}
+                onClick={() => {
+                  if (replacing) {
+                    onPick([e.id]);
+                    close();
+                  } else setPicked(on ? picked.filter((p) => p !== e.id) : [...picked, e.id]);
+                }}
               >
                 <span className="thumb-wrap">
                   <ExerciseImage ex={e} label={e.label ?? e.name} />
@@ -161,6 +171,7 @@ export function ExercisePicker({
         <button className="btn" onClick={() => setCreating(true)}>
           New exercise
         </button>
+        {!replacing && (
         <button
           className="btn btn-primary"
           disabled={!picked.length}
@@ -171,12 +182,18 @@ export function ExercisePicker({
         >
           {picked.length ? `Add ${picked.length}` : 'Add'}
         </button>
+        )}
       </div>
       <CreateExercise
         open={creating}
         initialName={filter.query}
         onClose={() => setCreating(false)}
-        onCreated={(e) => setPicked((p) => [...p, e.id])}
+        onCreated={(e) => {
+          if (replacing) {
+            onPick([e.id]);
+            close();
+          } else setPicked((p) => [...p, e.id]);
+        }}
       />
     </Sheet>
   );

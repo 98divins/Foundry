@@ -13,13 +13,19 @@ export function ActiveWorkout() {
   const [confirm, setConfirm] = useState<null | 'finish' | 'empty' | 'discard'>(null);
   useWakeLock(!!w);
 
-  // Fire the rest alert once when the countdown crosses zero.
+  // Fire the rest alert once when the countdown crosses zero. When the phone was locked or the
+  // app was in the background, the alert could not play: say so as soon as the user is back.
   const alerted = useRef<number | null>(null);
+  const [missedAt, setMissedAt] = useState<number | null>(null);
   useEffect(() => {
     const r = state.rest;
     if (!r || now < r.endsAt || alerted.current === r.endsAt) return;
     alerted.current = r.endsAt;
     if (now - r.endsAt < 5000) restDoneAlert(state.settings.sound);
+    else {
+      setMissedAt(r.endsAt);
+      navigator.vibrate?.([300, 120, 300]);
+    }
     update((s) => ({ ...s, rest: null }));
   }, [now, state.rest, state.settings.sound, update]);
 
@@ -101,7 +107,7 @@ export function ActiveWorkout() {
           </button>
         }
       />
-      <main className={'page' + (rest ? ' has-rest' : '')}>
+      <main className={'page' + (rest || missedAt ? ' has-rest' : '')}>
         <div className="stats-row">
           <Stat label="Duration" value={fmtClock((now - w.startedAt) / 1000)} />
           <Stat label="Volume" value={fmtVolume(workoutVolume(w), state.settings.unit)} />
@@ -114,6 +120,7 @@ export function ActiveWorkout() {
           onChange={(exercises) => setW((x) => ({ ...x, exercises }))}
           onSetCompleted={(we) => {
             primeAudio();
+            setMissedAt(null);
             if (we.restSec > 0) update((s) => ({ ...s, rest: { endsAt: Date.now() + we.restSec * 1000, total: we.restSec } }));
           }}
         />
@@ -122,6 +129,17 @@ export function ActiveWorkout() {
         </button>
       </main>
 
+      {!rest && missedAt && (
+        <div className="rest-bar rest-missed" role="alert">
+          <div className="rest-time">
+            <span className="eyebrow">Rest is over</span>
+            <span className="rest-clock">{fmtClock((now - missedAt) / 1000)} ago</span>
+          </div>
+          <button className="btn btn-small btn-primary" onClick={() => setMissedAt(null)}>
+            Got it
+          </button>
+        </div>
+      )}
       {rest && (
         <div className="rest-bar" role="timer" aria-live="off">
           <div className="rest-progress" style={{ transform: `scaleX(${restLeft / rest.total})` }} />

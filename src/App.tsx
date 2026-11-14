@@ -9,6 +9,7 @@ import { History } from './screens/History';
 import { Profile } from './screens/Profile';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { RoutineView } from './screens/RoutineView';
+import { ExplorePrograms, ProgramDetail } from './screens/Explore';
 import { ImportRoutines } from './screens/ImportRoutines';
 import { WorkoutDetail } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
@@ -68,6 +69,9 @@ export function App() {
       break;
     case 'e':
       screen = <ExerciseDetail key={param} id={param} />;
+      break;
+    case 'explore':
+      screen = param ? <ProgramDetail key={param} id={param} /> : <ExplorePrograms />;
       break;
     case 'rv':
       screen = <RoutineView key={param} id={param} />;
