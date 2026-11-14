@@ -1,5 +1,5 @@
 // Offline support: network first for navigations, cache first for assets.
-const CACHE = 'foundry-v1';
+const CACHE = 'foundry-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting()));

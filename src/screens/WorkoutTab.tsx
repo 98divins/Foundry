@@ -3,7 +3,7 @@ import { go, useNow } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { Routine, RoutineFolder, State, Workout } from '../types';
 import { defaultWorkoutName, fmtClock, fmtDate, fmtDuration, fmtVolume, uid, weekStart, workoutVolume } from '../utils';
-import { Confirm, Header, Icon, Sheet } from '../components/ui';
+import { Confirm, Header, Icon, Logo, Sheet } from '../components/ui';
 import { codeFromText, liveSetFromRoutine } from '../routines';
 import { ShareResult, useShareLink } from '../components/Share';
 
@@ -137,7 +137,13 @@ export function WorkoutTab() {
 
   return (
     <>
-      <Header title={<span className="brand">Foundry</span>} />
+      <Header
+        title={
+          <span className="brand">
+            <Logo /> Foundry
+          </span>
+        }
+      />
       <main className="page">
         <section className="hero-card">
           {active ? (

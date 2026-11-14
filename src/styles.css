@@ -1,25 +1,28 @@
-/* Foundry — cast-iron surfaces, molten-metal accent. Dark first, light on request.
-   Layout: one phone-width column, sticky header, bottom tab bar. */
+/* Foundry identity: forged metal (ingot logo, copper for records), sports energy (cobalt),
+   lab precision (Plex text, tight radii, hairlines). Signature: primary buttons with a cut corner.
+   Layout: one phone-width column, sticky header, bottom tab bar. Dark by default, light on request. */
 :root {
-  --bg: #13110e;
-  --surface: #1c1915;
-  --surface-2: #26221d;
-  --line: #36312a;
-  --bar: #4a4239;
-  --fg: #f2ede5;
-  --muted: #9d958a;
-  --accent: #ff7a1a;
-  --accent-ink: #1c0c00;
-  --accent-soft: rgba(255, 122, 26, 0.14);
-  --good: #47c18a;
-  --good-soft: rgba(71, 193, 138, 0.14);
-  --gold: #f3c24f;
-  --danger: #ef5b52;
+  --bg: #0d1015;
+  --surface: #151a21;
+  --surface-2: #1e242d;
+  --line: #2a313c;
+  --bar: #39424f;
+  --fg: #eef1f5;
+  --muted: #8e98a6;
+  --accent: #3d5bff;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(61, 91, 255, 0.16);
+  --good: #2fbf86;
+  --good-soft: rgba(47, 191, 134, 0.14);
+  /* Copper: records, trophies, check-ins. */
+  --gold: #e08a4c;
+  --danger: #f05656;
 
-  --font-display: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Archivo', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-  --radius: 14px;
+  --radius: 12px;
+  --cut: 10px;
   --gutter: 16px;
   --tabs-h: 64px;
   color-scheme: dark;
@@ -27,20 +30,20 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f4f1ec;
+    --bg: #f3f5f8;
     --surface: #ffffff;
-    --surface-2: #ebe6de;
-    --line: #dbd4c9;
-    --bar: #cfc6b9;
-    --fg: #1d1a16;
-    --muted: #6d655a;
-    --accent: #e0620c;
+    --surface-2: #e9edf2;
+    --line: #d8dee6;
+    --bar: #c3cbd6;
+    --fg: #10141a;
+    --muted: #5d6775;
+    --accent: #2443f2;
     --accent-ink: #ffffff;
-    --accent-soft: rgba(224, 98, 12, 0.12);
-    --good: #19935c;
-    --good-soft: rgba(25, 147, 92, 0.12);
-    --gold: #a97a06;
-    --danger: #d23a30;
+    --accent-soft: rgba(36, 67, 242, 0.1);
+    --good: #138a5c;
+    --good-soft: rgba(19, 138, 92, 0.12);
+    --gold: #b5622a;
+    --danger: #d63939;
     color-scheme: light;
   }
 }
@@ -1399,10 +1402,10 @@ span.ex-photo {
 /* ---------- Supersets ---------- */
 
 :root {
-  --ss-0: #9b6bff;
-  --ss-1: #3fbf6a;
-  --ss-2: #ef5b52;
-  --ss-3: #3f9cff;
+  --ss-0: #8b5cf6;
+  --ss-1: #2fbf86;
+  --ss-2: #f05656;
+  --ss-3: #14b8a6;
 }
 .ss {
   position: relative;
@@ -1553,9 +1556,9 @@ span.ex-photo {
 /* ---------- Nutrition ---------- */
 
 :root {
-  --mac-p: #e0567a;
-  --mac-c: #e3a81d;
-  --mac-f: #3f9cff;
+  --mac-p: #f0628a;
+  --mac-c: #f2b33d;
+  --mac-f: #22b8cf;
 }
 .fg {
   color: var(--fg);
@@ -2168,4 +2171,106 @@ span.ex-photo {
   .link-row {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+/* ---------- Identity overrides ---------- */
+
+/* Titles: sentence case, heavy and tight (less shouty than all caps). Small labels stay in caps. */
+.top-title,
+.hero-title,
+.section-head h2,
+.section-title,
+.month-title,
+.folder-name,
+.folder-plain,
+.sheet-head h2,
+.program-name,
+.program-routine-head h2,
+.meal-head h2,
+.day-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+.top-title {
+  font-size: 21px;
+}
+.hero-title {
+  font-size: 30px;
+}
+.hero-sub {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.section-head h2,
+.section-title,
+.program-name {
+  font-size: 21px;
+}
+.folder-name,
+.folder-plain,
+.meal-head h2,
+.program-routine-head h2 {
+  font-size: 17px;
+}
+.month-title,
+.day-label,
+.sheet-head h2 {
+  font-size: 19px;
+}
+/* Big numbers: wide cut of the display face. */
+.hero-clock,
+.kcal-big,
+.rest-clock,
+.stat-value {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.stat-value {
+  font-size: 21px;
+}
+/* Signature: primary actions are stamped with a cut corner, like a tag on metal. */
+.btn-primary {
+  border-radius: 8px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.btn {
+  border-radius: 8px;
+}
+.btn-small.btn-primary {
+  --cut: 7px;
+}
+/* Wordmark with the ingot logo. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-display);
+  font-stretch: 118%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.brand::after {
+  content: none;
+}
+.brand svg {
+  flex: none;
+}
+.tab.on {
+  color: var(--accent);
+}
+.eyebrow,
+.stat-label,
+.panel-title,
+.set-hd,
+.macro-label,
+.list-title {
+  font-family: var(--font-body);
 }

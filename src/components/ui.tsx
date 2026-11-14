@@ -294,3 +294,14 @@ export function Segmented<T extends string>({
     </div>
   );
 }
+
+/** The Foundry mark: an ingot with an F cut out, and a copper spark. Follows the theme colours. */
+export function Logo({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="96 104 330 260" aria-hidden="true">
+      <path d="M148 178h216l46 178H102z" fill="var(--accent)" />
+      <path d="M206 214h112v36h-74v20h60v34h-60v52h-38z" fill="var(--bg)" />
+      <path d="M376 116l14 26 26 14-26 14-14 26-14-26-26-14 26-14z" fill="var(--gold)" />
+    </svg>
+  );
+}
