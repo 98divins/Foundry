@@ -34,7 +34,7 @@ export function History() {
         {!list.length && (
           <div className="empty-card">
             <Icon name="history" size={28} />
-            <p>Finished workouts appear here. Start one from the Workout tab, log a past session, or import your history from the Profile tab.</p>
+            <p>Finished workouts appear here. Start one from the Workout tab, log a past session, or import your history in Progress → Settings.</p>
           </div>
         )}
         {groups.map((g) => (

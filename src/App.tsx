@@ -6,7 +6,8 @@ import { EditWorkout } from './screens/EditWorkout';
 import { ExerciseDetail } from './screens/ExerciseDetail';
 import { Exercises } from './screens/Exercises';
 import { History } from './screens/History';
-import { Profile } from './screens/Profile';
+import { SettingsPage } from './screens/Profile';
+import { Progress } from './screens/Progress';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { RoutineView } from './screens/RoutineView';
 import { ExplorePrograms, ProgramDetail } from './screens/Explore';
@@ -25,7 +26,7 @@ const TABS: { path: string; label: string; icon: IconName }[] = [
   { path: 'n', label: 'Nutrition', icon: 'apple' },
   { path: 'history', label: 'History', icon: 'history' },
   { path: 'exercises', label: 'Exercises', icon: 'list' },
-  { path: 'profile', label: 'Profile', icon: 'user' },
+  { path: 'profile', label: 'Progress', icon: 'chart' },
 ];
 
 export function App() {
@@ -59,7 +60,10 @@ export function App() {
       screen = <Exercises />;
       break;
     case 'profile':
-      screen = <Profile />;
+      screen = <Progress />;
+      break;
+    case 'settings':
+      screen = <SettingsPage />;
       break;
     case 'w':
       screen = <WorkoutDetail key={param} id={param} />;
@@ -90,7 +94,7 @@ export function App() {
     <div className={'app' + (isTab ? ' with-tabs' : '') + (state.active && section !== 'active' ? ' with-mini' : '')}>
       {saveError && (
         <div className="banner" role="alert">
-          This browser refused to save your data. Export a backup from Profile so nothing is lost.
+          This browser refused to save your data. Export a backup (Progress → Settings) so nothing is lost.
         </div>
       )}
       {screen}

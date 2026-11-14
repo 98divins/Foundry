@@ -1,65 +1,20 @@
-import { useMemo, useRef, useState } from 'react';
-import { BarChart } from '../components/Charts';
-import { Confirm, Header, Segmented, Stat } from '../components/ui';
+import { useRef, useState } from 'react';
+import { back } from '../hooks';
+import { Confirm, Header, Segmented } from '../components/ui';
 import { exportWorkoutCsv, importWorkoutCsv } from '../csv';
-import { muscleLabel } from '../exercises';
 import { defaultState, parseBackup, useStore } from '../store';
-import type { Muscle, NameLang, Unit } from '../types';
-import { countsForStats, download, fmtClock, fmtVolume, weekStart, workoutVolume } from '../utils';
+import type { NameLang, Unit } from '../types';
+import { download, fmtClock } from '../utils';
 
-const WEEK = 7 * 24 * 3600 * 1000;
-
-export function Profile() {
+export function SettingsPage() {
   const { state, update, exercises, exMap } = useStore();
   const { workouts, settings } = state;
-  const done = useMemo(() => workouts.filter((w) => w.endedAt), [workouts]);
+  const done = workouts.filter((w) => w.endedAt);
   const [msg, setMsg] = useState<{ text: string; error?: boolean } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<string | null>(null);
   const csvInput = useRef<HTMLInputElement>(null);
   const jsonInput = useRef<HTMLInputElement>(null);
-
-  const weeks = useMemo(() => {
-    const thisWeek = weekStart(Date.now());
-    return Array.from({ length: 12 }, (_, i) => {
-      const start = thisWeek - (11 - i) * WEEK;
-      // Rebase through weekStart to stay correct across DST changes.
-      const s = weekStart(start + WEEK / 2);
-      const e = weekStart(s + WEEK + WEEK / 2);
-      return {
-        label: new Date(s).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric' }),
-        value: done.filter((w) => w.startedAt >= s && w.startedAt < e).length,
-      };
-    });
-  }, [done]);
-
-  const muscles = useMemo(() => {
-    const since = Date.now() - 30 * 24 * 3600 * 1000;
-    const m = new Map<Muscle, number>();
-    for (const w of done) {
-      if (w.startedAt < since) continue;
-      for (const we of w.exercises) {
-        const muscle = exMap.get(we.exerciseId)?.muscle ?? 'other';
-        m.set(muscle, (m.get(muscle) ?? 0) + we.sets.filter(countsForStats).length);
-      }
-    }
-    return [...m.entries()].sort((a, b) => b[1] - a[1]);
-  }, [done, exMap]);
-  const maxMuscle = Math.max(1, ...muscles.map((m) => m[1]));
-
-  const totalTime = done.reduce((t, w) => t + (w.endedAt! - w.startedAt), 0);
-  const totalVolume = done.reduce((t, w) => t + workoutVolume(w), 0);
-  const streak = (() => {
-    let n = 0;
-    let s = weekStart(Date.now());
-    // The current week counts only once it has a workout; it never breaks the streak.
-    if (!done.some((w) => w.startedAt >= s)) s = weekStart(s - WEEK / 2);
-    while (done.some((w) => w.startedAt >= s && w.startedAt < weekStart(s + WEEK + WEEK / 2))) {
-      n++;
-      s = weekStart(s - WEEK / 2);
-    }
-    return n;
-  })();
 
   const say = (text: string, error = false) => setMsg({ text, error });
   const stamp = new Date().toISOString().slice(0, 10);
@@ -85,36 +40,8 @@ export function Profile() {
 
   return (
     <>
-      <Header title="Profile" />
+      <Header title="Settings" onBack={() => back('profile')} />
       <main className="page">
-        <div className="stats-row">
-          <Stat label="Workouts" value={done.length} />
-          <Stat label="Week streak" value={streak} />
-          <Stat label="Time" value={totalTime >= 3600000 ? `${Math.round(totalTime / 3600000)} h` : `${Math.round(totalTime / 60000)} min`} />
-          <Stat label="Volume" value={fmtVolume(totalVolume, settings.unit)} />
-        </div>
-
-        <section className="panel">
-          <h2 className="panel-title">Workouts per week</h2>
-          <BarChart bars={weeks} />
-        </section>
-
-        <section className="panel">
-          <h2 className="panel-title">Working sets by muscle, last 30 days</h2>
-          {!muscles.length && <p className="muted small">No workouts in the last 30 days.</p>}
-          <ul className="muscle-bars">
-            {muscles.map(([m, n]) => (
-              <li key={m}>
-                <span className="muscle-name">{muscleLabel(m, settings.exerciseLang)}</span>
-                <span className="muscle-track">
-                  <span className="muscle-fill" style={{ width: `${(n / maxMuscle) * 100}%` }} />
-                </span>
-                <span className="muscle-n">{n}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
         <section className="panel">
           <h2 className="panel-title">Settings</h2>
           <div className="setting">

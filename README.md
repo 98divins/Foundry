@@ -16,10 +16,18 @@ All data stays on your device.
 - **History**: every workout with duration, volume and records. Edit a past workout or log one after the fact.
 - **Records**: heaviest set, best estimated 1RM (Epley), best set volume, most reps for bodyweight moves. A record is flagged when it beats all earlier workouts.
 - **Progress**: per-exercise charts (est. 1RM, heaviest, volume, reps), workouts per week, working sets per muscle over the last 30 days.
-- **Exercise library**: 450 exercises with English and French names (choose in Profile), searchable without accents and filterable by muscle and equipment, plus your own custom ones. 376 have start and end photos from [Free Exercise DB](https://github.com/yuhonas/free-exercise-db) (public domain), loaded from a CDN and cached for offline use.
+- **Exercise library**: 450 exercises with English and French names (choose in Progress → Settings), searchable without accents and filterable by muscle and equipment, plus your own custom ones. 376 have start and end photos from [Free Exercise DB](https://github.com/yuhonas/free-exercise-db) (public domain), loaded from a CDN and cached for offline use.
 - **Tracking types**: weight × reps, bodyweight reps with optional added weight, assisted reps (the assistance never counts as volume), timed holds (plank, dead hang…) and cardio (distance and time).
 - **kg or lb**: weights are stored in kg and converted for display.
 - **Your data**: JSON backup and restore, CSV export, and **CSV import from a Hevy export** (Hevy → Settings → Export & Import Data → Export workouts). Unknown exercise names become custom exercises; workouts already present are skipped.
+
+## Progress
+
+- **Strength**: estimated-1RM trend for your most trained lifts (with change over the last 8 weeks) and a strength index: each lift's best of the week as a % of your first session, averaged.
+- **Training per week**: sets, workouts or volume over 12 weeks.
+- **Sets per muscle**: this week or the 4-week average, against a 10–20 sets guideline.
+- **Records** of the last 30 days.
+- **Diet × training**: a weekly table of calories, protein per kg, weight change, sets and strength index, and plain-language observations once there are about 5 weeks of data on both sides.
 
 ## Nutrition
 

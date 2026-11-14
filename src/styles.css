@@ -1971,3 +1971,117 @@ span.ex-photo {
   font-weight: 700;
   text-transform: uppercase;
 }
+
+/* ---------- Progress ---------- */
+
+.lift-list,
+.pr-list {
+  display: flex;
+  flex-direction: column;
+}
+.lift-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+}
+.pr-list .lift-row > svg {
+  color: var(--gold);
+  flex: none;
+}
+.lift-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sparkline {
+  flex: none;
+}
+.lift-row .ex-thumb {
+  width: 36px;
+  height: 36px;
+}
+.delta {
+  flex: none;
+  min-width: 48px;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.delta.up {
+  color: var(--good);
+}
+.delta.down {
+  color: var(--danger);
+}
+.muscle-bars.graded .muscle-track {
+  position: relative;
+  overflow: visible;
+}
+.muscle-zone {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  z-index: 1;
+  border-left: 2px solid var(--fg);
+  border-right: 2px solid var(--fg);
+  opacity: 0.35;
+  pointer-events: none;
+}
+.muscle-bars.graded .muscle-fill {
+  position: relative;
+}
+.muscle-fill.low {
+  background: var(--muted);
+}
+.muscle-fill.ok {
+  background: var(--good);
+}
+.muscle-fill.high {
+  background: var(--accent);
+}
+.insight {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+}
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 -4px;
+}
+.diet-table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.diet-table th,
+.diet-table td {
+  padding: 7px 4px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.diet-table th:first-child,
+.diet-table td:first-child {
+  text-align: left;
+}
+.diet-table th {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
