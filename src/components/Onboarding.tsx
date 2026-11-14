@@ -4,6 +4,8 @@ import { go } from '../hooks';
 import { useStore } from '../store';
 import type { NameLang, Unit } from '../types';
 import { Icon, Logo, Segmented, type IconName } from './ui';
+import { ConsentCheckbox } from './Legal';
+import { LEGAL_VERSION } from '../legal';
 import { t, tk, detectLang, type AppLang } from '../i18n';
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
@@ -83,15 +85,19 @@ function AuthForm({
   onCheckEmail: () => void;
 }) {
   const c = useCloud();
+  const { update } = useStore();
   const [password, setPassword] = useState('');
+  const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ text: string; error?: boolean } | null>(null);
-  const valid = email.includes('@') && (mode === 'reset' || password.length >= 8);
+  const valid = email.includes('@') && (mode === 'reset' || password.length >= 8) && (mode !== 'signup' || consent);
 
   const submit = async () => {
     setBusy(true);
     setMsg(null);
     const e = email.trim();
+    // Consent is recorded with the data, so it reaches the account with the first upload.
+    if (mode === 'signup') update((s) => ({ ...s, settings: { ...s.settings, consent: { at: Date.now(), version: LEGAL_VERSION } } }));
     const r = mode === 'login' ? await c.signIn(e, password) : mode === 'signup' ? await c.signUp(e, password) : await c.resetPassword(e);
     setBusy(false);
     if (r === 'CHECK_EMAIL') onCheckEmail();
@@ -124,6 +130,7 @@ function AuthForm({
           {mode === 'signup' && <span className="muted small">{t('At least 8 characters.')}</span>}
         </label>
       )}
+      {mode === 'signup' && <ConsentCheckbox checked={consent} onChange={setConsent} />}
       {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
       <button className="btn btn-primary btn-wide" type="submit" disabled={busy || !valid}>
         {busy ? t('Please wait…') : mode === 'signup' ? t('Create account') : mode === 'login' ? t('Log in') : t('Send reset link')}

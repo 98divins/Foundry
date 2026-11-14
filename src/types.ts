@@ -129,6 +129,8 @@ export interface Settings {
   theme?: 'system' | 'light' | 'dark';
   /** Interface language. Absent = the phone's language (French or English). */
   appLang?: 'fr' | 'en';
+  /** When the user accepted the terms, privacy policy and health-data processing, and which version. */
+  consent?: { at: number; version: string };
   /** Custom accent colour (hex). Absent = Foundry cobalt. */
   accent?: string;
   /** Pure black background in dark mode (OLED). */

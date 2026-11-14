@@ -6,10 +6,11 @@ import { useStore } from '../store';
 import type { NameLang, Settings, Unit } from '../types';
 import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
+import { LegalBody } from '../components/Legal';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, type AppLang } from '../i18n';
 
-type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about';
+type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'privacy' | 'terms';
 
 function Row({ icon, label, value, onClick }: { icon: IconName; label: string; value?: string; onClick: () => void }) {
   return (
@@ -63,6 +64,11 @@ export function SettingsHub() {
           <Row icon="help" label={t('Frequently asked questions')} onClick={() => open('faq')} />
           <Row icon="logo" label={t('About Foundry')} onClick={() => open('about')} />
         </ul>
+        <h2 className="settings-group">{t('Legal')}</h2>
+        <ul className="settings-list">
+          <Row icon="lock" label={t('Privacy policy')} onClick={() => open('privacy')} />
+          <Row icon="info" label={t('Terms of use')} onClick={() => open('terms')} />
+        </ul>
         {c.user && (
           <button
             className="btn btn-ghost-danger btn-wide settings-logout"
@@ -100,6 +106,18 @@ export function SettingsPage({ page }: { page?: string }) {
       return <FaqPage />;
     case 'about':
       return <AboutPage />;
+    case 'privacy':
+      return (
+        <Sub title={t('Privacy policy')}>
+          <LegalBody kind="privacy" />
+        </Sub>
+      );
+    case 'terms':
+      return (
+        <Sub title={t('Terms of use')}>
+          <LegalBody kind="terms" />
+        </Sub>
+      );
     default:
       return <SettingsHub />;
   }

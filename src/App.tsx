@@ -17,6 +17,7 @@ import { WorkoutDetail } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 import { useStore } from './store';
 import { CloudDialogs } from './components/Account';
+import { ConsentGate } from './components/Legal';
 import { QuickStart, Splash, Welcome } from './components/Onboarding';
 import { useCloud } from './cloud/cloud';
 import { hasData } from './cloud/sync';
@@ -136,6 +137,7 @@ export function App() {
       )}
       {screen}
       <CloudDialogs />
+      <ConsentGate />
       {state.active && section !== 'active' && (
         <button className="mini-workout" onClick={() => go('active')}>
           <span className="mini-dot" aria-hidden="true" />
