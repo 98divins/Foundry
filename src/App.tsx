@@ -7,6 +7,8 @@ import { Exercises } from './screens/Exercises';
 import { History } from './screens/History';
 import { Profile } from './screens/Profile';
 import { RoutineEditor } from './screens/RoutineEditor';
+import { RoutineView } from './screens/RoutineView';
+import { ImportRoutines } from './screens/ImportRoutines';
 import { WorkoutDetail } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 import { useStore } from './store';
@@ -47,6 +49,12 @@ export function App() {
       break;
     case 'e':
       screen = <ExerciseDetail key={param} id={param} />;
+      break;
+    case 'rv':
+      screen = <RoutineView key={param} id={param} />;
+      break;
+    case 'import':
+      screen = <ImportRoutines key={param} code={param ?? ''} />;
       break;
     case 'r':
       screen = <RoutineEditor key={param + (extra ?? '')} id={param} folderId={extra} />;

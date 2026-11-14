@@ -69,7 +69,7 @@ export function WorkoutDetail({ id }: { id: string }) {
           exercises: w.exercises.map((we) => ({
             ...we,
             id: uid(),
-            sets: we.sets.map((st) => ({ ...st, id: uid(), done: false })),
+            sets: we.sets.map((st) => ({ ...st, id: uid(), done: false, target: null })),
           })),
         },
       ],

@@ -4,6 +4,8 @@ import { exerciseName, useStore } from '../store';
 import type { Routine, RoutineFolder, State, Workout } from '../types';
 import { defaultWorkoutName, fmtClock, fmtDate, fmtDuration, fmtVolume, uid, weekStart, workoutVolume } from '../utils';
 import { Confirm, Header, Icon, Sheet } from '../components/ui';
+import { codeFromText, liveSetFromRoutine } from '../routines';
+import { ShareResult, useShareLink } from '../components/Share';
 
 export function startWorkout(update: (fn: (s: State) => State) => void, routine?: Routine) {
   update((s) => {
@@ -18,7 +20,7 @@ export function startWorkout(update: (fn: (s: State) => State) => void, routine?
       exercises: (routine?.exercises ?? []).map((we) => ({
         ...we,
         id: uid(),
-        sets: we.sets.map((st) => ({ ...st, id: uid(), done: false })),
+        sets: we.sets.map(liveSetFromRoutine),
       })),
     };
     return { ...s, active: w, rest: null };
@@ -46,6 +48,10 @@ export function WorkoutTab() {
   const [routineMenu, setRoutineMenu] = useState<Routine | null>(null);
   const [moving, setMoving] = useState<Routine | null>(null);
   const [routineDelete, setRoutineDelete] = useState<Routine | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const { shared, share, clear } = useShareLink();
+  const pastedCode = codeFromText(pasted);
 
   const unfiled = routines.filter((r) => inFolder(r, folders, undefined));
 
@@ -168,6 +174,9 @@ export function WorkoutTab() {
         <div className="section-head">
           <h2>Routines</h2>
           <div className="section-actions">
+            <button className="btn btn-small" onClick={() => setImporting(true)} aria-label="Import routines from a link">
+              <Icon name="link" size={16} />
+            </button>
             <button className="btn btn-small" onClick={() => setFolderForm({ name: '' })}>
               <Icon name="folder" size={16} /> Folder
             </button>
@@ -177,6 +186,7 @@ export function WorkoutTab() {
           </div>
         </div>
         {active && routines.length > 0 && <p className="muted small">Finish the workout in progress to start a routine.</p>}
+        <ShareResult shared={shared} onClose={clear} />
 
         {folders.map((f) => {
           const list = routines.filter((r) => inFolder(r, folders, f.id));
@@ -262,6 +272,15 @@ export function WorkoutTab() {
           <div className="menu">
             <button className="menu-item" onClick={() => { go('r/new/' + folderMenu.id); setFolderMenu(null); }}>
               <Icon name="plus" size={18} /> New routine in this folder
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                share(folderMenu, routines.filter((r) => inFolder(r, folders, folderMenu.id)));
+                setFolderMenu(null);
+              }}
+            >
+              <Icon name="link" size={18} /> Copy share link
             </button>
             <button className="menu-item" onClick={() => { setFolderForm({ id: folderMenu.id, name: folderMenu.name }); setFolderMenu(null); }}>
               <Icon name="edit" size={18} /> Rename
@@ -368,6 +387,40 @@ export function WorkoutTab() {
         )}
       </Sheet>
 
+      {/* Import from a pasted link */}
+      <Sheet open={importing} onClose={() => setImporting(false)} title="Import routines">
+        <form
+          className="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!pastedCode) return;
+            setImporting(false);
+            setPasted('');
+            go('import/' + pastedCode);
+          }}
+        >
+          <label className="field">
+            <span>Share link</span>
+            <textarea
+              id="import-link"
+              rows={3}
+              placeholder="Paste a Foundry routine link"
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+            />
+          </label>
+          {pasted && !pastedCode && <p className="field-error">This is not a Foundry routine link.</p>}
+          <div className="sheet-actions">
+            <button type="button" className="btn" onClick={() => setImporting(false)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={!pastedCode}>
+              Continue
+            </button>
+          </div>
+        </form>
+      </Sheet>
+
       <Confirm
         open={!!routineDelete}
         title="Delete routine?"
@@ -395,7 +448,7 @@ function RoutineRow({
   const { exMap } = useStore();
   return (
     <li className="routine">
-      <button className="routine-body" onClick={() => go('r/' + r.id)} aria-label={`Edit ${r.name}`}>
+      <button className="routine-body" onClick={() => go('rv/' + r.id)} aria-label={`Open ${r.name}`}>
         <span className="routine-name">{r.name}</span>
         <span className="muted small routine-ex">
           {r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ') || 'No exercises yet'}

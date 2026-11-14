@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { go } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { ExerciseKind, SetEntry, SetType, WorkoutExercise } from '../types';
 import { fmtClock, fmtNum, fmtSet, fromDisplay, previousSets, toDisplay, uid } from '../utils';
 import { ExerciseImage } from './ExerciseImage';
 import { ExercisePicker } from './ExercisePicker';
+import { fmtRepRange, linkWithNext, parseRepRange, supersetSlots, unlink, type SupersetSlot } from '../routines';
 import { Icon, NumInput, Sheet, TimeInput } from './ui';
 
 export type EditorMode = 'live' | 'edit' | 'routine';
@@ -36,6 +37,7 @@ export function WorkoutEditor({
 }) {
   const { state } = useStore();
   const [picking, setPicking] = useState(false);
+  const slots = supersetSlots(exercises);
 
   const replace = (i: number, we: WorkoutExercise | null) => {
     const next = [...exercises];
@@ -54,17 +56,23 @@ export function WorkoutEditor({
   return (
     <div className="editor">
       {exercises.map((we, i) => (
-        <ExerciseCard
-          key={we.id}
-          we={we}
-          mode={mode}
-          prev={mode === 'routine' ? [] : previousSets(state.workouts, we.exerciseId, before)}
-          canUp={i > 0}
-          canDown={i < exercises.length - 1}
-          onMove={(d) => move(i, d)}
-          onChange={(n) => replace(i, n)}
-          onSetCompleted={() => onSetCompleted?.(we)}
-        />
+        <div key={we.id} className={supersetClass(slots[i])}>
+          {slots[i].first && <span className={'ss-label ss-c' + ((slots[i].group ?? 0) % 4)}>Superset</span>}
+          <ExerciseCard
+            we={we}
+            mode={mode}
+            prev={mode === 'routine' ? [] : previousSets(state.workouts, we.exerciseId, before)}
+            canUp={i > 0}
+            canDown={i < exercises.length - 1}
+            inSuperset={slots[i].group != null}
+            canLink={i < exercises.length - 1}
+            onLink={() => onChange(linkWithNext(exercises, i))}
+            onUnlink={() => onChange(unlink(exercises, i))}
+            onMove={(d) => move(i, d)}
+            onChange={(n) => replace(i, n)}
+            onSetCompleted={() => onSetCompleted?.(we)}
+          />
+        </div>
       ))}
       {!exercises.length && (
         <div className="empty-card">
@@ -84,6 +92,15 @@ export function WorkoutEditor({
   );
 }
 
+/** Enough rows to show a routine note in full on a phone (about 40 characters a line), up to 6. */
+const noteRows = (note?: string) =>
+  Math.min(6, Math.max(1, (note ?? '').split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length / 40)), 0)));
+
+export function supersetClass(slot: SupersetSlot): string {
+  if (slot.group == null) return 'ss-none';
+  return `ss ss-c${slot.group % 4}` + (slot.first ? ' ss-first' : '') + (slot.last ? ' ss-last' : '');
+}
+
 function setLabel(sets: SetEntry[], i: number): string {
   const t = sets[i].type;
   if (t === 'warmup') return 'W';
@@ -98,6 +115,10 @@ function ExerciseCard({
   prev,
   canUp,
   canDown,
+  inSuperset,
+  canLink,
+  onLink,
+  onUnlink,
   onMove,
   onChange,
   onSetCompleted,
@@ -107,6 +128,10 @@ function ExerciseCard({
   prev: SetEntry[];
   canUp: boolean;
   canDown: boolean;
+  inSuperset: boolean;
+  canLink: boolean;
+  onLink: () => void;
+  onUnlink: () => void;
   onMove: (d: -1 | 1) => void;
   onChange: (we: WorkoutExercise | null) => void;
   onSetCompleted: () => void;
@@ -133,7 +158,7 @@ function ExerciseCard({
     const p = prev[i];
     const filled = {
       weight: s.weight ?? p?.weight ?? null,
-      reps: s.reps ?? p?.reps ?? null,
+      reps: s.reps ?? p?.reps ?? s.target?.reps ?? null,
       duration: s.duration ?? p?.duration ?? null,
       distance: s.distance ?? p?.distance ?? null,
     };
@@ -167,6 +192,8 @@ function ExerciseCard({
           reps: last?.reps ?? null,
           duration: last?.duration ?? null,
           distance: last?.distance ?? null,
+          repsMax: last?.repsMax ?? null,
+          target: last?.target ?? null,
           done: false,
         },
       ],
@@ -199,7 +226,7 @@ function ExerciseCard({
           id={'note-' + we.id}
           className="ex-note"
           placeholder="Notes: seat height, grip, how it felt…"
-          rows={1}
+          rows={noteRows(we.note)}
           value={we.note ?? ''}
           onChange={(e) => onChange({ ...we, note: e.target.value })}
         />
@@ -302,14 +329,25 @@ function ExerciseCard({
                     placeholder={p?.weight ? fmtNum(toDisplay(p.weight, unit)) : kind === 'weight' ? '–' : '0'}
                     onChange={(v) => setSet(i, { weight: v == null ? null : fromDisplay(v, unit) })}
                   />
-                  <NumInput
-                    id={'r-' + s.id}
-                    label="Reps"
-                    decimal={false}
-                    value={s.reps}
-                    placeholder={p?.reps ? String(p.reps) : '–'}
-                    onChange={(v) => setSet(i, { reps: v })}
-                  />
+                  {mode === 'routine' ? (
+                    <RepRangeInput
+                      id={'r-' + s.id}
+                      reps={s.reps}
+                      repsMax={s.repsMax ?? null}
+                      onChange={(reps, repsMax) => setSet(i, { reps, repsMax })}
+                    />
+                  ) : (
+                    <NumInput
+                      id={'r-' + s.id}
+                      label="Reps"
+                      decimal={false}
+                      value={s.reps}
+                      placeholder={
+                        s.target ? fmtRepRange(s.target.reps, s.target.repsMax) || '–' : p?.reps ? String(p.reps) : '–'
+                      }
+                      onChange={(v) => setSet(i, { reps: v })}
+                    />
+                  )}
                 </>
               )}
               {showCheck && (
@@ -351,6 +389,15 @@ function ExerciseCard({
           <button className="menu-item" onClick={() => { setNoteOpen(true); setMenu(false); }}>
             <Icon name="note" size={18} /> {we.note ? 'Edit note' : 'Add note'}
           </button>
+          {inSuperset ? (
+            <button className="menu-item" onClick={() => { onUnlink(); setMenu(false); }}>
+              <Icon name="unlink" size={18} /> Remove from superset
+            </button>
+          ) : (
+            <button className="menu-item" disabled={!canLink} onClick={() => { onLink(); setMenu(false); }}>
+              <Icon name="link" size={18} /> Superset with next exercise
+            </button>
+          )}
           <button className="menu-item" disabled={!canUp} onClick={() => { onMove(-1); setMenu(false); }}>
             <Icon name="up" size={18} /> Move up
           </button>
@@ -363,5 +410,40 @@ function ExerciseCard({
         </div>
       </Sheet>
     </section>
+  );
+}
+
+/** Target reps in a routine: a number ("10") or a range ("8-12"). */
+function RepRangeInput({
+  id,
+  reps,
+  repsMax,
+  onChange,
+}: {
+  id: string;
+  reps: number | null;
+  repsMax: number | null;
+  onChange: (reps: number | null, repsMax: number | null) => void;
+}) {
+  const [text, setText] = useState(fmtRepRange(reps, repsMax));
+  useEffect(() => {
+    const parsed = parseRepRange(text);
+    if (!parsed || parsed.reps !== reps || parsed.repsMax !== repsMax) setText(fmtRepRange(reps, repsMax));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reps, repsMax]);
+  return (
+    <input
+      id={id}
+      className="num"
+      aria-label="Target reps, a number or a range like 8-12"
+      placeholder="8-12"
+      value={text}
+      onFocus={(e) => e.currentTarget.select()}
+      onChange={(e) => {
+        setText(e.target.value);
+        const v = parseRepRange(e.target.value);
+        if (v) onChange(v.reps, v.repsMax);
+      }}
+    />
   );
 }

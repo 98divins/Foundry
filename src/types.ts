@@ -66,6 +66,10 @@ export interface SetEntry {
   duration?: number | null;
   /** Kilometres, for cardio exercises. */
   distance?: number | null;
+  /** Upper end of a rep range in a routine ("8-12": reps 8, repsMax 12). */
+  repsMax?: number | null;
+  /** The routine's target, kept on a live set to show as a hint. */
+  target?: { reps: number | null; repsMax: number | null } | null;
   done: boolean;
 }
 
@@ -75,6 +79,8 @@ export interface WorkoutExercise {
   sets: SetEntry[];
   restSec: number;
   note?: string;
+  /** Consecutive exercises sharing this id are done as a superset. */
+  supersetId?: string;
 }
 
 export interface Workout {

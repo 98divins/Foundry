@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { WorkoutEditor } from '../components/WorkoutEditor';
 import { Confirm, Header } from '../components/ui';
+import { RoutineSummaryPanel } from './RoutineView';
 import { back, go } from '../hooks';
 import { useStore } from '../store';
 import type { Routine } from '../types';
@@ -80,8 +81,9 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
           </label>
         )}
         <p className="muted small">
-          Set the target reps and, if you like, a weight for each set. When you start the routine, each set also shows
-          what you lifted last time.
+          Set target reps per set, as a number or a range such as 8-12, and a weight if you like. During the workout the
+          target shows in the reps field and the Previous column shows what you did last time. Use an exercise’s ⋯ menu to
+          pair it with the next one as a superset.
         </p>
         <WorkoutEditor
           exercises={draft.exercises}
@@ -89,6 +91,7 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
           before={Date.now()}
           onChange={(exercises) => setDraft({ ...draft, exercises })}
         />
+        {draft.exercises.length > 0 && <RoutineSummaryPanel routine={draft} />}
         {existing && (
           <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>
             Delete routine

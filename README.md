@@ -9,7 +9,8 @@ All data stays on your device.
 - **Live workouts**: add exercises, log weight × reps per set, tick sets as you go. Each set shows what you did last time; tick an empty set to reuse those numbers.
 - **Set types**: normal, warm-up (left out of stats), drop set, failure.
 - **Rest timer**: starts automatically when you tick a set, ±15 s, skip, beep and vibration when it ends. The screen stays awake during a workout.
-- **Routines and folders**: reusable templates, grouped in folders (e.g. “Upper/Lower x2”) (Push / Pull / Legs included as a starting point). Start one in a single tap, or save any finished workout as a routine.
+- **Routines and folders**: reusable templates with target rep ranges (e.g. 8-12), supersets and notes, grouped in folders (e.g. “Upper/Lower x2”). Each routine has a summary: exercises, sets, estimated time and sets per muscle.
+- **Share links**: copy a link to a routine or a whole folder; opening it (or pasting it in the app) adds the routines on that device (Push / Pull / Legs included as a starting point). Start one in a single tap, or save any finished workout as a routine.
 - **History**: every workout with duration, volume and records. Edit a past workout or log one after the fact.
 - **Records**: heaviest set, best estimated 1RM (Epley), best set volume, most reps for bodyweight moves. A record is flagged when it beats all earlier workouts.
 - **Progress**: per-exercise charts (est. 1RM, heaviest, volume, reps), workouts per week, working sets per muscle over the last 30 days.
