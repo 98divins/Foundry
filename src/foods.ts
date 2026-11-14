@@ -99,12 +99,17 @@ export function foodFromOff(p: OffProduct): Food | null {
 
 export class OffError extends Error {}
 
-async function offFetch(url: string): Promise<unknown> {
+async function offFetch(url: string, retries = 1): Promise<unknown> {
   let res: Response;
   try {
     res = await fetch(url, { headers: { Accept: 'application/json' } });
   } catch {
     throw new OffError('No connection to Open Food Facts. Check your internet connection, or add the food yourself.');
+  }
+  // Open Food Facts' search is sometimes briefly overloaded: try once more before giving up.
+  if ((res.status === 502 || res.status === 503 || res.status === 504) && retries > 0) {
+    await new Promise((r) => setTimeout(r, 1500));
+    return offFetch(url, retries - 1);
   }
   if (res.status === 404) return null;
   if (res.status === 429) throw new OffError('Open Food Facts is limiting searches. Wait a minute and try again.');
