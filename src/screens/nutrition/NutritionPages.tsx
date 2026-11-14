@@ -3,6 +3,7 @@ import { LineChart } from '../../components/Charts';
 import { Header, HeightInput, Icon, NumInput, Segmented, Stat } from '../../components/ui';
 import { back, go } from '../../hooks';
 import {
+  computeTargets,
   ACTIVITY_FACTOR,
   currentExpenditure,
   currentTargets,
@@ -21,6 +22,8 @@ import {
 import { useNutrition, useStore } from '../../store';
 import { fmtNum, fromDisplay, toDisplay } from '../../utils';
 import { locale, t, tk } from '../../i18n';
+import { CUSTOM_PLAN, MACRO_PLANS, planFor } from '../../macroPlans';
+import { PRO_FREE_DURING_BETA } from '../../pro';
 
 const ts = (key: string) => parseDay(key).getTime();
 
@@ -212,6 +215,7 @@ export function PlanPage({ setup }: { setup?: boolean }) {
         rateKgPerWeek: draft.rateKgPerWeek,
         proteinPerKg: draft.proteinPerKg,
         fatShare: draft.fatShare,
+        macroPlan: plan,
         checkInDay: draft.checkInDay,
       };
       if (needsWeight && weight) {
@@ -232,6 +236,16 @@ export function PlanPage({ setup }: { setup?: boolean }) {
     return exp != null ? { exp, ci: makeCheckIn({ ...draft, profile, weights: n.weights.length ? n.weights : [{ date: dayKey(), kg }] }) } : null;
   })();
   const current = currentTargets(n);
+  const plan = planFor(draft.proteinPerKg, draft.fatShare, draft.macroPlan);
+  /** % of calories from protein, carbs and fat with these settings, for this user's calories and weight. */
+  const splitFor = (proteinPerKg: number, fatShare: number) => {
+    const kg = latest ?? (weight ? fromDisplay(weight, unit) : null);
+    if (!preview || !kg) return null;
+    const m = computeTargets(preview.exp, kg, { ...draft, profile, proteinPerKg, fatShare });
+    const p = Math.round(((m.protein * 4) / m.kcal) * 100);
+    const f = Math.round(((m.fat * 9) / m.kcal) * 100);
+    return { p, f, c: Math.max(0, 100 - p - f) };
+  };
   const valid = profile.heightCm > 100 && profile.birthYear > 1920 && (!needsWeight || !!weight);
 
   return (
@@ -298,31 +312,65 @@ export function PlanPage({ setup }: { setup?: boolean }) {
               ))}
             </select>
           </label>
-          <div className="field-row">
-            <label className="field">
-              <span>{t('Protein (g per kg)')}</span>
-              <select
-                id="p-protein"
-                value={draft.proteinPerKg}
-                onChange={(e) => setDraft({ ...draft, proteinPerKg: Number(e.target.value) })}
-              >
-                {[1.6, 1.8, 2, 2.2, 2.4].map((p) => (
-                  <option key={p} value={p}>
-                    {t('{0} g/kg', { 0: p })}</option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>{t('Fat (share of calories)')}</span>
-              <select id="p-fat" value={draft.fatShare} onChange={(e) => setDraft({ ...draft, fatShare: Number(e.target.value) })}>
-                {[0.2, 0.25, 0.28, 0.3, 0.35, 0.4].map((f) => (
-                  <option key={f} value={f}>
-                    {Math.round(f * 100)} %
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="field">
+            <span>{t('Macro plan')}</span>
+            <ul className="plan-choices">
+              {[...MACRO_PLANS, null].map((m) => {
+                const id = m ? m.id : CUSTOM_PLAN;
+                const on = plan === id;
+                const split = m ? splitFor(m.proteinPerKg, m.fatShare) : splitFor(draft.proteinPerKg, draft.fatShare);
+                return (
+                  <li key={id}>
+                    <button
+                      type="button"
+                      className="plan-choice"
+                      aria-pressed={on}
+                      onClick={() => setDraft({ ...draft, macroPlan: id, ...(m ? { proteinPerKg: m.proteinPerKg, fatShare: m.fatShare } : {}) })}
+                    >
+                      <span className="plan-choice-text">
+                        <strong>
+                          {m ? t(m.name) : t('Custom')}
+                          {!m && <span className="pro-badge">Pro</span>}
+                        </strong>
+                        <span className="muted small">{m ? t(m.description) : t('Set protein and fat yourself.')}</span>
+                      </span>
+                      {split && <span className="plan-split small">{t('P {p}% · C {c}% · F {f}%', split)}</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
+          {plan === CUSTOM_PLAN && (
+            <>
+              {PRO_FREE_DURING_BETA && <p className="muted small">{t('Pro feature, included for free during the beta.')}</p>}
+          <div className="field-row">
+              <label className="field">
+                <span>{t('Protein (g per kg)')}</span>
+                <select
+                  id="p-protein"
+                  value={draft.proteinPerKg}
+                  onChange={(e) => setDraft({ ...draft, proteinPerKg: Number(e.target.value) })}
+                >
+                  {[...new Set([1.6, 1.8, 2, 2.2, 2.3, 2.4, 2.6, draft.proteinPerKg])].sort((x, y) => x - y).map((p) => (
+                    <option key={p} value={p}>
+                      {t('{0} g/kg', { 0: fmtNum(p) })}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>{t('Fat (share of calories)')}</span>
+                <select id="p-fat" value={draft.fatShare} onChange={(e) => setDraft({ ...draft, fatShare: Number(e.target.value) })}>
+                  {[...new Set([0.2, 0.25, 0.28, 0.3, 0.35, 0.4, draft.fatShare])].sort((x, y) => x - y).map((f) => (
+                    <option key={f} value={f}>
+                      {Math.round(f * 100)} %
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            </>
+          )}
           <label className="field">
             <span>{t('Weekly check-in day')}</span>
             <select id="p-day" value={draft.checkInDay} onChange={(e) => setDraft({ ...draft, checkInDay: Number(e.target.value) })}>

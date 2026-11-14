@@ -2860,3 +2860,62 @@ span.ex-photo {
 .meal-head h2.meal-title-empty {
   padding-left: 22px;
 }
+
+/* Macro plans */
+.plan-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plan-choice {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: inherit;
+  text-align: left;
+}
+.plan-choice[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.plan-choice-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.plan-split {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  text-align: right;
+}
+.plan-choice[aria-pressed='true'] .plan-split {
+  color: var(--fg);
+}
+.pro-badge {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--gold);
+  color: #10141a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 2px;
+}
+@media (max-width: 380px) {
+  .plan-choice {
+    flex-wrap: wrap;
+  }
+  .plan-split {
+    width: 100%;
+    text-align: left;
+  }
+}

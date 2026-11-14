@@ -93,6 +93,8 @@ export interface NutritionState {
   /** kg per week; negative to lose. */
   rateKgPerWeek: number;
   proteinPerKg: number;
+  /** Chosen macro plan (macroPlans.ts), or 'custom'. Absent on older data: inferred from the values. */
+  macroPlan?: string;
   /** Share of calories from fat, 0.2–0.4. */
   fatShare: number;
   /** 0 = Sunday … 6 = Saturday. */
