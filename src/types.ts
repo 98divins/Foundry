@@ -127,6 +127,10 @@ export interface Settings {
   /** Keep the screen on during a workout (default true). */
   keepAwake?: boolean;
   theme?: 'system' | 'light' | 'dark';
+  /** Custom accent colour (hex). Absent = Foundry cobalt. */
+  accent?: string;
+  /** Pure black background in dark mode (OLED). */
+  pureBlack?: boolean;
 }
 
 export interface RestTimer {

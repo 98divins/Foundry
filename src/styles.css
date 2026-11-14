@@ -65,6 +65,40 @@
   color-scheme: light;
 }
 
+/* User accent colour (theme.ts sets the variables, already adjusted for contrast). */
+:root[data-accent] {
+  --accent: var(--ua-dark);
+  --accent-ink: var(--ua-dark-ink);
+  --accent-soft: color-mix(in srgb, var(--ua-dark) 16%, transparent);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-accent]:not([data-theme='dark']) {
+    --accent: var(--ua-light);
+    --accent-ink: var(--ua-light-ink);
+    --accent-soft: color-mix(in srgb, var(--ua-light) 12%, transparent);
+  }
+}
+:root[data-accent][data-theme='light'] {
+  --accent: var(--ua-light);
+  --accent-ink: var(--ua-light-ink);
+  --accent-soft: color-mix(in srgb, var(--ua-light) 12%, transparent);
+}
+/* Pure black for OLED screens, dark mode only. */
+@media (prefers-color-scheme: dark) {
+  :root[data-black]:not([data-theme='light']) {
+    --bg: #000000;
+    --surface: #0c0e11;
+    --surface-2: #171a1f;
+    --line: #23272e;
+  }
+}
+:root[data-black][data-theme='dark'] {
+  --bg: #000000;
+  --surface: #0c0e11;
+  --surface-2: #171a1f;
+  --line: #23272e;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -2559,13 +2593,9 @@ span.ex-photo {
   object-fit: cover;
   background: var(--surface-2);
 }
-.avatar-initials {
-  display: grid;
-  place-items: center;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-family: var(--font-display);
-  font-weight: 800;
+.avatar-anon {
+  background: var(--surface-2);
+  fill: var(--muted);
 }
 .profile-photo {
   display: flex;
@@ -2660,4 +2690,60 @@ span.ex-photo {
   padding-left: 18px;
   list-style: disc;
   font-size: 14px;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 12px 0;
+}
+.swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.swatch-dot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid transparent;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+.swatch[aria-pressed='true'] .swatch-dot,
+.swatch[data-on='true'] .swatch-dot {
+  outline-color: var(--fg);
+}
+.swatch-custom {
+  background: conic-gradient(#ef4552, #f2c230, #2fbf86, #14b8c4, #3d5bff, #8b5cf6, #ec4899, #ef4552);
+}
+.swatch input[type='color'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.theme-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-top: 12px;
+}
+.theme-preview .btn-primary {
+  margin-left: auto;
 }

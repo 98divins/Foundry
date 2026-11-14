@@ -6,6 +6,7 @@ import { useStore } from '../store';
 import type { NameLang, Settings, Unit } from '../types';
 import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
+import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 
 type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about';
 
@@ -49,7 +50,7 @@ export function SettingsHub() {
           <Row icon="dumbbell" label="Workouts" onClick={() => open('workouts')} />
           <Row icon="ruler" label="Units" value={`${s.unit} · ${s.distanceUnit ?? 'km'} · ${s.heightUnit ?? 'cm'}`} onClick={() => open('units')} />
           <Row icon="globe" label="Language" value={s.exerciseLang === 'fr' ? 'Français' : 'English'} onClick={() => open('language')} />
-          <Row icon="moon" label="Theme" value={{ system: 'System', light: 'Light', dark: 'Dark' }[s.theme ?? 'system']} onClick={() => open('theme')} />
+          <Row icon="moon" label="Theme" value={{ system: 'System', light: 'Light', dark: 'Dark' }[s.theme ?? 'system'] + (s.accent || s.pureBlack ? ' · Custom' : '')} onClick={() => open('theme')} />
         </ul>
         <h2 className="settings-group">Data</h2>
         <ul className="settings-list">
@@ -136,21 +137,17 @@ async function avatarFrom(file: File): Promise<string> {
   }
 }
 
+/** Profile picture, or a neutral head-and-shoulders placeholder when there is none. */
 export function Avatar({ size = 64 }: { size?: number }) {
   const { state } = useStore();
   const p = state.profile;
-  const initials = (p?.name || '?')
-    .split(/\s+/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
   return p?.avatar ? (
     <img className="avatar" src={p.avatar} alt="" width={size} height={size} />
   ) : (
-    <span className="avatar avatar-initials" style={{ width: size, height: size, fontSize: size * 0.38 }} aria-hidden="true">
-      {initials}
-    </span>
+    <svg className="avatar avatar-anon" width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="39" r="17" />
+      <path d="M16 92C16 72 31 61 50 61S84 72 84 92Z" />
+    </svg>
   );
 }
 
@@ -417,8 +414,11 @@ function ThemePage() {
     { value: 'light', label: 'Light', text: 'Always light.' },
     { value: 'dark', label: 'Dark', text: 'Always dark. Easier on the eyes in a dim gym.' },
   ];
+  const accent = (s.accent ?? DEFAULT_ACCENT).toLowerCase();
+  const isPreset = ACCENTS.some((a) => a.hex === accent);
   return (
     <Sub title="Theme">
+      <h2 className="settings-group">Mode</h2>
       <ul className="settings-list">
         {options.map((o) => (
           <li key={o.value}>
@@ -432,6 +432,57 @@ function ThemePage() {
           </li>
         ))}
       </ul>
+
+      <h2 className="settings-group">Accent colour</h2>
+      <div className="swatches">
+        {ACCENTS.map((a) => (
+          <button key={a.hex} className="swatch" aria-pressed={accent === a.hex} onClick={() => set('accent', a.hex === DEFAULT_ACCENT ? undefined : a.hex)}>
+            <span className="swatch-dot" style={{ background: a.hex }}>
+              {accent === a.hex && <Icon name="check" size={18} />}
+            </span>
+            {a.name}
+          </button>
+        ))}
+        <label className="swatch" data-on={!isPreset}>
+          <span className="swatch-dot swatch-custom" style={!isPreset ? { background: accent } : undefined}>
+            {!isPreset && <Icon name="check" size={18} />}
+          </span>
+          Custom
+          <input type="color" value={accent} aria-label="Custom colour" onChange={(e) => set('accent', e.target.value)} />
+        </label>
+      </div>
+      <div className="theme-preview">
+        <Avatar size={40} />
+        <span className="small">
+          Preview
+          <br />
+          <span className="muted">Colours adjust a little in light and dark mode to stay readable.</span>
+        </span>
+        <span className="btn btn-primary">Start</span>
+      </div>
+
+      <h2 className="settings-group">Background</h2>
+      <section className="panel">
+        <label className="setting">
+          <span>
+            Pure black
+            <br />
+            <span className="muted small">Dark mode only. Saves battery on OLED screens.</span>
+          </span>
+          <input type="checkbox" className="switch" checked={!!s.pureBlack} onChange={(e) => set('pureBlack', e.target.checked)} />
+        </label>
+      </section>
+      {(s.accent || s.pureBlack) && (
+        <button
+          className="btn btn-wide"
+          onClick={() => {
+            set('accent', undefined);
+            set('pureBlack', undefined);
+          }}
+        >
+          Reset to Foundry colours
+        </button>
+      )}
     </Sub>
   );
 }

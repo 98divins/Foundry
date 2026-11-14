@@ -1,3 +1,4 @@
+import { applyAccent } from './theme';
 import { useEffect } from 'react';
 import { Icon, type IconName } from './components/ui';
 import { go, useNow, useRoute } from './hooks';
@@ -48,6 +49,13 @@ export function App() {
     if (theme === 'system') delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = theme;
   }, [theme]);
+  const accent = themeState.settings.accent;
+  const pureBlack = !!themeState.settings.pureBlack;
+  useEffect(() => applyAccent(accent), [accent]);
+  useEffect(() => {
+    if (pureBlack) document.documentElement.dataset.black = '';
+    else delete document.documentElement.dataset.black;
+  }, [pureBlack]);
   const { state, saveError } = useStore();
   const nutritionDay = section === 'n' && (!param || /^\d{4}-\d{2}-\d{2}$/.test(param));
   const isTab = TABS.some((t) => t.path === (section ?? '')) && (section !== 'n' || nutritionDay);
