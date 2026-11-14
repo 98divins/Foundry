@@ -22,6 +22,7 @@ const paths = {
   up: 'M12 19V5M6 11l6-6 6 6',
   down: 'M12 5v14M6 13l6 6 6-6',
   note: 'M5 4h14v16H5zM9 9h6M9 13h6M9 17h3',
+  folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z',
 };
 
 export type IconName = keyof typeof paths;

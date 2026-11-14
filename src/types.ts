@@ -67,6 +67,14 @@ export interface Routine {
   name: string;
   exercises: WorkoutExercise[];
   updatedAt: number;
+  /** Folder the routine is filed in; none means "My routines". */
+  folderId?: string;
+}
+
+export interface RoutineFolder {
+  id: string;
+  name: string;
+  collapsed?: boolean;
 }
 
 export interface Settings {
@@ -84,6 +92,7 @@ export interface State {
   version: 1;
   workouts: Workout[];
   routines: Routine[];
+  folders: RoutineFolder[];
   customExercises: Exercise[];
   active: Workout | null;
   rest: RestTimer | null;

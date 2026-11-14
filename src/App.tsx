@@ -20,7 +20,7 @@ const TABS: { path: string; label: string; icon: IconName }[] = [
 ];
 
 export function App() {
-  const [section, param] = useRoute();
+  const [section, param, extra] = useRoute();
   const { state, saveError } = useStore();
   const isTab = TABS.some((t) => t.path === (section ?? ''));
   const now = useNow(1000, !!state.active && section !== 'active');
@@ -49,7 +49,7 @@ export function App() {
       screen = <ExerciseDetail key={param} id={param} />;
       break;
     case 'r':
-      screen = <RoutineEditor key={param} id={param} />;
+      screen = <RoutineEditor key={param + (extra ?? '')} id={param} folderId={extra} />;
       break;
     default:
       screen = <WorkoutTab />;

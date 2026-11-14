@@ -6,11 +6,18 @@ import { useStore } from '../store';
 import type { Routine } from '../types';
 import { uid } from '../utils';
 
-export function RoutineEditor({ id }: { id: string }) {
+export function RoutineEditor({ id, folderId }: { id: string; folderId?: string }) {
   const { state, update } = useStore();
   const existing = state.routines.find((r) => r.id === id);
   const [draft, setDraft] = useState<Routine>(
-    () => existing ?? { id: uid(), name: '', exercises: [], updatedAt: Date.now() },
+    () =>
+      existing ?? {
+        id: uid(),
+        name: '',
+        exercises: [],
+        updatedAt: Date.now(),
+        folderId: state.folders.some((f) => f.id === folderId) ? folderId : undefined,
+      },
   );
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -55,6 +62,23 @@ export function RoutineEditor({ id }: { id: string }) {
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
         </label>
+        {state.folders.length > 0 && (
+          <label className="field">
+            <span>Folder</span>
+            <select
+              id="routine-folder"
+              value={draft.folderId && state.folders.some((f) => f.id === draft.folderId) ? draft.folderId : ''}
+              onChange={(e) => setDraft({ ...draft, folderId: e.target.value || undefined })}
+            >
+              <option value="">My routines (no folder)</option>
+              {state.folders.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <p className="muted small">
           Set the target reps and, if you like, a weight for each set. When you start the routine, each set also shows
           what you lifted last time.

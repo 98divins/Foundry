@@ -59,6 +59,7 @@ export function defaultState(): State {
     version: 1,
     workouts: [],
     routines: starterRoutines(),
+    folders: [],
     customExercises: [],
     active: null,
     rest: null,
