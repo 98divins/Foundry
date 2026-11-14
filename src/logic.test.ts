@@ -7,6 +7,7 @@ import {
   epley,
   exerciseSessions,
   fmtSet,
+  hasEntry,
   fromDisplay,
   niceTicks,
   parseTime,
@@ -98,6 +99,15 @@ describe('exercise kinds', () => {
     expect(LIBRARY.find((e) => e.name === 'Plank')?.kind).toBe('duration');
     expect(LIBRARY.find((e) => e.name === 'Running')?.kind).toBe('cardio');
     expect(LIBRARY.find((e) => e.name === 'Pull Up (Assisted)')?.kind).toBe('assisted');
+  });
+
+  it('knows when a set has something typed in', () => {
+    expect(hasEntry(set('a', 80, 8), 'weight')).toBe(true);
+    expect(hasEntry({ ...set('a', null, 8) }, 'weight')).toBe(false);
+    expect(hasEntry({ ...set('a', null, 0), reps: null, target: { reps: 8, repsMax: 12 } }, 'bodyweight')).toBe(false);
+    expect(hasEntry(set('a', null, 10), 'bodyweight')).toBe(true);
+    expect(hasEntry({ ...set('a', null, 0), reps: null, duration: 60 }, 'duration')).toBe(true);
+    expect(hasEntry({ ...set('a', null, 0), reps: null, distance: 3 }, 'cardio')).toBe(true);
   });
 
   it('parses times typed on a number pad', () => {

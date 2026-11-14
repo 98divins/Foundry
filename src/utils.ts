@@ -55,6 +55,20 @@ export const exerciseKind = (exerciseId: string) => kindOf(exerciseId);
 export const countsForStats = (s: SetEntry) =>
   s.done && s.type !== 'warmup' && ((s.reps ?? 0) > 0 || (s.duration ?? 0) > 0 || (s.distance ?? 0) > 0);
 
+/** Whether a set holds something the user typed, for its kind (ignores hints and placeholders). */
+export function hasEntry(s: SetEntry, kind: ExerciseKind): boolean {
+  switch (kind) {
+    case 'weight':
+      return (s.reps ?? 0) > 0 && s.weight != null;
+    case 'duration':
+      return (s.duration ?? 0) > 0;
+    case 'cardio':
+      return (s.duration ?? 0) > 0 || (s.distance ?? 0) > 0;
+    default:
+      return (s.reps ?? 0) > 0;
+  }
+}
+
 /** Lifted load per set. Assistance, holds and cardio move no external load. */
 export function setVolume(s: SetEntry, kind: ExerciseKind): number {
   if (kind !== 'weight' && kind !== 'bodyweight') return 0;
