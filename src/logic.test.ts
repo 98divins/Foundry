@@ -2,7 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { exportWorkoutCsv, importWorkoutCsv, parseCSV, parseDate } from './csv';
 import { LIBRARY } from './exercises';
 import type { SetEntry, Workout } from './types';
-import { computePRs, epley, exerciseSessions, fromDisplay, niceTicks, previousSets, toDisplay } from './utils';
+import {
+  computePRs,
+  epley,
+  exerciseSessions,
+  fmtSet,
+  fromDisplay,
+  niceTicks,
+  parseTime,
+  previousSets,
+  registerKinds,
+  toDisplay,
+  workoutVolume,
+} from './utils';
+
+const kinds = new Map(LIBRARY.map((e) => [e.id, e.kind]));
+registerKinds((id) => kinds.get(id) ?? 'weight');
 
 const set = (id: string, weight: number | null, reps: number, extra: Partial<SetEntry> = {}): SetEntry => ({
   id,
@@ -75,6 +90,63 @@ describe('records', () => {
   });
 });
 
+describe('exercise kinds', () => {
+  it('library covers the full list with unique ids', () => {
+    expect(LIBRARY.length).toBe(451);
+    expect(new Set(LIBRARY.map((e) => e.id)).size).toBe(LIBRARY.length);
+    expect(LIBRARY.find((e) => e.id === 'bench_bb')?.nameFr).toBe('Développé Couché (Barre)');
+    expect(LIBRARY.find((e) => e.name === 'Plank')?.kind).toBe('duration');
+    expect(LIBRARY.find((e) => e.name === 'Running')?.kind).toBe('cardio');
+    expect(LIBRARY.find((e) => e.name === 'Pull Up (Assisted)')?.kind).toBe('assisted');
+  });
+
+  it('parses times typed on a number pad', () => {
+    expect(parseTime('90', 'sec')).toBe(90);
+    expect(parseTime('25', 'min')).toBe(1500);
+    expect(parseTime('1:30', 'sec')).toBe(90);
+    expect(parseTime('1:02:00', 'min')).toBe(3720);
+    expect(parseTime('', 'sec')).toBe(null);
+    expect(parseTime('1:x', 'sec')).toBe(undefined);
+  });
+
+  it('formats sets per kind', () => {
+    expect(fmtSet({ weight: 80, reps: 8 }, 'weight', 'kg')).toBe('80 kg × 8');
+    expect(fmtSet({ weight: 10, reps: 6 }, 'bodyweight', 'kg')).toBe('+10 kg × 6');
+    expect(fmtSet({ weight: null, reps: 12 }, 'bodyweight', 'kg')).toBe('12 reps');
+    expect(fmtSet({ weight: 20, reps: 8 }, 'assisted', 'kg')).toBe('−20 kg × 8');
+    expect(fmtSet({ weight: null, reps: null, duration: 90 }, 'duration', 'kg')).toBe('1:30');
+    expect(fmtSet({ weight: null, reps: null, duration: 1500, distance: 5 }, 'cardio', 'kg')).toBe('5 km · 25:00');
+  });
+
+  it('keeps assistance, holds and cardio out of volume', () => {
+    const w: Workout = {
+      ...workout('1', 1, 'pull_up_assisted', [set('a', 30, 8)]),
+      exercises: [
+        { id: 'x', exerciseId: 'pull_up_assisted', restSec: 90, sets: [set('a', 30, 8)] },
+        { id: 'y', exerciseId: 'bench_bb', restSec: 90, sets: [set('b', 100, 5)] },
+      ],
+    };
+    expect(workoutVolume(w)).toBe(500);
+  });
+
+  it('flags longest hold and farthest run', () => {
+    const t = (id: string, duration: number, distance: number | null = null): SetEntry => ({
+      ...set(id, null, 0),
+      reps: null,
+      duration,
+      distance,
+    });
+    const prs = computePRs([
+      workout('1', 1, 'plank', [t('a', 60)]),
+      workout('2', 2, 'plank', [t('b', 90)]),
+      workout('3', 3, 'running', [t('c', 1500, 5)]),
+      workout('4', 4, 'running', [t('d', 1400, 6)]),
+    ]);
+    expect(prs.get('b')).toEqual(['duration']);
+    expect(prs.get('d')).toEqual(['distance']);
+  });
+});
+
 describe('csv', () => {
   it('parses quotes and newlines', () => {
     expect(parseCSV('a,"b,c","say ""hi"""\r\n1,"two\nlines",3\n')).toEqual([
@@ -125,6 +197,21 @@ describe('csv', () => {
     expect(back.workouts).toHaveLength(2);
     expect(back.workouts[0].exercises.flatMap((e) => e.sets)).toHaveLength(4);
     expect(back.newExercises).toHaveLength(0);
+  });
+
+  it('imports durations, distances and French exercise names', () => {
+    const text = [
+      'title,start_time,end_time,exercise_title,set_type,weight_kg,reps,distance_km,duration_seconds',
+      'Cardio,"10 Nov 2026, 07:00","10 Nov 2026, 07:40",Course à pied,normal,,,5.2,1680',
+      'Cardio,"10 Nov 2026, 07:00","10 Nov 2026, 07:40",Planche,normal,,,,75',
+    ].join('\n');
+    const res = importWorkoutCsv(text, LIBRARY, []);
+    expect(res.newExercises).toHaveLength(0);
+    const [run, plank] = res.workouts[0].exercises;
+    expect(run.exerciseId).toBe('running');
+    expect(run.sets[0]).toMatchObject({ distance: 5.2, duration: 1680 });
+    expect(plank.exerciseId).toBe('plank');
+    expect(plank.sets[0].duration).toBe(75);
   });
 
   it('rejects files without workout columns', () => {

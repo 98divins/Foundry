@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { fmtClock, parseTime } from '../utils';
 
 /* ---------- Icons (24px stroke set) ---------- */
 
@@ -88,6 +89,52 @@ export function NumInput({
         setText(t);
         const n = parseNum(t);
         if (n !== undefined) onChange(n);
+      }}
+    />
+  );
+}
+
+/**
+ * Time entry that works with a phone's number pad: "90" means 90 s for holds or 90 min for cardio,
+ * "1:30" is also accepted. Shown as m:ss once the field loses focus.
+ */
+export function TimeInput({
+  value,
+  onChange,
+  placeholder,
+  plainUnit,
+  id,
+  className = '',
+}: {
+  value: number | null;
+  onChange: (seconds: number | null) => void;
+  placeholder?: string;
+  plainUnit: 'sec' | 'min';
+  id?: string;
+  className?: string;
+}) {
+  const [text, setText] = useState(value == null ? '' : fmtClock(value));
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setText(value == null ? '' : fmtClock(value));
+  }, [value, focused]);
+  return (
+    <input
+      id={id}
+      className={'num ' + className}
+      inputMode="decimal"
+      aria-label={plainUnit === 'sec' ? 'Time (seconds or m:ss)' : 'Time (minutes or h:mm:ss)'}
+      placeholder={placeholder}
+      value={text}
+      onFocus={(e) => {
+        setFocused(true);
+        e.currentTarget.select();
+      }}
+      onBlur={() => setFocused(false)}
+      onChange={(e) => {
+        setText(e.target.value);
+        const v = parseTime(e.target.value.replace(',', '.'), plainUnit);
+        if (v !== undefined) onChange(v);
       }}
     />
   );

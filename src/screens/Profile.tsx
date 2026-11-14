@@ -2,9 +2,9 @@ import { useMemo, useRef, useState } from 'react';
 import { BarChart } from '../components/Charts';
 import { Confirm, Header, Segmented, Stat } from '../components/ui';
 import { exportWorkoutCsv, importWorkoutCsv } from '../csv';
-import { MUSCLE_LABEL } from '../exercises';
+import { muscleLabel } from '../exercises';
 import { defaultState, parseBackup, useStore } from '../store';
-import type { Muscle, Unit } from '../types';
+import type { Muscle, NameLang, Unit } from '../types';
 import { countsForStats, download, fmtClock, fmtVolume, weekStart, workoutVolume } from '../utils';
 
 const WEEK = 7 * 24 * 3600 * 1000;
@@ -105,7 +105,7 @@ export function Profile() {
           <ul className="muscle-bars">
             {muscles.map(([m, n]) => (
               <li key={m}>
-                <span className="muscle-name">{MUSCLE_LABEL[m]}</span>
+                <span className="muscle-name">{muscleLabel(m, settings.exerciseLang)}</span>
                 <span className="muscle-track">
                   <span className="muscle-fill" style={{ width: `${(n / maxMuscle) * 100}%` }} />
                 </span>
@@ -143,6 +143,18 @@ export function Profile() {
               ))}
             </select>
           </label>
+          <div className="setting">
+            <span>Exercise names</span>
+            <Segmented<NameLang>
+              label="Exercise names"
+              value={settings.exerciseLang}
+              onChange={(exerciseLang) => update((s) => ({ ...s, settings: { ...s.settings, exerciseLang } }))}
+              options={[
+                { value: 'fr', label: 'Français' },
+                { value: 'en', label: 'English' },
+              ]}
+            />
+          </div>
           <label className="setting">
             <span>Beep when rest is over</span>
             <input

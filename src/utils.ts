@@ -1,4 +1,4 @@
-import type { PRKind, SetEntry, Unit, Workout, WorkoutExercise } from './types';
+import type { ExerciseKind, PRKind, SetEntry, Unit, Workout, WorkoutExercise } from './types';
 
 export const uid = () =>
   Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -44,11 +44,26 @@ export function epley(weight: number, reps: number): number {
   return weight * (1 + reps / 30);
 }
 
-/** A set counts toward stats once it is completed, is not a warm-up and has reps. */
-export const countsForStats = (s: SetEntry) => s.done && s.type !== 'warmup' && (s.reps ?? 0) > 0;
+/* The store registers how each exercise is tracked, so stats can treat cardio or assisted sets correctly. */
+let kindOf: (exerciseId: string) => ExerciseKind = () => 'weight';
+export function registerKinds(fn: (exerciseId: string) => ExerciseKind) {
+  kindOf = fn;
+}
+export const exerciseKind = (exerciseId: string) => kindOf(exerciseId);
+
+/** A set counts toward stats once it is completed, is not a warm-up and has something logged. */
+export const countsForStats = (s: SetEntry) =>
+  s.done && s.type !== 'warmup' && ((s.reps ?? 0) > 0 || (s.duration ?? 0) > 0 || (s.distance ?? 0) > 0);
+
+/** Lifted load per set. Assistance, holds and cardio move no external load. */
+export function setVolume(s: SetEntry, kind: ExerciseKind): number {
+  if (kind !== 'weight' && kind !== 'bodyweight') return 0;
+  return (s.weight ?? 0) * (s.reps ?? 0);
+}
 
 export function exerciseVolume(we: WorkoutExercise): number {
-  return we.sets.filter(countsForStats).reduce((t, s) => t + (s.weight ?? 0) * (s.reps ?? 0), 0);
+  const kind = kindOf(we.exerciseId);
+  return we.sets.filter(countsForStats).reduce((t, s) => t + setVolume(s, kind), 0);
 }
 
 export function workoutVolume(w: Workout): number {
@@ -57,6 +72,39 @@ export function workoutVolume(w: Workout): number {
 
 export function workoutSetCount(w: Workout): number {
   return w.exercises.reduce((t, we) => t + we.sets.filter(countsForStats).length, 0);
+}
+
+/** "1:30", "45" (seconds for holds, minutes for cardio), "1:02:00". Returns seconds. */
+export function parseTime(text: string, plainUnit: 'sec' | 'min'): number | null | undefined {
+  const t = text.trim();
+  if (!t) return null;
+  if (/^\d+(\.\d+)?$/.test(t)) return Math.round(Number(t) * (plainUnit === 'min' ? 60 : 1));
+  const parts = t.split(':');
+  if (parts.length > 3 || parts.some((p) => !/^\d{1,2}$/.test(p) && !/^\d+$/.test(p))) return undefined;
+  return parts.reduce((acc, p) => acc * 60 + Number(p), 0);
+}
+
+export function fmtKm(km: number): string {
+  return `${Math.round(km * 100) / 100} km`;
+}
+
+/** One set as a short line, e.g. "80 kg × 8", "+10 kg × 6", "−20 kg × 8", "1:30", "5 km · 25:00". */
+export function fmtSet(s: Pick<SetEntry, 'weight' | 'reps' | 'duration' | 'distance'>, kind: ExerciseKind, unit: Unit): string {
+  const w = s.weight ? fmtNum(toDisplay(s.weight, unit)) : null;
+  switch (kind) {
+    case 'duration':
+      return s.duration ? fmtClock(s.duration) : '–';
+    case 'cardio': {
+      const parts = [s.distance ? fmtKm(s.distance) : null, s.duration ? fmtClock(s.duration) : null].filter(Boolean);
+      return parts.join(' · ') || '–';
+    }
+    case 'assisted':
+      return `${w ? `−${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' reps'}`;
+    case 'bodyweight':
+      return `${w ? `+${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' reps'}`;
+    default:
+      return `${w ? `${w} ${unit} × ` : ''}${s.reps ?? '–'}${w ? '' : ' reps'}`;
+  }
 }
 
 export function fmtDuration(ms: number): string {
@@ -105,10 +153,15 @@ export interface Session {
   bestSetVolume: number;
   bestReps: number;
   volume: number;
+  /** Longest single set, in seconds. */
+  bestDuration: number;
+  totalDuration: number;
+  totalDistance: number;
 }
 
 /** One entry per finished workout that contains the exercise, oldest first. */
 export function exerciseSessions(workouts: Workout[], exerciseId: string): Session[] {
+  const kind = kindOf(exerciseId);
   const out: Session[] = [];
   for (const w of finished(workouts)) {
     const sets = w.exercises
@@ -116,19 +169,31 @@ export function exerciseSessions(workouts: Workout[], exerciseId: string): Sessi
       .flatMap((we) => we.sets)
       .filter(countsForStats);
     if (!sets.length) continue;
+    const loaded = kind === 'weight' || kind === 'bodyweight';
     out.push({
       workoutId: w.id,
       date: w.startedAt,
       sets,
-      bestWeight: Math.max(...sets.map((s) => s.weight ?? 0)),
-      best1rm: Math.max(...sets.map((s) => epley(s.weight ?? 0, s.reps ?? 0))),
-      bestSetVolume: Math.max(...sets.map((s) => (s.weight ?? 0) * (s.reps ?? 0))),
+      bestWeight: loaded ? Math.max(...sets.map((s) => s.weight ?? 0)) : 0,
+      best1rm: loaded ? Math.max(...sets.map((s) => epley(s.weight ?? 0, s.reps ?? 0))) : 0,
+      bestSetVolume: Math.max(...sets.map((s) => setVolume(s, kind))),
       bestReps: Math.max(...sets.map((s) => s.reps ?? 0)),
-      volume: sets.reduce((t, s) => t + (s.weight ?? 0) * (s.reps ?? 0), 0),
+      volume: sets.reduce((t, s) => t + setVolume(s, kind), 0),
+      bestDuration: Math.max(...sets.map((s) => s.duration ?? 0)),
+      totalDuration: sets.reduce((t, s) => t + (s.duration ?? 0), 0),
+      totalDistance: sets.reduce((t, s) => t + (s.distance ?? 0), 0),
     });
   }
   return out;
 }
+
+const PR_METRICS: Record<ExerciseKind, PRKind[]> = {
+  weight: ['weight', '1rm', 'volume'],
+  bodyweight: ['weight', '1rm', 'volume', 'reps'],
+  assisted: ['reps'],
+  duration: ['duration'],
+  cardio: ['distance', 'duration'],
+};
 
 /**
  * Personal records, keyed by set id. A set is a record when it beats every
@@ -136,9 +201,17 @@ export function exerciseSessions(workouts: Workout[], exerciseId: string): Sessi
  * Within one workout only the best set per metric is flagged.
  */
 export function computePRs(workouts: Workout[]): Map<string, PRKind[]> {
-  const bests = new Map<string, Record<PRKind, number>>();
+  const bests = new Map<string, Partial<Record<PRKind, number>>>();
   const result = new Map<string, PRKind[]>();
   const flag = (id: string, k: PRKind) => result.set(id, [...(result.get(id) ?? []), k]);
+  const metric: Record<PRKind, (s: SetEntry) => number> = {
+    weight: (s) => s.weight ?? 0,
+    '1rm': (s) => epley(s.weight ?? 0, s.reps ?? 0),
+    volume: (s) => (s.weight ?? 0) * (s.reps ?? 0),
+    reps: (s) => s.reps ?? 0,
+    duration: (s) => s.duration ?? 0,
+    distance: (s) => s.distance ?? 0,
+  };
 
   for (const w of finished(workouts)) {
     const byExercise = new Map<string, SetEntry[]>();
@@ -147,23 +220,17 @@ export function computePRs(workouts: Workout[]): Map<string, PRKind[]> {
       if (sets.length) byExercise.set(we.exerciseId, [...(byExercise.get(we.exerciseId) ?? []), ...sets]);
     }
     for (const [exId, sets] of byExercise) {
-      const metric: Record<PRKind, (s: SetEntry) => number> = {
-        weight: (s) => s.weight ?? 0,
-        '1rm': (s) => epley(s.weight ?? 0, s.reps ?? 0),
-        volume: (s) => (s.weight ?? 0) * (s.reps ?? 0),
-        reps: (s) => s.reps ?? 0,
-      };
       const prev = bests.get(exId);
-      const next = { ...(prev ?? { weight: 0, '1rm': 0, volume: 0, reps: 0 }) };
-      for (const k of Object.keys(metric) as PRKind[]) {
+      const next = { ...(prev ?? {}) };
+      for (const k of PR_METRICS[kindOf(exId)]) {
         let top: SetEntry | null = null;
         for (const s of sets) if (!top || metric[k](s) > metric[k](top)) top = s;
         if (!top) continue;
         const v = metric[k](top);
-        // Reps only count as a record when there is no load to compare.
-        const relevant = k === 'reps' ? sets.every((s) => !s.weight) : v > 0;
-        if (prev && relevant && v > prev[k] + 1e-9) flag(top.id, k);
-        next[k] = Math.max(next[k], v);
+        // Rep records only count when no set carried extra load.
+        const relevant = k === 'reps' ? sets.every((s) => !s.weight) || kindOf(exId) === 'assisted' : v > 0;
+        if (prev && relevant && v > (prev[k] ?? 0) + 1e-9) flag(top.id, k);
+        next[k] = Math.max(next[k] ?? 0, v);
       }
       bests.set(exId, next);
     }

@@ -49,7 +49,12 @@ export function parseDate(s: string): number | null {
   return Number.isNaN(t) ? null : t;
 }
 
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+const norm = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 
 function guessEquipment(title: string): Equipment {
   const t = title.toLowerCase();
@@ -92,7 +97,12 @@ export function importWorkoutCsv(text: string, known: Exercise[], existing: Work
   const get = (r: string[], name: string) => (col(name) >= 0 ? (r[col(name)] ?? '').trim() : '');
   const num = (v: string) => (v === '' || Number.isNaN(Number(v)) ? null : Number(v));
 
-  const byName = new Map(known.map((e) => [norm(e.name), e]));
+  // Match English names and, for exports made in French, French names too.
+  const byName = new Map<string, Exercise>();
+  for (const e of known) {
+    byName.set(norm(e.name), e);
+    if (e.nameFr && !byName.has(norm(e.nameFr))) byName.set(norm(e.nameFr), e);
+  }
   const newExercises: Exercise[] = [];
   const workouts = new Map<string, Workout>();
   const order: string[] = [];
@@ -142,21 +152,31 @@ export function importWorkoutCsv(text: string, known: Exercise[], existing: Work
     }
     const weight = num(get(r, 'weight_kg'));
     const reps = num(get(r, 'reps'));
-    if (reps == null && weight == null) continue;
+    const duration = num(get(r, 'duration_seconds'));
+    const distance = num(get(r, 'distance_km'));
+    if (reps == null && weight == null && !duration && !distance) continue;
     we.sets.push({
       id: uid(),
       type: SET_TYPE[get(r, 'set_type').toLowerCase()] ?? 'normal',
       weight,
       reps,
+      duration: duration || null,
+      distance: distance || null,
       done: true,
     });
   }
 
-  // Exercises that never carried a load are bodyweight movements.
+  // Guess how new exercises are tracked from what their sets hold.
   const all = [...workouts.values()];
   for (const e of newExercises) {
     const sets = all.flatMap((w) => w.exercises.filter((we) => we.exerciseId === e.id).flatMap((we) => we.sets));
-    if (sets.length && sets.every((s) => !s.weight)) {
+    if (!sets.length) continue;
+    if (sets.some((s) => s.distance)) {
+      e.kind = 'cardio';
+      e.muscle = 'cardio';
+    } else if (sets.every((s) => !s.reps) && sets.some((s) => s.duration)) {
+      e.kind = 'duration';
+    } else if (sets.every((s) => !s.weight)) {
       e.kind = 'bodyweight';
       e.equipment = e.equipment === 'other' ? 'bodyweight' : e.equipment;
     }
@@ -204,7 +224,8 @@ export function exportWorkoutCsv(workouts: Workout[], exercises: Map<string, Exe
           lines.push(
             [
               w.name, fmtCsvDate(w.startedAt), fmtCsvDate(w.endedAt!), w.note ?? '', name, '', we.note ?? '',
-              i, typeOut[s.type], s.weight == null ? '' : Math.round(s.weight * 1000) / 1000, s.reps ?? '', '', '', '',
+              i, typeOut[s.type], s.weight == null ? '' : Math.round(s.weight * 1000) / 1000, s.reps ?? '',
+              s.distance ?? '', s.duration ?? '', '',
             ].map(esc).join(','),
           );
         });

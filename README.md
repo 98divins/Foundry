@@ -9,11 +9,12 @@ All data stays on your device.
 - **Live workouts**: add exercises, log weight × reps per set, tick sets as you go. Each set shows what you did last time; tick an empty set to reuse those numbers.
 - **Set types**: normal, warm-up (left out of stats), drop set, failure.
 - **Rest timer**: starts automatically when you tick a set, ±15 s, skip, beep and vibration when it ends. The screen stays awake during a workout.
-- **Routines**: reusable templates (Push / Pull / Legs included as a starting point). Start one in a single tap, or save any finished workout as a routine.
+- **Routines and folders**: reusable templates, grouped in folders (e.g. “Upper/Lower x2”) (Push / Pull / Legs included as a starting point). Start one in a single tap, or save any finished workout as a routine.
 - **History**: every workout with duration, volume and records. Edit a past workout or log one after the fact.
 - **Records**: heaviest set, best estimated 1RM (Epley), best set volume, most reps for bodyweight moves. A record is flagged when it beats all earlier workouts.
 - **Progress**: per-exercise charts (est. 1RM, heaviest, volume, reps), workouts per week, working sets per muscle over the last 30 days.
-- **Exercise library**: ~75 common exercises plus your own custom ones.
+- **Exercise library**: 450 exercises with English and French names (choose in Profile), searchable without accents and filterable by muscle and equipment, plus your own custom ones. 376 have start and end photos from [Free Exercise DB](https://github.com/yuhonas/free-exercise-db) (public domain), loaded from a CDN and cached for offline use.
+- **Tracking types**: weight × reps, bodyweight reps with optional added weight, assisted reps (the assistance never counts as volume), timed holds (plank, dead hang…) and cardio (distance and time).
 - **kg or lb**: weights are stored in kg and converted for display.
 - **Your data**: JSON backup and restore, CSV export, and **CSV import from a Hevy export** (Hevy → Settings → Export & Import Data → Export workouts). Unknown exercise names become custom exercises; workouts already present are skipped.
 
@@ -44,7 +45,8 @@ Data is kept in the browser's local storage on that device. Export a backup from
 | `src/store.tsx` | App state, persistence, starter routines |
 | `src/utils.ts` | Volume, 1RM, records, sessions, formatting |
 | `src/csv.ts` | CSV parser, Hevy-format import, CSV export |
-| `src/exercises.ts` | Built-in exercise library |
+| `src/exerciseData.ts` | The 450 exercises: names, muscle, equipment, tracking type, photo |
+| `src/exercises.ts` | Library helpers: labels in both languages, photo URLs, search |
 | `src/components/WorkoutEditor.tsx` | Set table used by live workouts, routines and edits |
 | `src/screens/` | One file per screen |
 | `public/sw.js` | Offline cache |

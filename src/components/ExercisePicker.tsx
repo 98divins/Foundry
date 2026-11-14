@@ -1,30 +1,108 @@
 import { useMemo, useState } from 'react';
-import { EQUIPMENT_LABEL, MUSCLE_LABEL } from '../exercises';
+import { EQUIPMENT, KIND_LABEL, MUSCLES, equipmentLabel, fold, muscleLabel } from '../exercises';
 import { useStore } from '../store';
 import type { Equipment, Exercise, ExerciseKind, Muscle } from '../types';
 import { uid } from '../utils';
+import { ExerciseImage } from './ExerciseImage';
 import { Icon, Sheet } from './ui';
 
-export function useFilteredExercises(query: string, muscle: Muscle | 'all') {
-  const { exercises } = useStore();
-  return useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return exercises
-      .filter((e) => (muscle === 'all' || e.muscle === muscle) && (!q || e.name.toLowerCase().includes(q)))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [exercises, query, muscle]);
+export interface ExerciseFilter {
+  query: string;
+  muscle: Muscle | 'all';
+  equipment: Equipment | 'all';
 }
 
-export function MuscleChips({ value, onChange }: { value: Muscle | 'all'; onChange: (m: Muscle | 'all') => void }) {
-  const items: (Muscle | 'all')[] = ['all', ...(Object.keys(MUSCLE_LABEL) as Muscle[])];
+export const emptyFilter: ExerciseFilter = { query: '', muscle: 'all', equipment: 'all' };
+
+/** Matches French and English names, ignoring accents and word order. */
+export function useFilteredExercises({ query, muscle, equipment }: ExerciseFilter) {
+  const { exercises } = useStore();
+  return useMemo(() => {
+    const words = fold(query).split(/\s+/).filter(Boolean);
+    return exercises
+      .filter((e) => {
+        if (muscle !== 'all' && e.muscle !== muscle && !(muscle === 'upper_back' && e.muscle === 'back')) return false;
+        if (equipment !== 'all' && e.equipment !== equipment) return false;
+        if (!words.length) return true;
+        const hay = fold(`${e.name} ${e.nameFr ?? ''}`);
+        return words.every((w) => hay.includes(w));
+      })
+      .sort((a, b) => (a.label ?? a.name).localeCompare(b.label ?? b.name));
+  }, [exercises, query, muscle, equipment]);
+}
+
+export function ExerciseFilters({
+  value,
+  onChange,
+  idPrefix,
+}: {
+  value: ExerciseFilter;
+  onChange: (f: ExerciseFilter) => void;
+  idPrefix: string;
+}) {
+  const { state } = useStore();
+  const lang = state.settings.exerciseLang;
   return (
-    <div className="chips" role="group" aria-label="Filter by muscle">
-      {items.map((m) => (
-        <button key={m} className={'chip' + (value === m ? ' on' : '')} onClick={() => onChange(m)}>
-          {m === 'all' ? 'All' : MUSCLE_LABEL[m]}
-        </button>
-      ))}
+    <div className="filters">
+      <label className="search">
+        <Icon name="search" size={18} />
+        <input
+          id={idPrefix + '-search'}
+          placeholder={lang === 'fr' ? 'Rechercher (FR ou EN)' : 'Search (English or French)'}
+          value={value.query}
+          onChange={(e) => onChange({ ...value, query: e.target.value })}
+        />
+        {value.query && (
+          <button className="icon-btn search-clear" aria-label="Clear search" onClick={() => onChange({ ...value, query: '' })}>
+            <Icon name="x" size={16} />
+          </button>
+        )}
+      </label>
+      <div className="filter-row">
+        <select
+          id={idPrefix + '-muscle'}
+          aria-label="Muscle"
+          value={value.muscle}
+          onChange={(e) => onChange({ ...value, muscle: e.target.value as Muscle | 'all' })}
+        >
+          <option value="all">{lang === 'fr' ? 'Tous les muscles' : 'All muscles'}</option>
+          {MUSCLES.map((m) => (
+            <option key={m} value={m}>
+              {muscleLabel(m, lang)}
+            </option>
+          ))}
+        </select>
+        <select
+          id={idPrefix + '-equipment'}
+          aria-label="Equipment"
+          value={value.equipment}
+          onChange={(e) => onChange({ ...value, equipment: e.target.value as Equipment | 'all' })}
+        >
+          <option value="all">{lang === 'fr' ? 'Tout l’équipement' : 'All equipment'}</option>
+          {EQUIPMENT.map((m) => (
+            <option key={m} value={m}>
+              {equipmentLabel(m, lang)}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
+  );
+}
+
+export function ExerciseRowText({ e }: { e: Exercise }) {
+  const { state } = useStore();
+  const lang = state.settings.exerciseLang;
+  return (
+    <span className="picker-text">
+      <span className="picker-name">
+        {e.label ?? e.name}
+        {e.custom && <span className="tag">Custom</span>}
+      </span>
+      <span className="muted small">
+        {muscleLabel(e.muscle, lang)} · {equipmentLabel(e.equipment, lang)}
+      </span>
+    </span>
   );
 }
 
@@ -37,31 +115,22 @@ export function ExercisePicker({
   onClose: () => void;
   onPick: (ids: string[]) => void;
 }) {
-  const [query, setQuery] = useState('');
-  const [muscle, setMuscle] = useState<Muscle | 'all'>('all');
+  const [filter, setFilter] = useState<ExerciseFilter>(emptyFilter);
   const [picked, setPicked] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
-  const list = useFilteredExercises(query, muscle);
+  const list = useFilteredExercises(filter);
 
   const close = () => {
     setPicked([]);
-    setQuery('');
+    setFilter(emptyFilter);
     onClose();
   };
 
   return (
     <Sheet open={open} onClose={close} title="Add exercises" tall>
       <div className="picker-tools">
-        <label className="search">
-          <Icon name="search" size={18} />
-          <input
-            id="picker-search"
-            placeholder="Search exercises"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </label>
-        <MuscleChips value={muscle} onChange={setMuscle} />
+        <ExerciseFilters value={filter} onChange={setFilter} idPrefix="picker" />
+        <span className="muted small">{list.length} exercises</span>
       </div>
       <ul className="picker-list">
         {list.map((e) => {
@@ -73,20 +142,20 @@ export function ExercisePicker({
                 aria-pressed={on}
                 onClick={() => setPicked(on ? picked.filter((p) => p !== e.id) : [...picked, e.id])}
               >
-                <span className="ex-initial" aria-hidden="true">
-                  {on ? <Icon name="check" size={18} /> : e.name[0]}
+                <span className="thumb-wrap">
+                  <ExerciseImage ex={e} label={e.label ?? e.name} />
+                  {on && (
+                    <span className="thumb-check" aria-hidden="true">
+                      <Icon name="check" size={18} />
+                    </span>
+                  )}
                 </span>
-                <span className="picker-text">
-                  <span className="picker-name">{e.name}</span>
-                  <span className="muted small">
-                    {MUSCLE_LABEL[e.muscle]} · {EQUIPMENT_LABEL[e.equipment]}
-                  </span>
-                </span>
+                <ExerciseRowText e={e} />
               </button>
             </li>
           );
         })}
-        {!list.length && <li className="muted empty-line">No exercise matches “{query}”.</li>}
+        {!list.length && <li className="muted empty-line">No exercise matches these filters.</li>}
       </ul>
       <div className="sheet-actions sticky-actions">
         <button className="btn" onClick={() => setCreating(true)}>
@@ -105,7 +174,7 @@ export function ExercisePicker({
       </div>
       <CreateExercise
         open={creating}
-        initialName={query}
+        initialName={filter.query}
         onClose={() => setCreating(false)}
         onCreated={(e) => setPicked((p) => [...p, e.id])}
       />
@@ -124,12 +193,15 @@ export function CreateExercise({
   onCreated?: (e: Exercise) => void;
   initialName?: string;
 }) {
-  const { update, exercises } = useStore();
+  const { state, update, exercises } = useStore();
+  const lang = state.settings.exerciseLang;
   const [name, setName] = useState(initialName);
   const [muscle, setMuscle] = useState<Muscle>('chest');
   const [equipment, setEquipment] = useState<Equipment>('barbell');
   const [kind, setKind] = useState<ExerciseKind>('weight');
-  const clash = exercises.some((e) => e.name.toLowerCase() === name.trim().toLowerCase());
+  const clash = exercises.some(
+    (e) => fold(e.name) === fold(name.trim()) || (e.nameFr && fold(e.nameFr) === fold(name.trim())),
+  );
 
   return (
     <Sheet open={open} onClose={onClose} title="New exercise">
@@ -153,9 +225,9 @@ export function CreateExercise({
         <label className="field">
           <span>Primary muscle</span>
           <select id="new-ex-muscle" value={muscle} onChange={(e) => setMuscle(e.target.value as Muscle)}>
-            {(Object.keys(MUSCLE_LABEL) as Muscle[]).map((m) => (
+            {MUSCLES.map((m) => (
               <option key={m} value={m}>
-                {MUSCLE_LABEL[m]}
+                {muscleLabel(m, lang)}
               </option>
             ))}
           </select>
@@ -163,9 +235,9 @@ export function CreateExercise({
         <label className="field">
           <span>Equipment</span>
           <select id="new-ex-equipment" value={equipment} onChange={(e) => setEquipment(e.target.value as Equipment)}>
-            {(Object.keys(EQUIPMENT_LABEL) as Equipment[]).map((m) => (
+            {EQUIPMENT.map((m) => (
               <option key={m} value={m}>
-                {EQUIPMENT_LABEL[m]}
+                {equipmentLabel(m, lang)}
               </option>
             ))}
           </select>
@@ -173,8 +245,11 @@ export function CreateExercise({
         <label className="field">
           <span>Tracking</span>
           <select id="new-ex-kind" value={kind} onChange={(e) => setKind(e.target.value as ExerciseKind)}>
-            <option value="weight">Weight × reps</option>
-            <option value="bodyweight">Bodyweight reps (optional added weight)</option>
+            {(Object.keys(KIND_LABEL) as ExerciseKind[]).map((k) => (
+              <option key={k} value={k}>
+                {KIND_LABEL[k]}
+              </option>
+            ))}
           </select>
         </label>
         <div className="sheet-actions">

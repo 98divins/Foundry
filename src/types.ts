@@ -2,7 +2,10 @@ export type Unit = 'kg' | 'lb';
 export type SetType = 'normal' | 'warmup' | 'drop' | 'failure';
 export type Muscle =
   | 'chest'
-  | 'back'
+  | 'upper_back'
+  | 'lats'
+  | 'lower_back'
+  | 'traps'
   | 'shoulders'
   | 'biceps'
   | 'triceps'
@@ -12,8 +15,14 @@ export type Muscle =
   | 'hamstrings'
   | 'glutes'
   | 'calves'
+  | 'adductors'
+  | 'abductors'
+  | 'neck'
   | 'full_body'
-  | 'other';
+  | 'cardio'
+  | 'other'
+  /** Used by the first library; still valid for custom exercises made then. */
+  | 'back';
 export type Equipment =
   | 'barbell'
   | 'dumbbell'
@@ -22,13 +31,25 @@ export type Equipment =
   | 'bodyweight'
   | 'kettlebell'
   | 'band'
+  | 'plate'
+  | 'suspension'
   | 'other';
-/** weight: load × reps. bodyweight: reps, with optional added load. */
-export type ExerciseKind = 'weight' | 'bodyweight';
+/**
+ * weight: load × reps. bodyweight: reps, optional added load. assisted: reps, the load is the help
+ * (so it never counts as volume). duration: a timed hold. cardio: distance and time.
+ */
+export type ExerciseKind = 'weight' | 'bodyweight' | 'assisted' | 'duration' | 'cardio';
+export type NameLang = 'fr' | 'en';
 
 export interface Exercise {
   id: string;
+  /** English name (also what CSV files use). */
   name: string;
+  nameFr?: string;
+  /** Free Exercise DB photo folder. */
+  image?: string | null;
+  /** Name to show, in the language picked in settings (filled in by the store). */
+  label?: string;
   muscle: Muscle;
   equipment: Equipment;
   kind: ExerciseKind;
@@ -41,6 +62,10 @@ export interface SetEntry {
   type: SetType;
   weight: number | null;
   reps: number | null;
+  /** Seconds, for duration and cardio exercises. */
+  duration?: number | null;
+  /** Kilometres, for cardio exercises. */
+  distance?: number | null;
   done: boolean;
 }
 
@@ -81,6 +106,7 @@ export interface Settings {
   unit: Unit;
   defaultRest: number;
   sound: boolean;
+  exerciseLang: NameLang;
 }
 
 export interface RestTimer {
@@ -99,4 +125,4 @@ export interface State {
   settings: Settings;
 }
 
-export type PRKind = 'weight' | '1rm' | 'volume' | 'reps';
+export type PRKind = 'weight' | '1rm' | 'volume' | 'reps' | 'duration' | 'distance';

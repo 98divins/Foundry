@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { LIBRARY } from './exercises';
+import { displayName, LIBRARY } from './exercises';
 import type { Exercise, Routine, State, WorkoutExercise } from './types';
-import { uid } from './utils';
+import { registerKinds, uid } from './utils';
 
 const KEY = 'foundry:v1';
 
@@ -63,7 +63,7 @@ export function defaultState(): State {
     customExercises: [],
     active: null,
     rest: null,
-    settings: { unit: 'kg', defaultRest: 90, sound: true },
+    settings: { unit: 'kg', defaultRest: 90, sound: true, exerciseLang: 'fr' },
   };
 }
 
@@ -117,12 +117,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     navigator.storage?.persist?.().catch(() => {});
   }, []);
 
-  const value = useMemo<Ctx>(() => {
-    const exercises = [...LIBRARY, ...state.customExercises];
+  const lang = state.settings.exerciseLang;
+  const custom = state.customExercises;
+  const lib = useMemo(() => {
+    const exercises = [...LIBRARY, ...custom].map((e) => ({ ...e, label: displayName(e, lang) }));
     const exMap = new Map(exercises.map((e) => [e.id, e]));
-    // Keep unknown ids renderable if a custom exercise was deleted.
-    return { state, update: setState, exercises, exMap, saveError };
-  }, [state, saveError]);
+    registerKinds((id) => exMap.get(id)?.kind ?? 'weight');
+    return { exercises, exMap };
+  }, [custom, lang]);
+
+  const value = useMemo<Ctx>(() => ({ state, update: setState, ...lib, saveError }), [state, lib, saveError]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
@@ -134,5 +138,6 @@ export function useStore(): Ctx {
 }
 
 export function exerciseName(exMap: Map<string, Exercise>, id: string) {
-  return exMap.get(id)?.name ?? 'Deleted exercise';
+  const e = exMap.get(id);
+  return e?.label ?? e?.name ?? 'Deleted exercise';
 }

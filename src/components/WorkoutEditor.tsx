@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { go } from '../hooks';
 import { exerciseName, useStore } from '../store';
-import type { SetEntry, SetType, WorkoutExercise } from '../types';
-import { fmtClock, fmtNum, fromDisplay, previousSets, toDisplay, uid } from '../utils';
+import type { ExerciseKind, SetEntry, SetType, WorkoutExercise } from '../types';
+import { fmtClock, fmtNum, fmtSet, fromDisplay, previousSets, toDisplay, uid } from '../utils';
+import { ExerciseImage } from './ExerciseImage';
 import { ExercisePicker } from './ExercisePicker';
-import { Icon, NumInput, Sheet } from './ui';
+import { Icon, NumInput, Sheet, TimeInput } from './ui';
 
 export type EditorMode = 'live' | 'edit' | 'routine';
 
@@ -113,11 +114,12 @@ function ExerciseCard({
   const { state, exMap } = useStore();
   const unit = state.settings.unit;
   const ex = exMap.get(we.exerciseId);
-  const bodyweight = ex?.kind === 'bodyweight';
+  const kind: ExerciseKind = ex?.kind ?? 'weight';
   const [menu, setMenu] = useState(false);
   const [noteOpen, setNoteOpen] = useState(!!we.note);
   const [flash, setFlash] = useState<string | null>(null);
   const showCheck = mode === 'live';
+  const timed = kind === 'duration' || kind === 'cardio';
 
   const setSet = (i: number, patch: Partial<SetEntry>) => {
     const sets = we.sets.map((s, j) => (j === i ? { ...s, ...patch } : s));
@@ -129,14 +131,26 @@ function ExerciseCard({
     if (s.done) return setSet(i, { done: false });
     // Empty fields take the values shown as placeholders (last session).
     const p = prev[i];
-    const weight = s.weight ?? p?.weight ?? null;
-    const reps = s.reps ?? p?.reps ?? null;
-    if (!reps || (!bodyweight && weight == null)) {
+    const filled = {
+      weight: s.weight ?? p?.weight ?? null,
+      reps: s.reps ?? p?.reps ?? null,
+      duration: s.duration ?? p?.duration ?? null,
+      distance: s.distance ?? p?.distance ?? null,
+    };
+    const ok =
+      kind === 'weight'
+        ? !!filled.reps && filled.weight != null
+        : kind === 'duration'
+          ? !!filled.duration
+          : kind === 'cardio'
+            ? !!filled.duration || !!filled.distance
+            : !!filled.reps;
+    if (!ok) {
       setFlash(s.id);
       setTimeout(() => setFlash(null), 600);
       return;
     }
-    setSet(i, { done: true, weight, reps });
+    setSet(i, { done: true, ...filled });
     onSetCompleted();
   };
 
@@ -146,16 +160,35 @@ function ExerciseCard({
       ...we,
       sets: [
         ...we.sets,
-        { id: uid(), type: 'normal', weight: last?.weight ?? null, reps: last?.reps ?? null, done: false },
+        {
+          id: uid(),
+          type: 'normal',
+          weight: last?.weight ?? null,
+          reps: last?.reps ?? null,
+          duration: last?.duration ?? null,
+          distance: last?.distance ?? null,
+          done: false,
+        },
       ],
     });
   };
 
+  const prevText = (p: SetEntry | undefined) => {
+    if (!p) return '–';
+    if (timed) return fmtSet(p, kind, unit);
+    const w = p.weight ? fmtNum(toDisplay(p.weight, unit)) : null;
+    const sign = kind === 'assisted' ? '−' : kind === 'bodyweight' ? '+' : '';
+    return `${w ? `${sign}${w} × ` : ''}${p.reps ?? '–'}`;
+  };
+
+  const weightHeader = kind === 'bodyweight' ? `+${unit}` : kind === 'assisted' ? `−${unit}` : unit;
+
   return (
-    <section className="ex-card" aria-label={ex?.name}>
+    <section className="ex-card" aria-label={ex?.label ?? ex?.name}>
       <div className="ex-head">
         <button className="ex-title" onClick={() => ex && go('e/' + ex.id)}>
-          {exerciseName(exMap, we.exerciseId)}
+          <ExerciseImage ex={ex} label={exerciseName(exMap, we.exerciseId)} />
+          <span>{exerciseName(exMap, we.exerciseId)}</span>
         </button>
         <button className="icon-btn" aria-label="Exercise options" onClick={() => setMenu(true)}>
           <Icon name="dots" />
@@ -180,8 +213,19 @@ function ExerciseCard({
       <div className={'set-grid' + (showCheck ? ' with-check' : '') + (mode === 'routine' ? ' no-prev' : '')}>
         <div className="set-hd">Set</div>
         {mode !== 'routine' && <div className="set-hd">Previous</div>}
-        <div className="set-hd">{bodyweight ? `+${unit}` : unit}</div>
-        <div className="set-hd">Reps</div>
+        {kind === 'duration' ? (
+          <div className="set-hd span-2">Time</div>
+        ) : kind === 'cardio' ? (
+          <>
+            <div className="set-hd">km</div>
+            <div className="set-hd">Time</div>
+          </>
+        ) : (
+          <>
+            <div className="set-hd">{weightHeader}</div>
+            <div className="set-hd">Reps</div>
+          </>
+        )}
         {showCheck && (
           <div className="set-hd" aria-label="Done">
             <Icon name="check" size={16} />
@@ -190,7 +234,6 @@ function ExerciseCard({
 
         {we.sets.map((s, i) => {
           const p = prev[i];
-          const prevText = p ? `${p.weight ? fmtNum(toDisplay(p.weight, unit)) + ' × ' : ''}${p.reps ?? '–'}` : '–';
           const rowCls = 'set-row' + (s.done ? ' done' : '') + (flash === s.id ? ' flash' : '');
           return (
             <div className={rowCls} key={s.id} role="group" aria-label={`Set ${i + 1}`}>
@@ -216,27 +259,59 @@ function ExerciseCard({
                 <button
                   className="set-prev"
                   disabled={!p}
-                  onClick={() => p && setSet(i, { weight: p.weight, reps: p.reps })}
-                  aria-label={p ? `Use previous: ${prevText}` : 'No previous set'}
+                  onClick={() =>
+                    p && setSet(i, { weight: p.weight, reps: p.reps, duration: p.duration ?? null, distance: p.distance ?? null })
+                  }
+                  aria-label={p ? `Use previous: ${prevText(p)}` : 'No previous set'}
                 >
-                  {prevText}
+                  {prevText(p)}
                 </button>
               )}
-              <NumInput
-                id={'w-' + s.id}
-                label="Weight"
-                value={s.weight == null ? null : toDisplay(s.weight, unit)}
-                placeholder={p?.weight ? fmtNum(toDisplay(p.weight, unit)) : bodyweight ? '0' : '–'}
-                onChange={(v) => setSet(i, { weight: v == null ? null : fromDisplay(v, unit) })}
-              />
-              <NumInput
-                id={'r-' + s.id}
-                label="Reps"
-                decimal={false}
-                value={s.reps}
-                placeholder={p?.reps ? String(p.reps) : '–'}
-                onChange={(v) => setSet(i, { reps: v })}
-              />
+              {kind === 'duration' ? (
+                <TimeInput
+                  id={'t-' + s.id}
+                  className="span-2"
+                  plainUnit="sec"
+                  value={s.duration ?? null}
+                  placeholder={p?.duration ? fmtClock(p.duration) : 'sec'}
+                  onChange={(v) => setSet(i, { duration: v })}
+                />
+              ) : kind === 'cardio' ? (
+                <>
+                  <NumInput
+                    id={'d-' + s.id}
+                    label="Distance in km"
+                    value={s.distance ?? null}
+                    placeholder={p?.distance ? fmtNum(p.distance) : '–'}
+                    onChange={(v) => setSet(i, { distance: v })}
+                  />
+                  <TimeInput
+                    id={'t-' + s.id}
+                    plainUnit="min"
+                    value={s.duration ?? null}
+                    placeholder={p?.duration ? fmtClock(p.duration) : 'min'}
+                    onChange={(v) => setSet(i, { duration: v })}
+                  />
+                </>
+              ) : (
+                <>
+                  <NumInput
+                    id={'w-' + s.id}
+                    label={kind === 'assisted' ? 'Assistance weight' : kind === 'bodyweight' ? 'Added weight' : 'Weight'}
+                    value={s.weight == null ? null : toDisplay(s.weight, unit)}
+                    placeholder={p?.weight ? fmtNum(toDisplay(p.weight, unit)) : kind === 'weight' ? '–' : '0'}
+                    onChange={(v) => setSet(i, { weight: v == null ? null : fromDisplay(v, unit) })}
+                  />
+                  <NumInput
+                    id={'r-' + s.id}
+                    label="Reps"
+                    decimal={false}
+                    value={s.reps}
+                    placeholder={p?.reps ? String(p.reps) : '–'}
+                    onChange={(v) => setSet(i, { reps: v })}
+                  />
+                </>
+              )}
               {showCheck && (
                 <button
                   className={'check' + (s.done ? ' on' : '')}
@@ -255,7 +330,7 @@ function ExerciseCard({
         <Icon name="plus" size={16} /> Add set
       </button>
 
-      <Sheet open={menu} onClose={() => setMenu(false)} title={ex?.name}>
+      <Sheet open={menu} onClose={() => setMenu(false)} title={ex?.label ?? ex?.name}>
         <div className="menu">
           {mode !== 'edit' && (
             <label className="field">

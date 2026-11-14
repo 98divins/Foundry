@@ -2,17 +2,17 @@ import { useMemo, useState } from 'react';
 import { Confirm, Header, Icon, Sheet, Stat } from '../components/ui';
 import { back, go } from '../hooks';
 import { exerciseName, useStore } from '../store';
-import type { PRKind } from '../types';
+import type { ExerciseKind, PRKind } from '../types';
+import { ExerciseImage } from '../components/ExerciseImage';
 import {
   computePRs,
   epley,
   fmtDate,
   fmtDuration,
-  fmtNum,
   fmtTime,
   fmtVolume,
   fmtEstimate,
-  toDisplay,
+  fmtSet,
   uid,
   workoutSetCount,
   workoutVolume,
@@ -23,6 +23,16 @@ const PR_LABEL: Record<PRKind, string> = {
   '1rm': 'Best 1RM',
   volume: 'Best set volume',
   reps: 'Most reps',
+  duration: 'Longest',
+  distance: 'Farthest',
+};
+
+const SET_HEADER: Record<ExerciseKind, string> = {
+  weight: 'Weight × reps',
+  bodyweight: 'Reps (added weight)',
+  assisted: 'Reps (assistance)',
+  duration: 'Time',
+  cardio: 'Distance · time',
 };
 
 export function WorkoutDetail({ id }: { id: string }) {
@@ -92,54 +102,61 @@ export function WorkoutDetail({ id }: { id: string }) {
         </div>
         {w.note && <p className="note-block">{w.note}</p>}
 
-        {w.exercises.map((we) => (
-          <section key={we.id} className="ex-card">
-            <div className="ex-head">
-              <button className="ex-title" onClick={() => go('e/' + we.exerciseId)}>
-                {exerciseName(exMap, we.exerciseId)}
-              </button>
-            </div>
-            {we.note && <p className="muted small">{we.note}</p>}
-            <table className="set-table">
-              <thead>
-                <tr>
-                  <th>Set</th>
-                  <th>Weight × reps</th>
-                  <th className="num-col">Est. 1RM</th>
-                </tr>
-              </thead>
-              <tbody>
-                {we.sets.map((s, i) => {
-                  const kinds = prs.get(s.id);
-                  const label =
-                    s.type === 'warmup'
-                      ? 'W'
-                      : s.type === 'drop'
-                        ? 'D'
-                        : String(we.sets.slice(0, i + 1).filter((x) => x.type === 'normal' || x.type === 'failure').length) +
-                          (s.type === 'failure' ? 'F' : '');
-                  return (
-                    <tr key={s.id}>
-                      <td className={'set-type-cell t-' + s.type}>{label}</td>
-                      <td>
-                        {s.weight ? `${fmtNum(toDisplay(s.weight, unit))} ${unit} × ` : ''}
-                        {s.reps ?? '–'} {s.weight ? '' : 'reps'}
-                        {kinds && (
-                          <span className="pr-pill" title={kinds.map((k) => PR_LABEL[k]).join(', ')}>
-                            <Icon name="trophy" size={12} /> {kinds.map((k) => PR_LABEL[k]).join(' · ')}
-                          </span>
+        {w.exercises.map((we) => {
+          const ex = exMap.get(we.exerciseId);
+          const kind = ex?.kind ?? 'weight';
+          const show1rm = kind === 'weight';
+          return (
+            <section key={we.id} className="ex-card">
+              <div className="ex-head">
+                <button className="ex-title" onClick={() => go('e/' + we.exerciseId)}>
+                  <ExerciseImage ex={ex} label={exerciseName(exMap, we.exerciseId)} />
+                  <span>{exerciseName(exMap, we.exerciseId)}</span>
+                </button>
+              </div>
+              {we.note && <p className="muted small">{we.note}</p>}
+              <table className="set-table">
+                <thead>
+                  <tr>
+                    <th>Set</th>
+                    <th>{SET_HEADER[kind]}</th>
+                    {show1rm && <th className="num-col">Est. 1RM</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {we.sets.map((s, i) => {
+                    const kinds = prs.get(s.id);
+                    const label =
+                      s.type === 'warmup'
+                        ? 'W'
+                        : s.type === 'drop'
+                          ? 'D'
+                          : String(we.sets.slice(0, i + 1).filter((x) => x.type === 'normal' || x.type === 'failure').length) +
+                            (s.type === 'failure' ? 'F' : '');
+                    return (
+                      <tr key={s.id}>
+                        <td className={'set-type-cell t-' + s.type}>{label}</td>
+                        <td>
+                          {fmtSet(s, kind, unit)}
+                          {kinds && (
+                            <span className="pr-pill" title={kinds.map((k) => PR_LABEL[k]).join(', ')}>
+                              <Icon name="trophy" size={12} /> {kinds.map((k) => PR_LABEL[k]).join(' · ')}
+                            </span>
+                          )}
+                        </td>
+                        {show1rm && (
+                          <td className="num-col muted">
+                            {s.weight && s.reps ? fmtEstimate(epley(s.weight, s.reps), unit) : '–'}
+                          </td>
                         )}
-                      </td>
-                      <td className="num-col muted">
-                        {s.weight && s.reps ? fmtEstimate(epley(s.weight, s.reps), unit) : '–'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </section>
-        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </section>
+          );
+        })}
         {toast && <div className="toast">{toast}</div>}
       </main>
 
