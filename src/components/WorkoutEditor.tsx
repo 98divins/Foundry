@@ -1,0 +1,292 @@
+import { useState } from 'react';
+import { go } from '../hooks';
+import { exerciseName, useStore } from '../store';
+import type { SetEntry, SetType, WorkoutExercise } from '../types';
+import { fmtClock, fmtNum, fromDisplay, previousSets, toDisplay, uid } from '../utils';
+import { ExercisePicker } from './ExercisePicker';
+import { Icon, NumInput, Sheet } from './ui';
+
+export type EditorMode = 'live' | 'edit' | 'routine';
+
+const REST_OPTIONS = [0, 30, 45, 60, 75, 90, 120, 150, 180, 240, 300];
+
+export function newBlock(exerciseId: string, restSec: number): WorkoutExercise {
+  return {
+    id: uid(),
+    exerciseId,
+    restSec,
+    sets: [{ id: uid(), type: 'normal', weight: null, reps: null, done: false }],
+  };
+}
+
+export function WorkoutEditor({
+  exercises,
+  onChange,
+  mode,
+  before,
+  onSetCompleted,
+}: {
+  exercises: WorkoutExercise[];
+  onChange: (next: WorkoutExercise[]) => void;
+  mode: EditorMode;
+  /** Only workouts that started before this time count as "previous". */
+  before: number;
+  onSetCompleted?: (we: WorkoutExercise) => void;
+}) {
+  const { state } = useStore();
+  const [picking, setPicking] = useState(false);
+
+  const replace = (i: number, we: WorkoutExercise | null) => {
+    const next = [...exercises];
+    if (we) next[i] = we;
+    else next.splice(i, 1);
+    onChange(next);
+  };
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= exercises.length) return;
+    const next = [...exercises];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  return (
+    <div className="editor">
+      {exercises.map((we, i) => (
+        <ExerciseCard
+          key={we.id}
+          we={we}
+          mode={mode}
+          prev={mode === 'routine' ? [] : previousSets(state.workouts, we.exerciseId, before)}
+          canUp={i > 0}
+          canDown={i < exercises.length - 1}
+          onMove={(d) => move(i, d)}
+          onChange={(n) => replace(i, n)}
+          onSetCompleted={() => onSetCompleted?.(we)}
+        />
+      ))}
+      {!exercises.length && (
+        <div className="empty-card">
+          <Icon name="dumbbell" size={28} />
+          <p>{mode === 'routine' ? 'Add the exercises this routine is made of.' : 'Add your first exercise to start logging sets.'}</p>
+        </div>
+      )}
+      <button className="btn btn-primary btn-wide" onClick={() => setPicking(true)}>
+        <Icon name="plus" size={18} /> Add exercise
+      </button>
+      <ExercisePicker
+        open={picking}
+        onClose={() => setPicking(false)}
+        onPick={(ids) => onChange([...exercises, ...ids.map((id) => newBlock(id, state.settings.defaultRest))])}
+      />
+    </div>
+  );
+}
+
+function setLabel(sets: SetEntry[], i: number): string {
+  const t = sets[i].type;
+  if (t === 'warmup') return 'W';
+  if (t === 'drop') return 'D';
+  const n = sets.slice(0, i + 1).filter((s) => s.type === 'normal' || s.type === 'failure').length;
+  return t === 'failure' ? `${n}F` : String(n);
+}
+
+function ExerciseCard({
+  we,
+  mode,
+  prev,
+  canUp,
+  canDown,
+  onMove,
+  onChange,
+  onSetCompleted,
+}: {
+  we: WorkoutExercise;
+  mode: EditorMode;
+  prev: SetEntry[];
+  canUp: boolean;
+  canDown: boolean;
+  onMove: (d: -1 | 1) => void;
+  onChange: (we: WorkoutExercise | null) => void;
+  onSetCompleted: () => void;
+}) {
+  const { state, exMap } = useStore();
+  const unit = state.settings.unit;
+  const ex = exMap.get(we.exerciseId);
+  const bodyweight = ex?.kind === 'bodyweight';
+  const [menu, setMenu] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(!!we.note);
+  const [flash, setFlash] = useState<string | null>(null);
+  const showCheck = mode === 'live';
+
+  const setSet = (i: number, patch: Partial<SetEntry>) => {
+    const sets = we.sets.map((s, j) => (j === i ? { ...s, ...patch } : s));
+    onChange({ ...we, sets });
+  };
+
+  const toggleDone = (i: number) => {
+    const s = we.sets[i];
+    if (s.done) return setSet(i, { done: false });
+    // Empty fields take the values shown as placeholders (last session).
+    const p = prev[i];
+    const weight = s.weight ?? p?.weight ?? null;
+    const reps = s.reps ?? p?.reps ?? null;
+    if (!reps || (!bodyweight && weight == null)) {
+      setFlash(s.id);
+      setTimeout(() => setFlash(null), 600);
+      return;
+    }
+    setSet(i, { done: true, weight, reps });
+    onSetCompleted();
+  };
+
+  const addSet = () => {
+    const last = we.sets[we.sets.length - 1];
+    onChange({
+      ...we,
+      sets: [
+        ...we.sets,
+        { id: uid(), type: 'normal', weight: last?.weight ?? null, reps: last?.reps ?? null, done: false },
+      ],
+    });
+  };
+
+  return (
+    <section className="ex-card" aria-label={ex?.name}>
+      <div className="ex-head">
+        <button className="ex-title" onClick={() => ex && go('e/' + ex.id)}>
+          {exerciseName(exMap, we.exerciseId)}
+        </button>
+        <button className="icon-btn" aria-label="Exercise options" onClick={() => setMenu(true)}>
+          <Icon name="dots" />
+        </button>
+      </div>
+      {noteOpen && (
+        <textarea
+          id={'note-' + we.id}
+          className="ex-note"
+          placeholder="Notes: seat height, grip, how it felt…"
+          rows={1}
+          value={we.note ?? ''}
+          onChange={(e) => onChange({ ...we, note: e.target.value })}
+        />
+      )}
+      {mode !== 'edit' && (
+        <button className="rest-chip" onClick={() => setMenu(true)}>
+          <Icon name="timer" size={15} /> Rest {we.restSec ? fmtClock(we.restSec) : 'off'}
+        </button>
+      )}
+
+      <div className={'set-grid' + (showCheck ? ' with-check' : '') + (mode === 'routine' ? ' no-prev' : '')}>
+        <div className="set-hd">Set</div>
+        {mode !== 'routine' && <div className="set-hd">Previous</div>}
+        <div className="set-hd">{bodyweight ? `+${unit}` : unit}</div>
+        <div className="set-hd">Reps</div>
+        {showCheck && (
+          <div className="set-hd" aria-label="Done">
+            <Icon name="check" size={16} />
+          </div>
+        )}
+
+        {we.sets.map((s, i) => {
+          const p = prev[i];
+          const prevText = p ? `${p.weight ? fmtNum(toDisplay(p.weight, unit)) + ' × ' : ''}${p.reps ?? '–'}` : '–';
+          const rowCls = 'set-row' + (s.done ? ' done' : '') + (flash === s.id ? ' flash' : '');
+          return (
+            <div className={rowCls} key={s.id} role="group" aria-label={`Set ${i + 1}`}>
+              <label className={'set-type t-' + s.type}>
+                <span aria-hidden="true">{setLabel(we.sets, i)}</span>
+                <select
+                  id={'type-' + s.id}
+                  aria-label="Set type"
+                  value={s.type}
+                  onChange={(e) => {
+                    if (e.target.value === 'remove') onChange({ ...we, sets: we.sets.filter((x) => x.id !== s.id) });
+                    else setSet(i, { type: e.target.value as SetType });
+                  }}
+                >
+                  <option value="normal">Normal set</option>
+                  <option value="warmup">Warm-up</option>
+                  <option value="drop">Drop set</option>
+                  <option value="failure">Failure</option>
+                  <option value="remove">Remove set</option>
+                </select>
+              </label>
+              {mode !== 'routine' && (
+                <button
+                  className="set-prev"
+                  disabled={!p}
+                  onClick={() => p && setSet(i, { weight: p.weight, reps: p.reps })}
+                  aria-label={p ? `Use previous: ${prevText}` : 'No previous set'}
+                >
+                  {prevText}
+                </button>
+              )}
+              <NumInput
+                id={'w-' + s.id}
+                label="Weight"
+                value={s.weight == null ? null : toDisplay(s.weight, unit)}
+                placeholder={p?.weight ? fmtNum(toDisplay(p.weight, unit)) : bodyweight ? '0' : '–'}
+                onChange={(v) => setSet(i, { weight: v == null ? null : fromDisplay(v, unit) })}
+              />
+              <NumInput
+                id={'r-' + s.id}
+                label="Reps"
+                decimal={false}
+                value={s.reps}
+                placeholder={p?.reps ? String(p.reps) : '–'}
+                onChange={(v) => setSet(i, { reps: v })}
+              />
+              {showCheck && (
+                <button
+                  className={'check' + (s.done ? ' on' : '')}
+                  aria-pressed={s.done}
+                  aria-label={s.done ? 'Mark set not done' : 'Complete set'}
+                  onClick={() => toggleDone(i)}
+                >
+                  <Icon name="check" size={18} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <button className="btn btn-ghost btn-wide" onClick={addSet}>
+        <Icon name="plus" size={16} /> Add set
+      </button>
+
+      <Sheet open={menu} onClose={() => setMenu(false)} title={ex?.name}>
+        <div className="menu">
+          {mode !== 'edit' && (
+            <label className="field">
+              <span>Rest timer</span>
+              <select
+                id={'rest-' + we.id}
+                value={we.restSec}
+                onChange={(e) => onChange({ ...we, restSec: Number(e.target.value) })}
+              >
+                {REST_OPTIONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r ? fmtClock(r) : 'Off'}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <button className="menu-item" onClick={() => { setNoteOpen(true); setMenu(false); }}>
+            <Icon name="note" size={18} /> {we.note ? 'Edit note' : 'Add note'}
+          </button>
+          <button className="menu-item" disabled={!canUp} onClick={() => { onMove(-1); setMenu(false); }}>
+            <Icon name="up" size={18} /> Move up
+          </button>
+          <button className="menu-item" disabled={!canDown} onClick={() => { onMove(1); setMenu(false); }}>
+            <Icon name="down" size={18} /> Move down
+          </button>
+          <button className="menu-item danger" onClick={() => { setMenu(false); onChange(null); }}>
+            <Icon name="trash" size={18} /> Remove exercise
+          </button>
+        </div>
+      </Sheet>
+    </section>
+  );
+}
