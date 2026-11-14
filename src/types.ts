@@ -121,6 +121,12 @@ export interface Settings {
   onboarded?: boolean;
   /** Height entry: centimetres, or feet and inches. Stored in cm either way. */
   heightUnit?: 'cm' | 'in';
+  distanceUnit?: 'km' | 'mi';
+  /** 1 = Monday (default), 0 = Sunday. */
+  weekStartsOn?: 0 | 1;
+  /** Keep the screen on during a workout (default true). */
+  keepAwake?: boolean;
+  theme?: 'system' | 'light' | 'dark';
 }
 
 export interface RestTimer {
@@ -138,6 +144,14 @@ export interface State {
   rest: RestTimer | null;
   settings: Settings;
   nutrition: NutritionState;
+  profile?: UserProfile;
+}
+
+export interface UserProfile {
+  name: string;
+  bio: string;
+  /** Small JPEG data URL (256 px), synced with the rest of the data. */
+  avatar?: string | null;
 }
 
 export type PRKind = 'weight' | '1rm' | 'volume' | 'reps' | 'duration' | 'distance';

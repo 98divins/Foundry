@@ -240,3 +240,25 @@ describe('height units', () => {
     expect(fmtHeight(180.3)).toBe('180 cm');
   });
 });
+
+describe('display preferences', () => {
+  it('starts weeks on Monday or Sunday', async () => {
+    const { registerPrefs, weekStart } = await import('./utils');
+    const wed = new Date(2026, 10, 11, 15).getTime(); // Wednesday 11 Nov 2026
+    registerPrefs({ weekStartsOn: 1 });
+    expect(new Date(weekStart(wed)).getDate()).toBe(9); // Monday
+    registerPrefs({ weekStartsOn: 0 });
+    expect(new Date(weekStart(wed)).getDate()).toBe(8); // Sunday
+    expect(new Date(weekStart(new Date(2026, 10, 8, 9).getTime())).getDate()).toBe(8);
+    registerPrefs({ weekStartsOn: 1 });
+  });
+
+  it('shows distances in km or miles, storing km', async () => {
+    const { registerPrefs, fmtKm, displayToKm, kmToDisplay } = await import('./utils');
+    registerPrefs({ distanceUnit: 'mi' });
+    expect(fmtKm(10)).toBe('6.21 mi');
+    expect(kmToDisplay(displayToKm(3.1))).toBe(3.1);
+    registerPrefs({ distanceUnit: 'km' });
+    expect(fmtKm(5)).toBe('5 km');
+  });
+});

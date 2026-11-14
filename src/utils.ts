@@ -98,8 +98,9 @@ export function parseTime(text: string, plainUnit: 'sec' | 'min'): number | null
   return parts.reduce((acc, p) => acc * 60 + Number(p), 0);
 }
 
+/** A distance in the user's unit (km or mi). */
 export function fmtKm(km: number): string {
-  return `${Math.round(km * 100) / 100} km`;
+  return `${kmToDisplay(km)} ${prefs.distanceUnit}`;
 }
 
 /** One set as a short line, e.g. "80 kg × 8", "+10 kg × 6", "−20 kg × 8", "1:30", "5 km · 25:00". */
@@ -264,12 +265,24 @@ export function previousSets(workouts: Workout[], exerciseId: string, before: nu
   return best.exercises.find((we) => we.exerciseId === exerciseId)!.sets.filter((s) => s.done);
 }
 
+/* Display preferences the store registers, so helpers do not need them passed everywhere. */
+const prefs = { weekStartsOn: 1 as 0 | 1, distanceUnit: 'km' as 'km' | 'mi' };
+export function registerPrefs(p: Partial<typeof prefs>) {
+  Object.assign(prefs, p);
+}
+
 export function weekStart(ts: number): number {
   const d = new Date(ts);
   d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  d.setDate(d.getDate() - ((d.getDay() + 7 - prefs.weekStartsOn) % 7));
   return d.getTime();
 }
+
+const KM_PER_MI = 1.609344;
+export const distUnit = () => prefs.distanceUnit;
+/** km (stored) → the user's unit, rounded to 2 decimals. */
+export const kmToDisplay = (km: number) => Math.round((prefs.distanceUnit === 'mi' ? km / KM_PER_MI : km) * 100) / 100;
+export const displayToKm = (v: number) => (prefs.distanceUnit === 'mi' ? v * KM_PER_MI : v);
 
 /** Ticks on round numbers covering [min, max]. */
 export function niceTicks(min: number, max: number, count = 4): number[] {

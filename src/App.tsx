@@ -6,7 +6,7 @@ import { EditWorkout } from './screens/EditWorkout';
 import { ExerciseDetail } from './screens/ExerciseDetail';
 import { Exercises } from './screens/Exercises';
 import { History } from './screens/History';
-import { SettingsPage } from './screens/Profile';
+import { SettingsPage } from './screens/Settings';
 import { Progress } from './screens/Progress';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { RoutineView } from './screens/RoutineView';
@@ -41,6 +41,13 @@ export function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [path]);
+  const { state: themeState } = useStore();
+  const theme = themeState.settings.theme ?? 'system';
+  // Light / dark override; "system" leaves it to the phone.
+  useEffect(() => {
+    if (theme === 'system') delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = theme;
+  }, [theme]);
   const { state, saveError } = useStore();
   const nutritionDay = section === 'n' && (!param || /^\d{4}-\d{2}-\d{2}$/.test(param));
   const isTab = TABS.some((t) => t.path === (section ?? '')) && (section !== 'n' || nutritionDay);
@@ -86,7 +93,7 @@ export function App() {
       screen = <Progress />;
       break;
     case 'settings':
-      screen = <SettingsPage />;
+      screen = <SettingsPage key={param ?? 'hub'} page={param} />;
       break;
     case 'w':
       screen = <WorkoutDetail key={param} id={param} />;

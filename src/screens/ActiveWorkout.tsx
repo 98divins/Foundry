@@ -11,7 +11,7 @@ export function ActiveWorkout() {
   const w = state.active;
   const now = useNow(500, !!w);
   const [confirm, setConfirm] = useState<null | 'finish' | 'empty' | 'discard'>(null);
-  useWakeLock(!!w);
+  useWakeLock(!!w && (state.settings.keepAwake ?? true));
 
   // Fire the rest alert once when the countdown crosses zero. When the phone was locked or the
   // app was in the background, the alert could not play: say so as soon as the user is back.

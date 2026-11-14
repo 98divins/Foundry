@@ -13,6 +13,7 @@ import {
 import { BarChart, LineChart, Sparkline } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon, Segmented, Stat } from '../components/ui';
+import { Avatar } from './Settings';
 import { muscleLabel } from '../exercises';
 import { go } from '../hooks';
 import { exerciseName, useStore } from '../store';
@@ -95,6 +96,7 @@ export function Progress() {
       <>
         <ProgressHeader />
         <main className="page">
+          <ProfileCard workouts={0} records={0} />
           <div className="empty-card">
             <Icon name="chart" size={28} />
             <p>Your progress shows here after your first finished workout: strength trends, weekly volume, records and how your diet affects them.</p>
@@ -108,6 +110,8 @@ export function Progress() {
     <>
       <ProgressHeader />
       <main className="page">
+        <ProfileCard workouts={done.length} records={prs.length} />
+
         <div className="stats-row">
           <Stat label="This week" value={`${thisWeek.workouts} workout${thisWeek.workouts === 1 ? '' : 's'}`} />
           <Stat label="Week streak" value={streak} />
@@ -290,6 +294,29 @@ export function Progress() {
         </p>
       </main>
     </>
+  );
+}
+
+function ProfileCard({ workouts, records }: { workouts: number; records: number }) {
+  const { state } = useStore();
+  return (
+    <button className="profile-card" onClick={() => go('settings/profile')}>
+      <Avatar size={64} />
+      <span className="profile-card-text">
+        <strong>{state.profile?.name || 'Add your name'}</strong>
+        <span className="muted small">{state.profile?.bio || 'Edit profile'}</span>
+      </span>
+      <span className="profile-card-stats">
+        <span>
+          <strong>{workouts}</strong>
+          <span className="muted small">Workouts</span>
+        </span>
+        <span>
+          <strong>{records}</strong>
+          <span className="muted small">Records (30 d)</span>
+        </span>
+      </span>
+    </button>
   );
 }
 

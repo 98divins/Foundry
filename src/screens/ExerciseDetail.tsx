@@ -11,7 +11,9 @@ import {
   fmtClock,
   fmtDate,
   fmtEstimate,
+  distUnit,
   fmtKm,
+  kmToDisplay,
   fmtNum,
   fmtSet,
   fmtVolume,
@@ -73,7 +75,7 @@ export function ExerciseDetail({ id }: { id: string }) {
   const best = (m: Metric) => Math.max(0, ...sessions.map(pick[m]));
   const isLoad = metric === '1rm' || metric === 'weight' || metric === 'volume';
   const isTime = metric === 'duration' || metric === 'time';
-  const toChart = (v: number) => (isLoad ? toDisplay(v, unit) : isTime ? v / 60 : v);
+  const toChart = (v: number) => (isLoad ? toDisplay(v, unit) : isTime ? v / 60 : metric === 'distance' ? kmToDisplay(v) : v);
   const points = sessions.map((s) => ({ x: s.date, y: toChart(pick[metric](s)) }));
   const fmtAxis = (v: number) =>
     isTime ? fmtClock(v * 60) : v >= 10000 ? `${fmtNum(v / 1000)}k` : fmtNum(v);
@@ -125,7 +127,7 @@ export function ExerciseDetail({ id }: { id: string }) {
             {metric === 'volume' && `Weight × reps summed over working sets, in ${unit}.`}
             {metric === 'reps' && 'Most reps in a single set per workout.'}
             {metric === 'duration' && 'Longest set per workout.'}
-            {metric === 'distance' && 'Total distance per workout, in km.'}
+            {metric === 'distance' && `Total distance per workout, in ${distUnit()}.`}
             {metric === 'time' && 'Total time per workout.'}
           </p>
         </section>

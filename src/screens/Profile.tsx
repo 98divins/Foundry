@@ -1,16 +1,15 @@
 import { useRef, useState } from 'react';
 import { back } from '../hooks';
-import { Confirm, Header, Segmented } from '../components/ui';
+import { Confirm, Header } from '../components/ui';
 import { exportWorkoutCsv, importWorkoutCsv } from '../csv';
 import { defaultState, parseBackup, useStore } from '../store';
-import type { NameLang, Unit } from '../types';
-import { download, fmtClock } from '../utils';
+import { download } from '../utils';
 import { fmtBackupAge, saveBackup } from '../backup';
-import { AccountSection } from '../components/Account';
 
-export function SettingsPage() {
+/** Settings → Export & import data. */
+export function DataPage() {
   const { state, update, exercises, exMap } = useStore();
-  const { workouts, settings } = state;
+  const { workouts } = state;
   const done = workouts.filter((w) => w.endedAt);
   const [msg, setMsg] = useState<{ text: string; error?: boolean } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -42,79 +41,13 @@ export function SettingsPage() {
 
   return (
     <>
-      <Header title="Settings" onBack={() => back('profile')} />
+      <Header title="Export & import data" onBack={() => back('settings')} />
       <main className="page">
-        <AccountSection />
-
-        <section className="panel">
-          <h2 className="panel-title">Settings</h2>
-          <div className="setting">
-            <span>Weight unit</span>
-            <Segmented<Unit>
-              label="Weight unit"
-              value={settings.unit}
-              onChange={(unit) => update((s) => ({ ...s, settings: { ...s.settings, unit } }))}
-              options={[
-                { value: 'kg', label: 'kg' },
-                { value: 'lb', label: 'lb' },
-              ]}
-            />
-          </div>
-          <label className="setting">
-            <span>Default rest for new exercises</span>
-            <select
-              id="default-rest"
-              value={settings.defaultRest}
-              onChange={(e) => update((s) => ({ ...s, settings: { ...s.settings, defaultRest: Number(e.target.value) } }))}
-            >
-              {[0, 30, 60, 90, 120, 150, 180, 240].map((r) => (
-                <option key={r} value={r}>
-                  {r ? fmtClock(r) : 'Off'}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="setting">
-            <span>Height</span>
-            <Segmented<'cm' | 'in'>
-              label="Height unit"
-              value={state.settings.heightUnit ?? 'cm'}
-              onChange={(heightUnit) => update((s) => ({ ...s, settings: { ...s.settings, heightUnit } }))}
-              options={[
-                { value: 'cm', label: 'cm' },
-                { value: 'in', label: 'ft / in' },
-              ]}
-            />
-          </div>
-          <div className="setting">
-            <span>Exercise names</span>
-            <Segmented<NameLang>
-              label="Exercise names"
-              value={settings.exerciseLang}
-              onChange={(exerciseLang) => update((s) => ({ ...s, settings: { ...s.settings, exerciseLang } }))}
-              options={[
-                { value: 'fr', label: 'Français' },
-                { value: 'en', label: 'English' },
-              ]}
-            />
-          </div>
-          <label className="setting">
-            <span>Beep when rest is over</span>
-            <input
-              id="sound"
-              type="checkbox"
-              className="switch"
-              checked={settings.sound}
-              onChange={(e) => update((s) => ({ ...s, settings: { ...s.settings, sound: e.target.checked } }))}
-            />
-          </label>
-        </section>
-
         <section className="panel">
           <h2 className="panel-title">Your data</h2>
           <p className="muted small">
-            Everything is stored on this device only: deleting the app or clearing browser data erases it. Export a backup
-            regularly and keep the file (Files, iCloud Drive, Google Drive). Last backup: <strong>{fmtBackupAge(state)}</strong>.
+            Your data is saved to your account. A backup file is an extra copy you keep yourself (Files, iCloud Drive,
+            Google Drive). Last backup: <strong>{fmtBackupAge(state)}</strong>.
           </p>
           <div className="btn-grid">
             <button
@@ -170,7 +103,6 @@ export function SettingsPage() {
             }}
           />
         </section>
-        <p className="muted small center">Foundry · your training log, kept on your device</p>
       </main>
 
       <Confirm
@@ -193,7 +125,7 @@ export function SettingsPage() {
       <Confirm
         open={confirmReset}
         title="Erase all data?"
-        message="All workouts, routines, custom exercises and settings on this device will be deleted. Export a backup first if you may need them."
+        message="All workouts, routines, foods, weigh-ins and settings are deleted, on this phone and in your account. Export a backup first if you may need them."
         confirmLabel="Erase everything"
         danger
         onConfirm={() => {

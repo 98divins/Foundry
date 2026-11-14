@@ -30,6 +30,7 @@ interface CloudCtx {
   signUp: (email: string, password: string) => Promise<string | null>;
   resetPassword: (email: string) => Promise<string | null>;
   resendConfirmation: (email: string) => Promise<string | null>;
+  changeEmail: (email: string) => Promise<string | null>;
   setNewPassword: (password: string) => Promise<string | null>;
   /** Returns an error when unsent changes cannot be uploaded (offline): signing out would lose them. */
   signOut: () => Promise<string | null>;
@@ -269,6 +270,12 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       const { data, error: e } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: appUrl() } });
       if (e) return explain(e.message);
       return data.session ? null : 'CHECK_EMAIL';
+    },
+    changeEmail: async (email) => {
+      const sb = await getClient();
+      if (!sb) return 'Cloud sync is not set up.';
+      const { error: e } = await sb.auth.updateUser({ email }, { emailRedirectTo: appUrl() });
+      return e ? explain(e.message) : null;
     },
     resendConfirmation: async (email) => {
       const sb = await getClient();

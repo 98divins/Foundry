@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { go } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { ExerciseKind, SetEntry, SetType, WorkoutExercise } from '../types';
-import { fmtClock, fmtNum, fmtSet, fromDisplay, previousSets, toDisplay, uid } from '../utils';
+import { displayToKm, distUnit, fmtClock, fmtNum, fmtSet, fromDisplay, kmToDisplay, previousSets, toDisplay, uid } from '../utils';
 import { ExerciseImage } from './ExerciseImage';
 import { ExercisePicker } from './ExercisePicker';
 import { fmtRepRange, linkWithNext, parseRepRange, supersetSlots, unlink, type SupersetSlot } from '../routines';
@@ -272,7 +272,7 @@ function ExerciseCard({
           <div className="set-hd span-2">Time</div>
         ) : kind === 'cardio' ? (
           <>
-            <div className="set-hd">km</div>
+            <div className="set-hd">{distUnit()}</div>
             <div className="set-hd">Time</div>
           </>
         ) : (
@@ -338,10 +338,10 @@ function ExerciseCard({
                 <>
                   <NumInput
                     id={'d-' + s.id}
-                    label="Distance in km"
-                    value={s.distance ?? null}
-                    placeholder={p?.distance ? fmtNum(p.distance) : '–'}
-                    onChange={(v) => setSet(i, { distance: v })}
+                    label={`Distance in ${distUnit()}`}
+                    value={s.distance != null ? kmToDisplay(s.distance) : null}
+                    placeholder={p?.distance ? fmtNum(kmToDisplay(p.distance)) : '–'}
+                    onChange={(v) => setSet(i, { distance: v == null ? null : displayToKm(v) })}
                   />
                   <TimeInput
                     id={'t-' + s.id}

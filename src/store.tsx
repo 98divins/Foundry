@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
-import { registerKinds } from './utils';
+import { registerKinds, registerPrefs } from './utils';
 import { defaultNutrition, type NutritionState } from './nutrition';
 
 const KEY = 'foundry:v1';
@@ -75,6 +75,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     navigator.storage?.persist?.().catch(() => {});
   }, []);
 
+  registerPrefs({ weekStartsOn: state.settings.weekStartsOn ?? 1, distanceUnit: state.settings.distanceUnit ?? 'km' });
   const lang = state.settings.exerciseLang;
   const custom = state.customExercises;
   const lib = useMemo(() => {
