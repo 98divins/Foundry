@@ -115,6 +115,8 @@ export interface Settings {
   defaultRest: number;
   sound: boolean;
   exerciseLang: NameLang;
+  /** When the last backup file was saved (data otherwise lives only on this device). */
+  lastBackupAt?: number | null;
 }
 
 export interface RestTimer {

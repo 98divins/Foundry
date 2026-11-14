@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Confirm, Header, Icon, Sheet, Stat } from '../components/ui';
 import { back, go } from '../hooks';
 import { exerciseName, useStore } from '../store';
+import { backupDue, fmtBackupAge, saveBackup } from '../backup';
 import type { ExerciseKind, PRKind } from '../types';
 import { ExerciseImage } from '../components/ExerciseImage';
 import {
@@ -43,6 +44,8 @@ export function WorkoutDetail({ id }: { id: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState('');
   const unit = state.settings.unit;
+  // Offer a backup right after a workout is finished.
+  const justFinished = !!w?.endedAt && Date.now() - w.endedAt < 15 * 60000;
 
   if (!w) {
     return (
@@ -100,6 +103,16 @@ export function WorkoutDetail({ id }: { id: string }) {
           <Stat label="Sets" value={workoutSetCount(w)} />
           <Stat label="Records" value={prSets.length} />
         </div>
+        {justFinished && backupDue(state) && (
+          <div className="backup-banner" role="status">
+            <span>
+              <strong>Save a backup?</strong> Your workouts are stored only on this phone. Last backup: {fmtBackupAge(state)}.
+            </span>
+            <button className="btn btn-small btn-primary" onClick={() => saveBackup(state, update)}>
+              Save backup
+            </button>
+          </div>
+        )}
         {w.note && <p className="note-block">{w.note}</p>}
 
         {w.exercises.map((we) => {

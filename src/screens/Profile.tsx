@@ -5,6 +5,7 @@ import { exportWorkoutCsv, importWorkoutCsv } from '../csv';
 import { defaultState, parseBackup, useStore } from '../store';
 import type { NameLang, Unit } from '../types';
 import { download, fmtClock } from '../utils';
+import { fmtBackupAge, saveBackup } from '../backup';
 
 export function SettingsPage() {
   const { state, update, exercises, exMap } = useStore();
@@ -97,12 +98,13 @@ export function SettingsPage() {
         <section className="panel">
           <h2 className="panel-title">Your data</h2>
           <p className="muted small">
-            Everything is stored on this device only. Export a backup regularly, and before you clear your browser data.
+            Everything is stored on this device only: deleting the app or clearing browser data erases it. Export a backup
+            regularly and keep the file (Files, iCloud Drive, Google Drive). Last backup: <strong>{fmtBackupAge(state)}</strong>.
           </p>
           <div className="btn-grid">
             <button
               className="btn"
-              onClick={() => download(`foundry-backup-${stamp}.json`, JSON.stringify(state), 'application/json')}
+              onClick={() => saveBackup(state, update)}
             >
               Export backup
             </button>

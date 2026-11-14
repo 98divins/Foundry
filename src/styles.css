@@ -2274,3 +2274,17 @@ span.ex-photo {
 .list-title {
   font-family: var(--font-body);
 }
+
+.backup-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  font-size: 14px;
+}
+.backup-banner .btn {
+  flex: none;
+}
