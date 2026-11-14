@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { WorkoutEditor } from '../components/WorkoutEditor';
-import { Header } from '../components/ui';
+import { Header, Icon, Sheet } from '../components/ui';
 import { back, go } from '../hooks';
 import { useStore } from '../store';
-import type { Workout } from '../types';
-import { defaultWorkoutName, uid } from '../utils';
-import { t } from '../i18n';
+import type { Routine, Workout } from '../types';
+import { liveSetFromRoutine } from '../routines';
+import { defaultWorkoutName, previousSets, uid } from '../utils';
+import { t, tp } from '../i18n';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 function toLocalInput(ts: number) {
@@ -24,6 +25,29 @@ export function EditWorkout({ id }: { id: string }) {
   });
   const [minutes, setMinutes] = useState(() => Math.round(((draft.endedAt ?? draft.startedAt) - draft.startedAt) / 60000));
   const [error, setError] = useState('');
+  const [picking, setPicking] = useState(false);
+
+  /**
+   * Fill the workout from a routine. Each set starts from what was done last time before this date
+   * (or the routine's target reps), so logging a past session is mostly checking the numbers.
+   */
+  const fromRoutine = (r: Routine) => {
+    const exercises = r.exercises.map((we) => {
+      const prev = previousSets(state.workouts, we.exerciseId, draft.startedAt);
+      return {
+        ...we,
+        id: uid(),
+        sets: we.sets.map((s, i) => {
+          const live = liveSetFromRoutine(s);
+          const p = prev[i];
+          return { ...live, weight: p?.weight ?? s.weight ?? null, reps: p?.reps ?? s.reps ?? null, duration: p?.duration ?? live.duration, distance: p?.distance ?? live.distance };
+        }),
+      };
+    });
+    setDraft({ ...draft, name: r.name, routineId: r.id, exercises: [...draft.exercises, ...exercises] });
+    setPicking(false);
+    setError('');
+  };
 
   if (id !== 'new' && !existing) {
     return (
@@ -104,6 +128,11 @@ export function EditWorkout({ id }: { id: string }) {
             onChange={(e) => setDraft({ ...draft, note: e.target.value })}
           />
         </label>
+        {!existing && state.routines.length > 0 && (
+          <button className="btn btn-wide" onClick={() => setPicking(true)}>
+            <Icon name="folder" size={18} /> {t('Fill from a routine')}
+          </button>
+        )}
         {error && <p className="field-error">{error}</p>}
         <WorkoutEditor
           exercises={draft.exercises}
@@ -116,6 +145,17 @@ export function EditWorkout({ id }: { id: string }) {
         />
         <p className="muted small">{t('Sets without reps are left out when you save.')}</p>
       </main>
+      <Sheet open={picking} onClose={() => setPicking(false)} title={t('Fill from a routine')}>
+        <p className="sheet-text muted small">{t('Sets are filled with what you did last time on each exercise. Check the numbers, then save.')}</p>
+        <div className="menu">
+          {state.routines.map((r) => (
+            <button key={r.id} className="menu-item" onClick={() => fromRoutine(r)}>
+              {r.name}
+              <span className="muted small"> · {tp(r.exercises.length, '{n} exercise', '{n} exercises')}</span>
+            </button>
+          ))}
+        </div>
+      </Sheet>
     </>
   );
 }
