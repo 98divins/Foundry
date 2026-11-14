@@ -16,6 +16,7 @@ export const FR: Record<string, string> = {
   "90 days": "90 jours",
   "; currently {n} kcal": "; actuellement {n} kcal",
   "A barcode has at least 8 digits.": "Un code-barres compte au moins 8 chiffres.",
+  "A new version of Foundry is available.": "Une nouvelle version de Foundry est disponible.",
   "About": "À propos",
   "About Foundry": "À propos de Foundry",
   "About you": "À propos de toi",

@@ -1,5 +1,5 @@
 // Offline support: network first for navigations, cache first for assets.
-const CACHE = 'foundry-v4';
+const CACHE = 'foundry-v5';
 
 // Only the app itself (fonts included) and exercise photos are cached. Live data (cloud sync,
 // Open Food Facts) always goes to the network so it is never stale.
@@ -25,9 +25,12 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   if (!CACHEABLE(new URL(req.url))) return;
+  // Never cache the build marker: the app reads it to notice updates.
+  if (new URL(req.url).pathname.endsWith('/version.json')) return;
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req)
+      // Revalidate with the server every time, so a new deploy shows on the next open.
+      fetch(req, { cache: 'no-cache' })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put('./index.html', copy));

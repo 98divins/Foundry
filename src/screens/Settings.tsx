@@ -8,7 +8,7 @@ import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
 import { LegalBody } from '../components/Legal';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
-import { t, detectLang, type AppLang } from '../i18n';
+import { t, detectLang, locale, type AppLang } from '../i18n';
 
 type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'privacy' | 'terms';
 
@@ -549,7 +549,7 @@ function AboutPage() {
       <div className="about-head">
         <Logo size={56} />
         <strong className="brand">{t('Foundry')}</strong>
-        <span className="muted small">{t('Version {0}', { 0: __APP_VERSION__ })}</span>
+        <span className="muted small">{t('Version {0}', { 0: `${__APP_VERSION__} · ${new Date(parseInt(__BUILD_ID__.split('-').pop() ?? '0', 36)).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' })}` })}</span>
       </div>
       <section className="panel">
         <h2 className="panel-title">{t('Credits')}</h2>
