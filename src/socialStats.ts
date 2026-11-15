@@ -3,6 +3,7 @@
  * Only aggregates leave the device: no workouts, no notes, no nutrition, no body weight.
  */
 import { recentPRs, strengthIndexByWeek, trainingDays, weekStarts, weekStreak, periodSummary } from './analytics';
+import { goalRate, weekGoal } from './goals';
 import type { State } from './types';
 import { computePRs, countsForStats, epley, finished, weekStart } from './utils';
 
@@ -32,6 +33,28 @@ export interface PublicStats {
   lastWorkoutAt: number | null;
   /** kg */
   lifts: Partial<Record<BigLift, number>>;
+  /** When these numbers were computed (rolling periods are as of then). */
+  computedAt?: number;
+  /** Totals over rolling periods: last 30, 182 and 365 days. */
+  periods?: Partial<Record<RollingPeriod, PeriodStats>>;
+  /** This week's goal progress, 0–100 (null without goals). */
+  weekGoalPct?: number | null;
+}
+
+export type RollingPeriod = '30' | '182' | '365';
+export type BoardPeriod = 'week' | RollingPeriod;
+export const BOARD_PERIODS: BoardPeriod[] = ['week', '30', '182', '365'];
+
+export interface PeriodStats {
+  days: number;
+  sets: number;
+  /** kg */
+  volume: number;
+  prs: number;
+  /** Strength index change over the period, in points. */
+  strength: number | null;
+  /** % of full weeks where the person met their own goals. */
+  goals: number | null;
 }
 
 export function buildPublicStats(state: State, now = Date.now()): PublicStats {
@@ -55,6 +78,22 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
     }
   }
   const done = finished(w);
+  const prs = computePRs(w);
+  const periods: Partial<Record<RollingPeriod, PeriodStats>> = {};
+  for (const p of ['30', '182', '365'] as RollingPeriod[]) {
+    const days = Number(p);
+    const from = now - days * DAY;
+    const sum = periodSummary(w, from, now + DAY);
+    const idx = strengthIndexByWeek(w, weekStarts(Math.ceil(days / 7) + 1, now)).filter((v): v is number => v != null);
+    periods[p] = {
+      days: sum.days,
+      sets: sum.sets,
+      volume: Math.round(sum.volume),
+      prs: recentPRs(w, prs, days, now).length,
+      strength: idx.length >= 2 ? Math.round((idx[idx.length - 1] - idx[0]) * 10) / 10 : null,
+      goals: goalRate(state, state.goals, from, now),
+    };
+  }
   return {
     v: 1,
     week: start,
@@ -70,21 +109,40 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
     totalWorkouts: done.length,
     lastWorkoutAt: done.length ? done[done.length - 1].startedAt : null,
     lifts,
+    computedAt: now,
+    periods,
+    weekGoalPct: state.goals ? Math.round(weekGoal(state, state.goals, start, now).progress * 100) : null,
   };
 }
 
-export type BoardMetric = 'weekDays' | 'weekSets' | 'weekVolume' | 'streak' | 'prs30' | 'strength4w';
-const WEEKLY: BoardMetric[] = ['weekDays', 'weekSets', 'weekVolume'];
+export type BoardMetric = 'days' | 'sets' | 'volume' | 'streak' | 'prs' | 'strength' | 'goals';
 
-/** A friend's value for a metric; weekly numbers from a past week count as zero. */
-export function metricValue(s: PublicStats | null | undefined, m: BoardMetric, now = Date.now()): number | null {
+/**
+ * A person's value for a metric over a period. This week's numbers from an older week count as zero;
+ * rolling periods are taken as published (missing on older app versions: no value).
+ */
+export function metricValue(s: PublicStats | null | undefined, m: BoardMetric, period: BoardPeriod = 'week', now = Date.now()): number | null {
   if (!s) return null;
-  if (WEEKLY.includes(m) && s.week !== weekStart(now)) return 0;
-  if (m === 'streak') {
-    // A streak not refreshed this week or last is over.
-    return s.week >= weekStart(weekStart(now) - 3.5 * DAY) ? s.streak : 0;
+  if (m === 'streak') return s.week >= weekStart(weekStart(now) - 3.5 * DAY) ? s.streak : 0;
+  if (period === 'week') {
+    const current = s.week === weekStart(now);
+    switch (m) {
+      case 'days':
+        return current ? s.weekDays : 0;
+      case 'sets':
+        return current ? s.weekSets : 0;
+      case 'volume':
+        return current ? s.weekVolume : 0;
+      case 'prs':
+        return s.prs30;
+      case 'strength':
+        return s.strength4w;
+      case 'goals':
+        return s.weekGoalPct == null ? null : current ? s.weekGoalPct : 0;
+    }
   }
-  return s[m];
+  const p = s.periods?.[period];
+  return p ? p[m] : null;
 }
 
 export interface BoardRow<P> {
@@ -94,8 +152,8 @@ export interface BoardRow<P> {
 }
 
 /** Rank people by a metric, highest first; equal values share a rank; no data goes last. */
-export function rankBoard<P>(people: { person: P; stats: PublicStats | null }[], m: BoardMetric, now = Date.now()): BoardRow<P>[] {
-  const rows = people.map((p) => ({ person: p.person, value: metricValue(p.stats, m, now) }));
+export function rankBoard<P>(people: { person: P; stats: PublicStats | null }[], m: BoardMetric, period: BoardPeriod = 'week', now = Date.now()): BoardRow<P>[] {
+  const rows = people.map((p) => ({ person: p.person, value: metricValue(p.stats, m, period, now) }));
   rows.sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
   let rank = 0;
   let last: number | null | undefined;

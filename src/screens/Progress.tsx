@@ -12,6 +12,7 @@ import {
   weekStreak,
 } from '../analytics';
 import { STATS_PAGES } from './Stats';
+import { GoalsCard } from './Goals';
 import { BarChart, LineChart, Sparkline } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon, Segmented, Stat } from '../components/ui';
@@ -91,6 +92,7 @@ export function Progress() {
         <ProgressHeader />
         <main className="page">
           <ProfileCard workouts={0} records={0} />
+          <GoalsCard />
           <div className="empty-card">
             <Icon name="chart" size={28} />
             <p>{t('Your progress shows here after your first finished workout: strength trends, weekly volume, records and how your diet affects them.')}</p>
@@ -105,6 +107,7 @@ export function Progress() {
       <ProgressHeader />
       <main className="page">
         <ProfileCard workouts={done.length} records={prs.length} />
+        <GoalsCard />
 
         <div className="stats-row">
           <Stat label={t('Training days this week')} value={thisWeek.days} />

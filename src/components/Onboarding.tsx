@@ -196,7 +196,7 @@ export function QuickStart() {
   const { state, update } = useStore();
   const [step, setStep] = useState<1 | 2>(1);
   const done = (route: string) => {
-    update((s) => ({ ...s, settings: { ...s.settings, onboarded: true } }));
+    update((s) => ({ ...s, settings: { ...s.settings, onboarded: true }, goals: s.goals ?? { trainingDays: 3, dietDays: null, setAt: Date.now() } }));
     go(route, { replace: true });
   };
 
@@ -206,6 +206,18 @@ export function QuickStart() {
         <div className="auth-head">
           <span className="eyebrow">{t('Step 1 of 2')}</span>
           <h1>{t('Your preferences')}</h1>
+        </div>
+        <div className="panel">
+          <div className="setting setting-stack">
+            <span>{t('Training days per week you aim for')}</span>
+            <Segmented<string>
+              label={t('Training days per week you aim for')}
+              value={String(state.goals?.trainingDays ?? 3)}
+              onChange={(v) => update((s) => ({ ...s, goals: { trainingDays: Number(v), dietDays: s.goals?.dietDays ?? null, setAt: s.goals?.setAt ?? Date.now() } }))}
+              options={[2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: String(n) }))}
+            />
+            <span className="muted small">{t('Your weekly goal. You can add a diet goal later in Progress.')}</span>
+          </div>
         </div>
         <div className="panel">
           <div className="setting">

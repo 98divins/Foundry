@@ -157,6 +157,8 @@ export interface State {
   profile?: UserProfile;
   /** Deleted items (key → time), so a deletion reaches the other devices. See cloud/merge.ts. */
   deleted?: Record<string, number>;
+  /** Weekly goals (see goals.ts). */
+  goals?: import('./goals').Goals;
 }
 
 export interface UserProfile {

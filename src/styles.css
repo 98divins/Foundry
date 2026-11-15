@@ -3343,3 +3343,82 @@ span.ex-photo {
     letter-spacing: -0.01em;
   }
 }
+
+/* Goals */
+.goals-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-align: left;
+  border-style: dashed;
+}
+.goals-cta > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.goals-cta svg:first-child {
+  color: var(--accent);
+}
+.goals-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.goals-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.goal-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.goal-bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.goal-bar-head strong.met {
+  color: var(--good);
+}
+.goal-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.goal-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+.goal-fill.met {
+  background: var(--good);
+}
+.goal-weeks {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+.goal-weeks span {
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  color: var(--accent-ink);
+}
+.goal-weeks span.met {
+  background: var(--good);
+}
+.setting-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}

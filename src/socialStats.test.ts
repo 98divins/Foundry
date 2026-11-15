@@ -31,14 +31,22 @@ describe('friends stats', () => {
 
   it('a friend’s weekly numbers from a past week count as zero', () => {
     const s = buildPublicStats(state, now);
-    expect(metricValue(s, 'weekDays', now)).toBe(2);
-    expect(metricValue(s, 'weekDays', now + 7 * 24 * H)).toBe(0);
-    expect(metricValue(null, 'weekDays', now)).toBeNull();
+    expect(metricValue(s, 'days', 'week', now)).toBe(2);
+    expect(metricValue(s, 'days', 'week', now + 7 * 24 * H)).toBe(0);
+    expect(metricValue(null, 'days', 'week', now)).toBeNull();
   });
 
   it('ranks highest first, shares ranks on ties, puts no data last', () => {
     const s = (weekDays: number) => ({ ...buildPublicStats(state, now), weekDays });
-    const rows = rankBoard([{ person: 'a', stats: s(2) }, { person: 'b', stats: s(4) }, { person: 'c', stats: null }, { person: 'd', stats: s(2) }], 'weekDays', now);
+    const rows = rankBoard([{ person: 'a', stats: s(2) }, { person: 'b', stats: s(4) }, { person: 'c', stats: null }, { person: 'd', stats: s(2) }], 'days', 'week', now);
     expect(rows.map((r) => [r.person, r.rank])).toEqual([['b', 1], ['a', 2], ['d', 2], ['c', 4]]);
+  });
+
+  it('also ranks over a month, six months and a year', () => {
+    const s = buildPublicStats(state, now);
+    expect(metricValue(s, 'days', '30', now)).toBe(2);
+    expect(metricValue(s, 'sets', '365', now)).toBe(6);
+    // Older app versions publish no rolling periods: no value rather than a wrong one.
+    expect(metricValue({ ...s, periods: undefined }, 'days', '182', now)).toBeNull();
   });
 });

@@ -9,6 +9,7 @@ import { Exercises } from './screens/Exercises';
 import { History } from './screens/History';
 import { SettingsPage } from './screens/Settings';
 import { StatsPage, type StatsPageId } from './screens/Stats';
+import { GoalsPage } from './screens/Goals';
 import { Progress } from './screens/Progress';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { RoutineView } from './screens/RoutineView';
@@ -107,6 +108,9 @@ export function App() {
       break;
     case 'profile':
       screen = <Progress />;
+      break;
+    case 'goals':
+      screen = <GoalsPage />;
       break;
     case 'stats':
       screen = <StatsPage key={param} page={param as StatsPageId} />;

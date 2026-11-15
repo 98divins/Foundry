@@ -14,21 +14,25 @@ import {
   type Friend,
   type PublicProfile,
 } from '../cloud/social';
-import { Confirm, Header, Icon } from '../components/ui';
+import { Confirm, Header, Icon, Segmented } from '../components/ui';
 import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { exerciseName, useStore } from '../store';
-import { BIG_LIFTS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type PublicStats } from '../socialStats';
+import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtNum, fmtVolume } from '../utils';
 
-const METRICS: { id: BoardMetric; label: string; hint: string }[] = [
-  { id: 'weekDays', label: tk('Training days'), hint: tk('Days with a workout this week. Three routines on one day count once.') },
-  { id: 'weekSets', label: tk('Sets'), hint: tk('Working sets this week.') },
-  { id: 'weekVolume', label: tk('Volume'), hint: tk('Weight × reps lifted this week.') },
+const METRICS: { id: BoardMetric; label: string; hint: string; weekHint?: string }[] = [
+  { id: 'days', label: tk('Training days'), hint: tk('Days with a workout. Three routines on one day count once.') },
+  { id: 'goals', label: tk('Goals'), hint: tk('Share of weeks where each person met their own goals: fair whatever the level.'), weekHint: tk('How far along each person is with their own goals this week.') },
+  { id: 'sets', label: tk('Sets'), hint: tk('Working sets.') },
+  { id: 'volume', label: tk('Volume'), hint: tk('Weight × reps lifted.') },
   { id: 'streak', label: tk('Streak'), hint: tk('Weeks in a row with at least one workout.') },
-  { id: 'prs30', label: tk('Records'), hint: tk('New personal records in the last 30 days.') },
-  { id: 'strength4w', label: tk('Progress'), hint: tk('Strength index change over 4 weeks: fair between beginners and experienced lifters.') },
+  { id: 'prs', label: tk('Records'), hint: tk('New personal records.'), weekHint: tk('New personal records in the last 30 days.') },
+  { id: 'strength', label: tk('Progress'), hint: tk('Strength index change: fair between beginners and experienced lifters.'), weekHint: tk('Strength index change over 4 weeks: fair between beginners and experienced lifters.') },
 ];
+
+const PERIOD_LABEL: Record<BoardPeriod, string> = { week: tk('This week'), '30': tk('1 month'), '182': tk('6 months'), '365': tk('1 year') };
+
 
 /** Loads my profile and friends; shared by the Friends screens. */
 function useSocial() {
@@ -72,8 +76,9 @@ const nameOf = (p: PublicProfile) => p.display_name || '@' + p.username;
 
 function fmtMetric(m: BoardMetric, v: number | null, unit: 'kg' | 'lb'): string {
   if (v == null) return '–';
-  if (m === 'weekVolume') return fmtVolume(v, unit);
-  if (m === 'strength4w') return t('{v} pts', { v: (v > 0 ? '+' : '') + fmtNum(v) });
+  if (m === 'volume') return fmtVolume(v, unit);
+  if (m === 'strength') return t('{v} pts', { v: (v > 0 ? '+' : '') + fmtNum(v) });
+  if (m === 'goals') return `${v} %`;
   return String(v);
 }
 
@@ -143,7 +148,8 @@ export function FriendsHome() {
   const { state, update } = useStore();
   const unit = state.settings.unit;
   const { uid, me, setMe, friends, reload, error, notReady } = useSocial();
-  const [metric, setMetric] = useState<BoardMetric>('weekDays');
+  const [metric, setMetric] = useState<BoardMetric>('days');
+  const [period, setPeriod] = useState<BoardPeriod>('week');
   const [search, setSearch] = useState('');
   const [msg, setMsg] = useState('');
   const [editing, setEditing] = useState(false);
@@ -157,6 +163,7 @@ export function FriendsHome() {
     ? rankBoard<{ p: PublicProfile; me: boolean }>(
         [{ person: { p: me, me: true }, stats: mine }, ...accepted.map((f) => ({ person: { p: f.profile, me: false }, stats: f.stats }))],
         metric,
+        period,
       )
     : [];
 
@@ -232,6 +239,7 @@ export function FriendsHome() {
 
             <section className="panel">
               <h2 className="panel-title">{t('Leaderboard')}</h2>
+              <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={setPeriod} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
               <div className="chips" role="tablist" aria-label={t('Leaderboard')}>
                 {METRICS.map((m) => (
                   <button key={m.id} role="tab" aria-selected={metric === m.id} className={'chip' + (metric === m.id ? ' on' : '')} onClick={() => setMetric(m.id)}>
@@ -239,7 +247,10 @@ export function FriendsHome() {
                   </button>
                 ))}
               </div>
-              <p className="muted small">{t(METRICS.find((m) => m.id === metric)!.hint)}</p>
+              <p className="muted small">{(() => {
+                const m = METRICS.find((x) => x.id === metric)!;
+                return t(period === 'week' && m.weekHint ? m.weekHint : m.hint);
+              })()}</p>
               <ol className="board">
                 {board.map((r) => (
                   <li key={r.person.p.user_id} className={r.person.me ? 'me' : ''}>
@@ -255,6 +266,9 @@ export function FriendsHome() {
                   </li>
                 ))}
               </ol>
+              {metric === 'goals' && board.every((r) => r.value == null) && (
+                <p className="muted small">{period === 'week' ? t('Nobody has set goals yet: set yours in Progress.') : t('Goals count from the first full week after they are set. Come back next week!')}</p>
+              )}
               {!accepted.length && <p className="muted small">{t('Invite friends to see how you compare. Weekly rankings start again every week.')}</p>}
               <button className="btn btn-primary btn-wide" onClick={() => share(inviteLink(me.username), setMsg)}>
                 <Icon name="share" size={18} /> {t('Invite friends')}
@@ -360,9 +374,10 @@ export function FriendCompare({ id }: { id: string }) {
   const mine = useMemo(() => buildPublicStats(state), [state]);
   const f = friends.find((x) => x.profile.user_id === id);
   const theirs: PublicStats | null = f?.stats ?? null;
-  const v = (s: PublicStats | null, m: BoardMetric) => metricValue(s, m);
+  const [period, setPeriod] = useState<BoardPeriod>('week');
+  const v = (s: PublicStats | null, m: BoardMetric) => metricValue(s, m, period);
   const score = (() => {
-    const pairs: [number | null, number | null][] = (['weekDays', 'weekSets', 'weekVolume', 'streak', 'prs30', 'strength4w'] as BoardMetric[]).map((m) => [v(mine, m), v(theirs, m)]);
+    const pairs: [number | null, number | null][] = (['days', 'goals', 'sets', 'volume', 'streak', 'prs', 'strength'] as BoardMetric[]).map((m) => [v(mine, m), v(theirs, m)]);
     let a = 0;
     let b = 0;
     for (const [x, y] of pairs) if (x != null && y != null && x !== y) x > y ? a++ : b++;
@@ -392,23 +407,25 @@ export function FriendCompare({ id }: { id: string }) {
             </section>
             {!theirs && <p className="muted small center">{t('{name} has not shared stats yet.', { name: nameOf(f.profile) })}</p>}
 
+            <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={setPeriod} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
             <section className="panel">
-              <h2 className="panel-title">{t('This week')}</h2>
+              <h2 className="panel-title">{t(PERIOD_LABEL[period])}</h2>
               <ul className="cmp-list">
-                <Row label={t('Training days')} a={v(mine, 'weekDays')} b={v(theirs, 'weekDays')} />
-                <Row label={t('Sets')} a={v(mine, 'weekSets')} b={v(theirs, 'weekSets')} />
-                <Row label={t('Volume')} a={v(mine, 'weekVolume')} b={v(theirs, 'weekVolume')} fmt={(x) => fmtVolume(x, unit)} />
-                <Row label={t('Time')} a={mine.weekMinutes} b={theirs ? (theirs.week === mine.week ? theirs.weekMinutes : 0) : null} fmt={(x) => fmtDuration(x * 60000)} />
+                <Row label={t('Training days')} a={v(mine, 'days')} b={v(theirs, 'days')} />
+                <Row label={t('Goals met')} a={v(mine, 'goals')} b={v(theirs, 'goals')} fmt={(x) => `${x} %`} />
+                <Row label={t('Sets')} a={v(mine, 'sets')} b={v(theirs, 'sets')} />
+                <Row label={t('Volume')} a={v(mine, 'volume')} b={v(theirs, 'volume')} fmt={(x) => fmtVolume(x, unit)} />
+                <Row label={period === 'week' ? t('Records (30 d)') : t('Records')} a={v(mine, 'prs')} b={v(theirs, 'prs')} />
+                <Row label={period === 'week' ? t('Strength progress (4 weeks)') : t('Strength progress')} a={v(mine, 'strength')} b={v(theirs, 'strength')} fmt={(x) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) })} />
+                {period === 'week' && <Row label={t('Time')} a={mine.weekMinutes} b={theirs ? (theirs.week === mine.week ? theirs.weekMinutes : 0) : null} fmt={(x) => fmtDuration(x * 60000)} />}
               </ul>
             </section>
 
             <section className="panel">
-              <h2 className="panel-title">{t('Consistency and progress')}</h2>
+              <h2 className="panel-title">{t('Consistency')}</h2>
               <ul className="cmp-list">
                 <Row label={t('Week streak')} a={v(mine, 'streak')} b={v(theirs, 'streak')} />
                 <Row label={t('Days per week (4 weeks)')} a={mine.avgDays4w} b={theirs?.avgDays4w} fmt={fmtNum} />
-                <Row label={t('Records (30 d)')} a={mine.prs30} b={theirs?.prs30} />
-                <Row label={t('Strength progress (4 weeks)')} a={mine.strength4w} b={theirs?.strength4w} fmt={(x) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) })} />
                 <Row label={t('Workouts in total')} a={mine.totalWorkouts} b={theirs?.totalWorkouts} />
               </ul>
             </section>
