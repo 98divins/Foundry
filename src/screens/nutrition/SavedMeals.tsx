@@ -115,7 +115,7 @@ export function MealsPage() {
             go('n/meals/' + id);
           }}
         >
-          <Icon name="plus" size={18} />{' '}{t(t('New meal'))}</button>
+          <Icon name="plus" size={18} />{' '}{t('New meal')}</button>
         {!n.savedMeals.length && <p className="muted">{t('No saved meal yet.')}</p>}
         <ul className="food-list">
           {[...n.savedMeals]

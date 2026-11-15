@@ -365,6 +365,8 @@ export function recentStats(n: NutritionState, days = 14, today = dayKey()) {
   };
 }
 
+export const MACRO_LABEL = { kcal: tk('Calories'), protein: tk('Protein'), carbs: tk('Carbs'), fat: tk('Fat') } as const;
+
 export const MEAL_LABEL: Record<Meal, string> = {
   breakfast: tk('Breakfast'),
   snack_breakfast: tk('Snacks after breakfast'),

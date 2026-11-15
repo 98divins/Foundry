@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NumInput, Sheet } from '../../components/ui';
-import { MEAL_LABEL, MEALS, round1, type FoodEntry, type Meal } from '../../nutrition';
+import { MACRO_LABEL, MEAL_LABEL, MEALS, round1, type FoodEntry, type Meal } from '../../nutrition';
 import { useNutrition } from '../../store';
 import { t } from '../../i18n';
 
@@ -56,7 +56,7 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
           <div className="quick-grid">
             {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
               <label key={k} className="field">
-                <span>{k === 'kcal' ? t('kcal') : `${k} (g)`}</span>
+                <span>{k === 'kcal' ? t('kcal') : t('{0} (g)', { 0: t(MACRO_LABEL[k]) })}</span>
                 <NumInput
                   id={'edit-' + k}
                   label={k}

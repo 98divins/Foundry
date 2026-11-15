@@ -3348,6 +3348,7 @@ span.ex-photo {
 .goals-cta {
   width: 100%;
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 12px;
   color: inherit;
@@ -3421,4 +3422,35 @@ span.ex-photo {
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
+}
+
+/* Three short fields: one row on wide phones, sex alone on top on small ones. */
+.field-row-3 > .field {
+  flex: 1 1 100px;
+}
+@media (max-width: 380px) {
+  .field-row-3 > .field:first-child {
+    flex-basis: 100%;
+  }
+}
+/* Toasts sit above the tab bar, where they hide nothing important. */
+.streak-toast {
+  top: auto;
+  bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 12px);
+  right: max(12px, calc((100vw - 560px) / 2 + 12px));
+}
+.with-mini .streak-toast {
+  bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 72px);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@media (max-width: 360px) {
+  .seg button {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
 }

@@ -6,6 +6,7 @@ import { FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, sear
 import {
   entriesFromMeal,
   kcalFromMacros,
+  MACRO_LABEL,
   MEAL_LABEL,
   MEALS,
   scaleFood,
@@ -62,7 +63,6 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
             { value: 'meals', label: t('Meals') },
             { value: 'scan', label: t('Scan') },
             { value: 'quick', label: t('Quick') },
-            { value: 'create', label: t('New') },
           ]}
         />
         {added.length > 0 && (
@@ -74,7 +74,7 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
           </div>
         )}
 
-        {mode === 'search' && <SearchFoods foods={n.foods} log={n.log} favorites={n.favorites} onPick={setPicked} />}
+        {mode === 'search' && <SearchFoods foods={n.foods} log={n.log} favorites={n.favorites} onPick={setPicked} onCreate={() => setMode('create')} />}
         {mode === 'meals' && (
           <SavedMealsList
             onLog={(sm, servings) => {
@@ -136,11 +136,13 @@ export function SearchFoods({
   log,
   favorites,
   onPick,
+  onCreate,
 }: {
   foods: Food[];
   log: FoodEntry[];
   favorites: string[];
   onPick: (f: Food) => void;
+  onCreate?: () => void;
 }) {
   const [query, setQuery] = useState('');
   const [generic, setGeneric] = useState<Food[] | null>(null);
@@ -269,6 +271,11 @@ export function SearchFoods({
             <button className="btn btn-primary" onClick={searchOnline} disabled={busy !== ''}>
               {busy === 'online' ? t('Searching…') : t('Search brands (Open Food Facts)')}
             </button>
+            {onCreate && (
+              <button className="btn" onClick={onCreate}>
+                <Icon name="plus" size={16} /> {t('Create a food from its label')}
+              </button>
+            )}
           </div>
           {online && online.q === query.trim() && (
             <>
@@ -381,7 +388,7 @@ function QuickAdd({ onAdd }: { onAdd: (e: Omit<FoodEntry, 'id' | 'date' | 'meal'
       <div className="quick-grid">
         {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
           <label key={k} className="field">
-            <span>{k === 'kcal' ? t('Calories') : `${k} (g)`}</span>
+            <span>{k === 'kcal' ? t('Calories') : t('{0} (g)', { 0: t(MACRO_LABEL[k]) })}</span>
             <NumInput
               id={'quick-' + k}
               label={k}
@@ -440,7 +447,7 @@ function CreateFood({ onCreate }: { onCreate: (f: Food) => void }) {
       <div className="quick-grid">
         {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
           <label key={k} className="field">
-            <span>{k === 'kcal' ? t('Calories') : `${k} (g)`}</span>
+            <span>{k === 'kcal' ? t('Calories') : t('{0} (g)', { 0: t(MACRO_LABEL[k]) })}</span>
             <NumInput
               id={'new-food-' + k}
               label={k}
@@ -543,7 +550,7 @@ export function AmountSheet({
           <NumInput id="amount-g" label={t('Amount in grams')} value={grams} onChange={setGrams} />
         </label>
         <p className="macro-line">
-          <strong>{t('{0} kcal', { 0: m.kcal })}</strong> · P {m.protein} g · C {m.carbs} g · F {m.fat} g
+          <strong>{t('{0} kcal', { 0: m.kcal })}</strong> · {t('P {p} g · C {c} g · F {f} g', { p: fmtNum(m.protein), c: fmtNum(m.carbs), f: fmtNum(m.fat) })}
         </p>
         <div className="sheet-actions">
           <button type="button" className="btn" onClick={onClose}>{t('Cancel')}</button>

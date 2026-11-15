@@ -9,6 +9,7 @@ import {
   dayTotals,
   latestTrend,
   makeCheckIn,
+  MACRO_LABEL,
   MEAL_LABEL,
   MEALS,
   parseDay,
@@ -129,14 +130,14 @@ export function NutritionHome({ date }: { date: string }) {
                 <span className="kcal-unit">{t('kcal')}</span>
               </p>
             </div>
-            <div className="kcal-side small muted">
-              <span>{t('Eaten')}{' '}<strong className="fg">{totals.kcal}</strong>
-              </span>
-              {targets && (
+            {targets && (
+              <div className="kcal-side small muted">
+                <span>{t('Eaten')}{' '}<strong className="fg">{totals.kcal}</strong>
+                </span>
                 <span>{t('Target')}{' '}<strong className="fg">{targets.kcal}</strong>
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
           {targets && (
             <span className="macro-track big">
@@ -442,7 +443,7 @@ function CheckInSheet({ open, onClose, current }: { open: boolean; onClose: () =
             <tbody>
               {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
                 <tr key={k}>
-                  <td>{k === 'kcal' ? t('Calories') : k[0].toUpperCase() + k.slice(1)}</td>
+                  <td>{t(MACRO_LABEL[k])}</td>
                   <td className="muted">{current ? current[k] : '–'}</td>
                   <td>
                     <strong>{ci.targets[k]}</strong> {k === 'kcal' ? t('kcal') : 'g'}

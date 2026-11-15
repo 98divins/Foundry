@@ -46,7 +46,7 @@ export function WeightPage() {
       <Header title={t('Weight')} onBack={() => back('n')} />
       <main className="page">
         <div className="stats-row">
-          <Stat label={t('Trend')} value={trend.length ? `${d(trend[trend.length - 1].trend)} ${unit}` : '–'} />
+          <Stat label={t('Trend')} value={trend.length ? `${fmtNum(d(trend[trend.length - 1].trend))} ${unit}` : '–'} />
           <Stat
             label={t('Per week (14 d)')}
             value={stats.weeklyChange != null ? `${stats.weeklyChange > 0 ? '+' : ''}${fmtNum(d(stats.weeklyChange))} ${unit}` : '–'}
@@ -135,8 +135,8 @@ export function InsightsPage() {
       <Header title={t('Expenditure')} onBack={() => back('n')} />
       <main className="page">
         <div className="stats-row">
-          <Stat label={t('Expenditure')} value={current != null ? `${current} kcal` : '–'} />
-          <Stat label={t('Avg intake (14 d)')} value={stats.avgIntake != null ? `${stats.avgIntake} kcal` : '–'} />
+          <Stat label={t('Expenditure (kcal)')} value={current ?? '–'} />
+          <Stat label={t('Avg intake, kcal (14 d)')} value={stats.avgIntake ?? '–'} />
           <Stat label={t('Logged days')} value={`${stats.loggedDays}/14`} />
         </div>
         <section className="panel">
@@ -254,7 +254,7 @@ export function PlanPage({ setup }: { setup?: boolean }) {
       <main className="page">
         <section className="panel form">
           <h2 className="panel-title">{t('About you')}</h2>
-          <div className="field-row">
+          <div className="field-row field-row-3">
             <label className="field">
               <span>{t('Sex')}</span>
               <select id="p-sex" value={profile.sex} onChange={(e) => setProfile({ ...profile, sex: e.target.value as Sex })}>
