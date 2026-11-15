@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { CreateExercise, ExerciseFilters, ExerciseRowText, emptyFilter, useFilteredExercises, type ExerciseFilter } from '../components/ExercisePicker';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon } from '../components/ui';
-import { go } from '../hooks';
+import { back, go } from '../hooks';
 import { useStore } from '../store';
 import { t } from '../i18n';
 
@@ -28,6 +28,7 @@ export function Exercises() {
     <>
       <Header
         title={t('Exercises')}
+        onBack={() => back('')}
         right={
           <button className="btn btn-small" onClick={() => setCreating(true)}>
             <Icon name="plus" size={16} />{' '}{t('New')}</button>

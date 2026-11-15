@@ -432,7 +432,7 @@ function ExerciseCard({
           <button className="menu-item" disabled={!canDown} onClick={() => { onMove(1); setMenu(false); }}>
             <Icon name="down" size={18} />{' '}{t('Move down')}</button>
           <button className="menu-item" onClick={() => { setMenu(false); setReplacing(true); }}>
-            <Icon name="swap" size={18} />{' '}{t('Replace exercise')}{mode === 'live' && <span className="muted small">{t('· this workout only')}</span>}
+            <Icon name="swap" size={18} />{' '}{mode === 'live' ? t('Replace for this workout') : t('Replace exercise')}
           </button>
           <button className="menu-item danger" onClick={() => { setMenu(false); onChange(null); }}>
             <Icon name="trash" size={18} />{' '}{t('Remove exercise')}</button>

@@ -38,10 +38,8 @@ import { t, tk } from './i18n';
 const TABS: { path: string; label: string; icon: IconName }[] = [
   { path: '', label: tk('Workout'), icon: 'dumbbell' },
   { path: 'n', label: tk('Nutrition'), icon: 'apple' },
-  { path: 'history', label: tk('History'), icon: 'history' },
-  { path: 'exercises', label: tk('Exercises'), icon: 'list' },
   { path: 'friends', label: tk('Friends'), icon: 'users' },
-  { path: 'profile', label: tk('Progress'), icon: 'chart' },
+  { path: 'profile', label: tk('Profile'), icon: 'user' },
 ];
 
 export function App() {

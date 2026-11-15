@@ -174,6 +174,12 @@ export function WorkoutTab() {
         </section>
 
         <div className="routine-entry">
+          <button className="btn" onClick={() => go('history')}>
+            <Icon name="history" size={18} />{' '}{t('History')}</button>
+          <button className="btn" onClick={() => go('exercises')}>
+            <Icon name="list" size={18} />{' '}{t('Exercises')}</button>
+        </div>
+        <div className="routine-entry">
           <button className="btn" onClick={() => go('r/new')}>
             <Icon name="plus" size={18} />{' '}{t('New routine')}</button>
           <button className="btn" onClick={() => go('explore')}>
@@ -231,7 +237,6 @@ export function WorkoutTab() {
             {!routines.length && (
               <div className="empty-card">
                 <p>{t('Routines are your workout templates. Create one for each training day, or start from a ready-made program in Explore programs.')}</p>
-                <button className="btn btn-primary" onClick={() => go('explore')}>{t('Explore programs')}</button>
               </div>
             )}
             {renderRoutines(unfiled)}

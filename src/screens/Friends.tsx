@@ -199,6 +199,15 @@ export function FriendsHome() {
           <NotReady />
         ) : me === undefined ? (
           <p className="muted">{t('Loading…')}</p>
+        ) : !me && !editing ? (
+          <section className="panel invite-card">
+            <Icon name="users" size={36} />
+            <h2>{t('Train with your friends')}</h2>
+            <p className="muted small">{t('Invite friends, see a weekly leaderboard (training days, sets, volume, streak, records, progress) and compare yourselves head to head. Only a summary of your training is shared, never your meals or your weight.')}</p>
+            <button className="btn btn-primary btn-wide" onClick={() => setEditing(true)}>
+              {t('Choose my username')}
+            </button>
+          </section>
         ) : !me || editing ? (
           uid && (
             <ProfileSetup

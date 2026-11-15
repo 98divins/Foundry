@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react';
 import { back } from '../hooks';
-import { Confirm, Header } from '../components/ui';
+import { Confirm, Header, Icon } from '../components/ui';
 import { exportWorkoutCsv, importWorkoutCsv } from '../csv';
 import { defaultState, parseBackup, useStore } from '../store';
 import { download } from '../utils';
 import { fmtBackupAge, saveBackup } from '../backup';
+import { downloadWorkbook } from '../export';
 import { t, tp } from '../i18n';
 
 /** Settings → Export & import data. */
@@ -61,6 +62,10 @@ export function DataPage() {
               onClick={() => download(`foundry-workouts-${stamp}.csv`, exportWorkoutCsv(workouts, exMap), 'text/csv')}
             >{t('Export CSV')}</button>
           </div>
+          <button className="btn btn-primary btn-wide" onClick={() => downloadWorkbook(state, exMap)}>
+            <Icon name="download" size={18} /> {t('Export to Excel (report and all data)')}
+          </button>
+          <p className="muted small">{t('One workbook: weekly report, workouts, every set, weigh-ins, daily nutrition, food log and check-ins. Opens in Excel, Numbers or Google Sheets.')}</p>
           <p className="muted small">{t('To bring your history over from Hevy: in Hevy, open Settings → Export & Import Data → Export workouts, then import that CSV file here. Exercises with unknown names become custom exercises.')}</p>
           {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
           <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmReset(true)}>{t('Erase all data')}</button>

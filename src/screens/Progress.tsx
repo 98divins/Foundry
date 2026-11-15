@@ -330,7 +330,7 @@ function AdvancedStats() {
 function ProgressHeader() {
   return (
     <Header
-      title={t('Progress')}
+      title={t('Profile')}
       right={
         <button className="icon-btn" aria-label={t('Settings')} onClick={() => go('settings')}>
           <Icon name="gear" />

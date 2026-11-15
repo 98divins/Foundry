@@ -197,7 +197,7 @@ export function MealEditor({ id }: { id: string }) {
             <MealSummary items={draft.items} />
           </div>
           {!draft.items.length && <p className="muted small">{t('Add the foods that make one serving of this meal.')}</p>}
-          <ul className="meal-item-list editable">
+          <ul className="meal-item-list editable stacked">
             {draft.items.map((i, k) => (
               <li key={k}>
                 <span className="entry-text">
