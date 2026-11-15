@@ -46,6 +46,7 @@ Optional. Without it, everything stays on the device (with backup files).
 
 1. Create a Supabase project (free tier), region in Europe.
 2. SQL Editor → run `supabase/schema.sql` once: one `user_state` row per user (the app data as JSON), Row Level Security so each user only reads and writes their own row, and `delete_my_account()` for in-app account deletion.
+3. For friends and leaderboards, also run `supabase/social.sql`: public profiles (username), friend requests, and a small training summary each person shares only with accepted friends.
 3. Authentication → URL Configuration: Site URL and Redirect URLs = the app's address (e.g. `https://98divins.github.io/Foundry/`), so confirmation and password-reset emails come back to the app.
 4. Put the Project URL and the publishable key in `src/cloud/config.ts` (both are public by design).
 

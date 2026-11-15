@@ -21,6 +21,8 @@ import { CloudDialogs } from './components/Account';
 import { ConsentGate } from './components/Legal';
 import { UpdateBanner } from './components/UpdateBanner';
 import { StreakToast } from './components/StreakToast';
+import { StatsPublisher } from './components/StatsPublisher';
+import { FriendCompare, FriendsHome, InvitePage } from './screens/Friends';
 import { QuickStart, Splash, Welcome } from './components/Onboarding';
 import { useCloud } from './cloud/cloud';
 import { hasData } from './cloud/sync';
@@ -37,6 +39,7 @@ const TABS: { path: string; label: string; icon: IconName }[] = [
   { path: 'n', label: tk('Nutrition'), icon: 'apple' },
   { path: 'history', label: tk('History'), icon: 'history' },
   { path: 'exercises', label: tk('Exercises'), icon: 'list' },
+  { path: 'friends', label: tk('Friends'), icon: 'users' },
   { path: 'profile', label: tk('Progress'), icon: 'chart' },
 ];
 
@@ -129,6 +132,12 @@ export function App() {
     case 'import':
       screen = <ImportRoutines key={param} code={param ?? ''} />;
       break;
+    case 'friends':
+      screen = param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
+      break;
+    case 'invite':
+      screen = <InvitePage key={param} username={decodeURIComponent(param ?? '')} />;
+      break;
     case 'r':
       screen = <RoutineEditor key={param + (extra ?? '')} id={param} folderId={extra} />;
       break;
@@ -145,6 +154,7 @@ export function App() {
       <CloudDialogs />
       <ConsentGate />
       <UpdateBanner />
+      <StatsPublisher />
       {isTab && <StreakToast />}
       {state.active && section !== 'active' && (
         <button className="mini-workout" onClick={() => go('active')}>

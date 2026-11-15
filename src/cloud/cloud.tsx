@@ -35,7 +35,7 @@ interface CloudCtx {
 const Ctx = createContext<CloudCtx | null>(null);
 
 let client: SupabaseClient | null = null;
-async function getClient(): Promise<SupabaseClient | null> {
+export async function getClient(): Promise<SupabaseClient | null> {
   if (!cloudConfigured()) return null;
   if (!client) {
     const { createClient } = await import('@supabase/supabase-js');
