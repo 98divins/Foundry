@@ -21,6 +21,8 @@ const weekEnd = (start: number) => weekStart(start + 10.5 * DAY);
 export interface TrainingWeek {
   start: number;
   workouts: number;
+  /** Distinct days with a workout: three routines in one session count once. */
+  days: number;
   sets: number;
   volume: number;
   minutes: number;
@@ -44,6 +46,7 @@ export function weeklyTraining(workouts: Workout[], starts: number[]): TrainingW
     return {
       start,
       workouts: inWeek.length,
+      days: trainingDays(inWeek),
       sets,
       volume,
       minutes: Math.round(inWeek.reduce((t, w) => t + ((w.endedAt ?? w.startedAt) - w.startedAt), 0) / 60000),
@@ -270,4 +273,120 @@ export function crossInsights(index: (number | null)[], diet: DietWeek[], protei
     });
   }
   return out;
+}
+
+/* ---------- Training days, streak, statistics pages ---------- */
+
+const dayOf = (ts: number) => {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
+
+/** Number of distinct calendar days with a finished workout. */
+export function trainingDays(workouts: Workout[]): number {
+  return new Set(finished(workouts).map((w) => dayOf(w.startedAt))).size;
+}
+
+/** Day keys (local) with at least one finished workout, for calendars. */
+export function trainedDaySet(workouts: Workout[]): Set<string> {
+  return new Set(finished(workouts).map((w) => dayOf(w.startedAt)));
+}
+export const dayKeyOf = dayOf;
+
+/**
+ * Weeks in a row with at least one workout, ending with this week.
+ * This week counts once it has a workout; until then the streak from last week still stands
+ * (it is not lost before the week is over), and `thisWeekDone` says whether it is secured.
+ */
+export function weekStreak(workouts: Workout[], now = Date.now()): { weeks: number; thisWeekDone: boolean } {
+  const days = finished(workouts).map((w) => w.startedAt);
+  const has = (start: number) => days.some((t) => t >= start && t < weekEnd(start));
+  let start = weekStart(now);
+  const thisWeekDone = has(start);
+  if (!thisWeekDone) start = weekStart(start - 3.5 * DAY);
+  let weeks = 0;
+  while (has(start)) {
+    weeks++;
+    start = weekStart(start - 3.5 * DAY);
+  }
+  return { weeks, thisWeekDone };
+}
+
+export type MuscleGroup = 'chest' | 'back' | 'shoulders' | 'arms' | 'core' | 'legs';
+export const MUSCLE_GROUPS: MuscleGroup[] = ['chest', 'back', 'core', 'shoulders', 'arms', 'legs'];
+const GROUP_OF: Partial<Record<Muscle, MuscleGroup>> = {
+  chest: 'chest',
+  upper_back: 'back', lats: 'back', lower_back: 'back', traps: 'back', back: 'back',
+  shoulders: 'shoulders',
+  biceps: 'arms', triceps: 'arms', forearms: 'arms',
+  abs: 'core',
+  quads: 'legs', hamstrings: 'legs', glutes: 'legs', calves: 'legs', adductors: 'legs', abductors: 'legs',
+};
+
+/** Working sets per muscle group between two times (full-body moves and cardio left out). */
+export function groupSets(workouts: Workout[], exMap: Map<string, Exercise>, from: number, to: number): Record<MuscleGroup, number> {
+  const out = Object.fromEntries(MUSCLE_GROUPS.map((g) => [g, 0])) as Record<MuscleGroup, number>;
+  for (const [m, n] of muscleSets(workouts, exMap, from, to)) {
+    const g = GROUP_OF[m];
+    if (g) out[g] += n;
+  }
+  return out;
+}
+
+export interface PeriodSummary {
+  workouts: number;
+  days: number;
+  minutes: number;
+  volume: number;
+  sets: number;
+}
+
+/** Totals for workouts started in [from, to). */
+export function periodSummary(workouts: Workout[], from: number, to: number): PeriodSummary {
+  const inP = finished(workouts).filter((w) => w.startedAt >= from && w.startedAt < to);
+  let sets = 0;
+  let volume = 0;
+  for (const w of inP)
+    for (const we of w.exercises) {
+      const kind = exerciseKind(we.exerciseId);
+      for (const s of we.sets.filter(countsForStats)) {
+        sets++;
+        volume += setVolume(s, kind);
+      }
+    }
+  return {
+    workouts: inP.length,
+    days: trainingDays(inP),
+    minutes: Math.round(inP.reduce((t, w) => t + ((w.endedAt ?? w.startedAt) - w.startedAt), 0) / 60000),
+    volume,
+    sets,
+  };
+}
+
+/** Exercises done most often in [from, to): number of workouts and working sets. */
+export function topExercises(workouts: Workout[], from: number, to: number, limit = 10) {
+  const m = new Map<string, { workouts: number; sets: number }>();
+  for (const w of finished(workouts)) {
+    if (w.startedAt < from || w.startedAt >= to) continue;
+    const seen = new Set<string>();
+    for (const we of w.exercises) {
+      const sets = we.sets.filter(countsForStats).length;
+      if (!sets) continue;
+      const e = m.get(we.exerciseId) ?? { workouts: 0, sets: 0 };
+      if (!seen.has(we.exerciseId)) e.workouts++;
+      seen.add(we.exerciseId);
+      e.sets += sets;
+      m.set(we.exerciseId, e);
+    }
+  }
+  return [...m.entries()]
+    .map(([exerciseId, v]) => ({ exerciseId, ...v }))
+    .sort((a, b) => b.workouts - a.workouts || b.sets - a.sets)
+    .slice(0, limit);
+}
+
+/** First instant of the month containing `ts`, and of the month `offset` months away. */
+export function monthStart(ts: number, offset = 0): number {
+  const d = new Date(ts);
+  return new Date(d.getFullYear(), d.getMonth() + offset, 1).getTime();
 }

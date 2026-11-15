@@ -6,6 +6,7 @@ import { defaultWorkoutName, fmtClock, fmtDate, fmtDuration, fmtVolume, uid, wee
 import { Confirm, Header, Icon, Logo, Sheet } from '../components/ui';
 import { codeFromText, liveSetFromRoutine } from '../routines';
 import { ShareResult, useShareLink } from '../components/Share';
+import { StreakChip } from '../components/StreakToast';
 import { t, tp } from '../i18n';
 
 export function startWorkout(update: (fn: (s: State) => State) => void, routine?: Routine) {
@@ -143,6 +144,7 @@ export function WorkoutTab() {
           <span className="brand">
             <Logo />{' '}{t('Foundry')}</span>
         }
+        right={<StreakChip />}
       />
       <main className="page">
         <section className="hero-card">

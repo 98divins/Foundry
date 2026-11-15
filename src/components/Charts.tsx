@@ -152,3 +152,39 @@ export function Sparkline({ values, width = 96, height = 32 }: { values: number[
     </svg>
   );
 }
+
+/** Radar (spider) chart: one axis per label, current period filled, previous period outlined. */
+export function RadarChart({ labels, current, previous }: { labels: string[]; current: number[]; previous?: number[] }) {
+  const size = 260;
+  const c = size / 2;
+  const r = 86;
+  const max = Math.max(1, ...current, ...(previous ?? []));
+  const at = (i: number, v: number) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / labels.length;
+    return [c + Math.cos(a) * r * (v / max), c + Math.sin(a) * r * (v / max)] as const;
+  };
+  const poly = (vals: number[]) => vals.map((v, i) => at(i, v).join(',')).join(' ');
+  return (
+    <svg className="radar" viewBox={`0 0 ${size} ${size}`} role="img" aria-label={labels.map((l, i) => `${l} ${current[i]}`).join(', ')}>
+      {[0.25, 0.5, 0.75, 1].map((k) => (
+        <polygon key={k} className="radar-grid" points={poly(labels.map(() => max * k))} />
+      ))}
+      {labels.map((_, i) => {
+        const [x, y] = at(i, max);
+        return <line key={i} className="radar-grid" x1={c} y1={c} x2={x} y2={y} />;
+      })}
+      {previous && <polygon className="radar-prev" points={poly(previous)} />}
+      <polygon className="radar-cur" points={poly(current)} />
+      {labels.map((l, i) => {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / labels.length;
+        const x = c + Math.cos(a) * (r + 22);
+        const y = c + Math.sin(a) * (r + 18);
+        return (
+          <text key={l} className="radar-label" x={x} y={y} textAnchor={Math.abs(Math.cos(a)) < 0.2 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end'} dominantBaseline="middle">
+            {l}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}

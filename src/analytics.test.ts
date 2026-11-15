@@ -127,3 +127,29 @@ describe('diet × training', () => {
     expect(crossInsights(index.slice(0, 4), diet.slice(0, 4), 2)).toEqual([]);
   });
 });
+
+describe('training days and week streak', () => {
+  const at = (daysAgo: number, hour = 10) => {
+    const d = new Date();
+    d.setHours(hour, 0, 0, 0);
+    return d.getTime() - daysAgo * 86400000;
+  };
+  const w = (start: number) => ({ id: String(start), name: 'W', startedAt: start, endedAt: start + 3600000, exercises: [] });
+
+  it('counts three routines on the same day as one training day', async () => {
+    const { trainingDays } = await import('./analytics');
+    expect(trainingDays([w(at(0, 9)), w(at(0, 10)), w(at(0, 11)), w(at(1))])).toBe(2);
+  });
+
+  it('counts weeks in a row and keeps last week’s streak until this week is over', async () => {
+    const { weekStreak } = await import('./analytics');
+    const { weekStart } = await import('./utils');
+    const thisWeek = weekStart(Date.now()) + 3600000;
+    const weeksAgo = (k: number) => thisWeek - k * 7 * 86400000;
+    expect(weekStreak([w(thisWeek), w(weeksAgo(1)), w(weeksAgo(2))]).weeks).toBe(3);
+    const pending = weekStreak([w(weeksAgo(1)), w(weeksAgo(2))]);
+    expect(pending).toEqual({ weeks: 2, thisWeekDone: false });
+    expect(weekStreak([w(thisWeek), w(weeksAgo(2))]).weeks).toBe(1);
+    expect(weekStreak([]).weeks).toBe(0);
+  });
+});

@@ -8,6 +8,7 @@ import { ExerciseDetail } from './screens/ExerciseDetail';
 import { Exercises } from './screens/Exercises';
 import { History } from './screens/History';
 import { SettingsPage } from './screens/Settings';
+import { StatsPage, type StatsPageId } from './screens/Stats';
 import { Progress } from './screens/Progress';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { RoutineView } from './screens/RoutineView';
@@ -19,6 +20,7 @@ import { useStore } from './store';
 import { CloudDialogs } from './components/Account';
 import { ConsentGate } from './components/Legal';
 import { UpdateBanner } from './components/UpdateBanner';
+import { StreakToast } from './components/StreakToast';
 import { QuickStart, Splash, Welcome } from './components/Onboarding';
 import { useCloud } from './cloud/cloud';
 import { hasData } from './cloud/sync';
@@ -103,6 +105,9 @@ export function App() {
     case 'profile':
       screen = <Progress />;
       break;
+    case 'stats':
+      screen = <StatsPage key={param} page={param as StatsPageId} />;
+      break;
     case 'settings':
       screen = <SettingsPage key={param ?? 'hub'} page={param} />;
       break;
@@ -140,6 +145,7 @@ export function App() {
       <CloudDialogs />
       <ConsentGate />
       <UpdateBanner />
+      {isTab && <StreakToast />}
       {state.active && section !== 'active' && (
         <button className="mini-workout" onClick={() => go('active')}>
           <span className="mini-dot" aria-hidden="true" />

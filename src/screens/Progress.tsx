@@ -9,7 +9,9 @@ import {
   weeklyDiet,
   weeklyTraining,
   weekStarts,
+  weekStreak,
 } from '../analytics';
+import { STATS_PAGES } from './Stats';
 import { BarChart, LineChart, Sparkline } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon, Segmented, Stat } from '../components/ui';
@@ -31,7 +33,7 @@ const PR_LABEL: Record<PRKind, string> = {
   distance: tk('Farthest'),
 };
 
-type WeekMetric = 'workouts' | 'sets' | 'volume';
+type WeekMetric = 'days' | 'workouts' | 'sets' | 'volume';
 
 export function Progress() {
   const { state, exMap } = useStore();
@@ -52,16 +54,7 @@ export function Progress() {
 
   const done = workouts.filter((w) => w.endedAt);
   const thisWeek = training[training.length - 1];
-  const streak = (() => {
-    let n = 0;
-    let i = training.length - 1;
-    if (!training[i].workouts) i--;
-    while (i >= 0 && training[i].workouts) {
-      n++;
-      i--;
-    }
-    return n;
-  })();
+  const streak = useMemo(() => weekStreak(workouts).weeks, [workouts]);
 
   // Sets per muscle: this week, or the average of the last 4 full weeks.
   const muscles = useMemo(() => {
@@ -81,7 +74,7 @@ export function Progress() {
   const weekLabel = (t: number) => new Date(t).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' });
   const bars = training.map((w) => ({
     label: weekLabel(w.start),
-    value: metric === 'workouts' ? w.workouts : metric === 'sets' ? w.sets : Math.round(toDisplay(w.volume, unit) / 1000),
+    value: metric === 'days' ? w.days : metric === 'workouts' ? w.workouts : metric === 'sets' ? w.sets : Math.round(toDisplay(w.volume, unit) / 1000),
   }));
   const indexPoints = starts
     .map((t, i) => ({ x: t, y: index[i] }))
@@ -114,11 +107,13 @@ export function Progress() {
         <ProfileCard workouts={done.length} records={prs.length} />
 
         <div className="stats-row">
-          <Stat label={t('Workouts this week')} value={thisWeek.workouts} />
-          <Stat label={t('Week streak')} value={streak} />
+          <Stat label={t('Training days this week')} value={thisWeek.days} />
+          <Stat label={t('Week streak')} value={<span className="streak-value"><Icon name="flame" size={22} />{streak}</span>} />
           <Stat label={t('Sets this week')} value={thisWeek.sets} />
           <Stat label={t('Workouts')} value={done.length} />
         </div>
+
+        <AdvancedStats />
 
         <section className="panel">
           <h2 className="panel-title">{t('Strength')}</h2>
@@ -162,6 +157,7 @@ export function Progress() {
             onChange={setMetric}
             options={[
               { value: 'sets', label: t('Sets') },
+              { value: 'days', label: t('Days') },
               { value: 'workouts', label: t('Workouts') },
               { value: 'volume', label: unit === 'kg' ? t('Volume (t)') : t('Volume (k lb)') },
             ]}
@@ -300,6 +296,31 @@ function ProfileCard({ workouts, records }: { workouts: number; records: number 
         </span>
       </span>
     </button>
+  );
+}
+
+function AdvancedStats() {
+  return (
+    <section>
+      <h2 className="settings-group">{t('Advanced statistics')}</h2>
+      <ul className="settings-list">
+        {STATS_PAGES.map((p) => (
+          <li key={p.id}>
+            <button className="settings-row" onClick={() => go('stats/' + p.id)}>
+              <Icon name={p.icon} />
+              <span className="settings-label">
+                <span>
+                  {t(p.title)}
+                  {p.pro && <span className="pro-badge">Pro</span>}
+                </span>
+                <span className="muted small">{t(p.text)}</span>
+              </span>
+              <Icon name="chevron" size={18} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
