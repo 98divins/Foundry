@@ -1,11 +1,12 @@
 import { fold } from './exercises';
 import { FR_FOODS } from './foodsFr';
+import { FR_FOODS_MORE } from './foodsFrMore';
 import { kcalFromMacros, type Food } from './nutrition';
 import { t } from './i18n';
 
 /* ---------- Built-in foods ---------- */
 
-export const FR_FOOD_LIST: Food[] = FR_FOODS.map(([id, name, , kcal, protein, carbs, fat, fiber, label, grams]) => ({
+export const FR_FOOD_LIST: Food[] = [...FR_FOODS, ...FR_FOODS_MORE].map(([id, name, , kcal, protein, carbs, fat, fiber, label, grams]) => ({
   id,
   name,
   per100: { kcal, protein, carbs, fat, fiber },

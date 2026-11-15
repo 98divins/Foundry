@@ -11,7 +11,7 @@ describe('built-in French foods', () => {
       // Calories roughly agree with macros; fibre counts about 2 kcal/g. Alcohol is not a macro, and
       // USDA uses food-specific energy factors for cocoa, so those are left out.
       const fromMacros = 4 * protein + 4 * (carbs - (fiber ?? 0)) + 2 * (fiber ?? 0) + 9 * fat;
-      if (!/vin|bière|cacao/i.test(f.name)) expect(Math.abs(kcal - fromMacros)).toBeLessThan(0.2 * kcal + 25);
+      if (!/vin|bière|cacao|champagne/i.test(f.name)) expect(Math.abs(kcal - fromMacros)).toBeLessThan(0.2 * kcal + 25);
     }
   });
 

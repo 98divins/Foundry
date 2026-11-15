@@ -14,10 +14,17 @@ declare global {
  * Live camera barcode reader. Uses the browser's BarcodeDetector where it exists (Chrome on
  * Android) and otherwise loads the ZXing reader (iPhone), only when the scanner opens.
  */
+/** Back camera at a resolution high enough to read the thin bars of a barcode. */
+const CAMERA: MediaTrackConstraints = { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } };
+
 export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => void; onClose: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState('');
   const done = useRef(false);
+  // The parent passes a new function on every render: keep the latest in a ref so the camera
+  // starts once instead of restarting (and never reading a code) at each render.
+  const onCodeRef = useRef(onCode);
+  onCodeRef.current = onCode;
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -29,14 +36,14 @@ export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => 
       if (done.current) return;
       done.current = true;
       navigator.vibrate?.(80);
-      onCode(code);
+      onCodeRef.current(code);
     };
 
     (async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia) throw new Error('nocamera');
         if (window.BarcodeDetector) {
-          stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+          stream = await navigator.mediaDevices.getUserMedia({ video: CAMERA, audio: false });
           if (cancelled || !video.current) return;
           video.current.srcObject = stream;
           await video.current.play();
@@ -51,11 +58,15 @@ export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => 
             }
           }, 250);
         } else {
-          const { BrowserMultiFormatReader } = await import('@zxing/browser');
+          const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([import('@zxing/browser'), import('@zxing/library')]);
           if (cancelled || !video.current) return;
-          const reader = new BrowserMultiFormatReader();
+          // Only product barcodes: faster and more reliable than trying every format.
+          const hints = new Map();
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
+          hints.set(DecodeHintType.TRY_HARDER, true);
+          const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 150 });
           const controls = await reader.decodeFromConstraints(
-            { video: { facingMode: 'environment' }, audio: false },
+            { video: CAMERA, audio: false },
             video.current,
             (result) => {
               if (result) found(result.getText());
@@ -79,7 +90,7 @@ export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => 
       stopZxing?.();
       stream?.getTracks().forEach((t) => t.stop());
     };
-  }, [onCode]);
+  }, []);
 
   return (
     <div className="scanner">
