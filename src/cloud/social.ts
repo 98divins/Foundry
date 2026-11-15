@@ -144,3 +144,15 @@ export async function unpublishStats(uid: string) {
 }
 
 export const inviteLink = (username: string) => `${location.origin}${location.pathname}#/invite/${encodeURIComponent(username)}`;
+
+/** Send a message from Settings → Contact us (table in supabase/feedback.sql). */
+export async function sendFeedback(kind: string, message: string, email: string): Promise<void> {
+  const { error } = await (await sb()).from('feedback').insert({
+    kind,
+    message,
+    email,
+    app_version: __APP_VERSION__,
+    device: navigator.userAgent.slice(0, 300),
+  });
+  check(error);
+}

@@ -26,9 +26,6 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-        env:
-          # Feedback address, set in GitHub → Settings → Secrets and variables → Actions → Variables.
-          VITE_CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

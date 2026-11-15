@@ -6,7 +6,7 @@ import { useStore } from '../store';
 import type { NameLang, Settings, Unit } from '../types';
 import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
-import { CONTACT_EMAIL } from '../contact';
+import { sendFeedback } from '../cloud/social';
 import { LegalBody } from '../components/Legal';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
@@ -570,16 +570,27 @@ function AboutPage() {
 
 type FeedbackKind = 'idea' | 'bug' | 'question' | 'other';
 
-/** Send an idea, a bug or a question by email, with the app details that help to answer. */
+/** Send an idea, a bug or a question from inside the app; the account email is attached for replies. */
 function ContactPage() {
+  const c = useCloud();
   const [kind, setKind] = useState<FeedbackKind>('idea');
   const [text, setText] = useState('');
   const [copied, setCopied] = useState('');
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [err, setErr] = useState('');
   const labels: Record<FeedbackKind, string> = { idea: t('Idea'), bug: t('Bug'), question: t('Question'), other: t('Other') };
-  const subject = `Foundry · ${labels[kind]}`;
-  const body = [text.trim(), '', '—', `Foundry ${__APP_VERSION__} · ${location.hash || '#/'}`, navigator.userAgent].join('\n');
-  const mailto = CONTACT_EMAIL ? `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}` : '';
-  const ready = !!text.trim() && !!mailto;
+  const email = c.user?.email ?? '';
+  const send = async () => {
+    setState('sending');
+    try {
+      await sendFeedback(kind, text.trim(), email);
+      setState('sent');
+      setText('');
+    } catch (e) {
+      setErr((e as Error).message);
+      setState('error');
+    }
+  };
   const shareApp = async () => {
     const url = location.origin + location.pathname;
     const msg = t('I train and track my nutrition with Foundry. Try it:');
@@ -593,7 +604,7 @@ function ContactPage() {
   };
   return (
     <Sub title={t('Contact us')}>
-      <p className="muted">{t('An idea, a bug, a question? Every message is read. Your email app opens with the message ready to send.')}</p>
+      <p className="muted">{t('An idea, a bug, a question? Every message is read.')}</p>
       <section className="panel form">
         <span>{t('Subject')}</span>
         <Segmented<FeedbackKind> label={t('Subject')} value={kind} onChange={setKind} options={(Object.keys(labels) as FeedbackKind[]).map((k) => ({ value: k, label: labels[k] }))} />
@@ -601,14 +612,12 @@ function ContactPage() {
           <span>{t('Your message')}</span>
           <textarea id="feedback" rows={6} value={text} placeholder={kind === 'bug' ? t('What happened, on which screen, and what you expected.') : t('Tell us what you think.')} onChange={(e) => setText(e.target.value)} />
         </label>
-        <a className={'btn btn-primary btn-wide' + (ready ? '' : ' disabled')} href={ready ? mailto : undefined} aria-disabled={!ready}>
-          {t('Send by email')}
-        </a>
-        {CONTACT_EMAIL ? (
-          <p className="muted small">{t('The app version and your phone model are added to help us fix bugs.')}</p>
-        ) : (
-          <p className="field-error small">{t('Contact is not set up yet in this version of the app.')}</p>
-        )}
+        <button className="btn btn-primary btn-wide" disabled={!text.trim() || state === 'sending' || !c.user} onClick={send}>
+          {state === 'sending' ? t('Sending…') : t('Send')}
+        </button>
+        {state === 'sent' && <p className="ok-line small">{t('Thanks! Your message was sent. We reply to {email}.', { email })}</p>}
+        {state === 'error' && <p className="field-error small">{t('The message could not be sent: {e}', { e: err })}</p>}
+        <p className="muted small">{t('Your account email, the app version and your phone model are added so we can reply and fix bugs.')}</p>
       </section>
       <section className="panel">
         <h2 className="panel-title">{t('Recommend Foundry')}</h2>
