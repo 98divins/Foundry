@@ -51,6 +51,28 @@ export function WorkoutTab() {
   const [moving, setMoving] = useState<Routine | null>(null);
   const [routineDelete, setRoutineDelete] = useState<Routine | null>(null);
   const [importing, setImporting] = useState(false);
+  const [merging, setMerging] = useState<{ folderId: string; ids: string[]; name: string; removeOld: boolean } | null>(null);
+
+  /** One routine with the chosen routines' exercises in order; the originals can be kept or removed. */
+  const merge = () => {
+    if (!merging || merging.ids.length < 2 || !merging.name.trim()) return;
+    update((s) => {
+      const picked = s.routines.filter((r) => merging.ids.includes(r.id));
+      const merged: Routine = {
+        id: uid(),
+        name: merging.name.trim(),
+        folderId: merging.folderId,
+        updatedAt: Date.now(),
+        exercises: picked.flatMap((r) => r.exercises.map((we) => ({ ...structuredClone(we), id: uid(), sets: we.sets.map((st) => ({ ...st, id: uid() })) }))),
+      };
+      const first = s.routines.findIndex((r) => merging.ids.includes(r.id));
+      const rest = merging.removeOld ? s.routines.filter((r) => !merging.ids.includes(r.id)) : [...s.routines];
+      const at = merging.removeOld ? Math.min(first, rest.length) : first;
+      rest.splice(at, 0, merged);
+      return { ...s, routines: rest };
+    });
+    setMerging(null);
+  };
   const [pasted, setPasted] = useState('');
   const { shared, share, clear } = useShareLink();
   const pastedCode = codeFromText(pasted);
@@ -286,6 +308,16 @@ export function WorkoutTab() {
               }}
             >
               <Icon name="link" size={18} />{' '}{t('Copy share link')}</button>
+            <button
+              className="menu-item"
+              disabled={routines.filter((r) => inFolder(r, folders, folderMenu.id)).length < 2}
+              onClick={() => {
+                const list = routines.filter((r) => inFolder(r, folders, folderMenu.id));
+                setMerging({ folderId: folderMenu.id, ids: list.map((r) => r.id), name: folderMenu.name, removeOld: true });
+                setFolderMenu(null);
+              }}
+            >
+              <Icon name="swap" size={18} />{' '}{t('Merge routines')}</button>
             <button className="menu-item" onClick={() => { setFolderForm({ id: folderMenu.id, name: folderMenu.name }); setFolderMenu(null); }}>
               <Icon name="edit" size={18} />{' '}{t('Rename')}</button>
             <button className="menu-item" disabled={folders[0]?.id === folderMenu.id} onClick={() => { moveFolder(folderMenu.id, -1); setFolderMenu(null); }}>
@@ -294,6 +326,43 @@ export function WorkoutTab() {
               <Icon name="down" size={18} />{' '}{t('Move down')}</button>
             <button className="menu-item danger" onClick={() => { setFolderDelete(folderMenu); setFolderMenu(null); }}>
               <Icon name="trash" size={18} />{' '}{t('Delete folder')}</button>
+          </div>
+        )}
+      </Sheet>
+
+      <Sheet open={!!merging} onClose={() => setMerging(null)} title={t('Merge routines')}>
+        {merging && (
+          <div className="form">
+            <p className="muted small">{t('The exercises of the routines you tick are put one after the other in a new routine.')}</p>
+            <ul className="check-list">
+              {routines
+                .filter((r) => inFolder(r, folders, merging.folderId))
+                .map((r) => (
+                  <li key={r.id}>
+                    <label className="toggle-line">
+                      <input
+                        type="checkbox"
+                        checked={merging.ids.includes(r.id)}
+                        onChange={(e) => setMerging({ ...merging, ids: e.target.checked ? [...merging.ids, r.id] : merging.ids.filter((x) => x !== r.id) })}
+                      />
+                      <span>
+                        {r.name} <span className="muted small">· {tp(r.exercises.length, '{n} exercise', '{n} exercises')}</span>
+                      </span>
+                    </label>
+                  </li>
+                ))}
+            </ul>
+            <label className="field">
+              <span>{t('Name of the new routine')}</span>
+              <input id="merge-name" value={merging.name} onChange={(e) => setMerging({ ...merging, name: e.target.value })} />
+            </label>
+            <label className="toggle-line">
+              <input type="checkbox" checked={merging.removeOld} onChange={(e) => setMerging({ ...merging, removeOld: e.target.checked })} />
+              <span>{t('Delete the merged routines (past workouts stay in your history)')}</span>
+            </label>
+            <button className="btn btn-primary btn-wide" disabled={merging.ids.length < 2 || !merging.name.trim()} onClick={merge}>
+              {tp(merging.ids.length, 'Merge {n} routine', 'Merge {n} routines')}
+            </button>
           </div>
         )}
       </Sheet>

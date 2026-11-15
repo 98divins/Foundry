@@ -175,3 +175,14 @@ export function routinesFromProgram(p: Program, folderId: string): Routine[] {
     })),
   }));
 }
+
+/**
+ * Programs announced but not available yet: shown with a "Coming soon" badge. Their content will
+ * come from partnerships with coaches, or be written from scratch; nothing is copied from paid programs.
+ */
+export const COMING_SOON: { id: string; name: string; description: string; level: string; daysPerWeek: number; goal: string }[] = [
+  { id: 'cs-sci-ul', name: tk('Science-based Upper / Lower'), description: tk('Five days, evidence-based volume and progression, built around the big lifts.'), level: tk('Intermediate'), daysPerWeek: 5, goal: tk('Muscle growth') },
+  { id: 'cs-powerbuilding', name: tk('Powerbuilding'), description: tk('Heavy compound work for strength plus accessories for size.'), level: tk('Intermediate'), daysPerWeek: 4, goal: tk('Strength and muscle') },
+  { id: 'cs-classic', name: tk('Classic physique'), description: tk('High-volume Push / Pull / Legs for a balanced, aesthetic physique.'), level: tk('Advanced'), daysPerWeek: 6, goal: tk('Aesthetics') },
+  { id: 'cs-fb-essentials', name: tk('Full body essentials'), description: tk('Three short full-body sessions a week for busy schedules.'), level: tk('Beginner'), daysPerWeek: 3, goal: tk('Strength and muscle') },
+];

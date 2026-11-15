@@ -1,7 +1,7 @@
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon } from '../components/ui';
 import { back, go } from '../hooks';
-import { PROGRAMS, routinesFromProgram } from '../programs';
+import { COMING_SOON, PROGRAMS, routinesFromProgram } from '../programs';
 import { exerciseRepRange, routineSummary } from '../routines';
 import { exerciseName, useStore } from '../store';
 import { fmtClock, uid } from '../utils';
@@ -36,6 +36,19 @@ export function ExplorePrograms() {
               </li>
             );
           })}
+          {COMING_SOON.map((p) => (
+            <li key={p.id}>
+              <div className="program-card soon" aria-disabled="true">
+                <span className="program-tags small">
+                  <span className="tag soon-tag">{t('Coming soon')}</span>
+                  <span className="tag">{t(p.level)}</span>
+                  <span className="muted">{t('{0} days / week · {1}', { 0: p.daysPerWeek, 1: t(p.goal) })}</span>
+                </span>
+                <span className="program-name">{t(p.name)}</span>
+                <span className="muted small">{t(p.description)}</span>
+              </div>
+            </li>
+          ))}
         </ul>
       </main>
     </>
