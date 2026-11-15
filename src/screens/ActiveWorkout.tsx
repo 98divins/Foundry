@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { WorkoutEditor } from '../components/WorkoutEditor';
-import { Confirm, Header, Sheet, Stat } from '../components/ui';
+import { Confirm, Header, Icon, Sheet, Stat } from '../components/ui';
 import { go, primeAudio, restDoneAlert, useNow, useWakeLock } from '../hooks';
 import { useStore } from '../store';
 import type { SetEntry, Workout, WorkoutExercise } from '../types';
-import { fmtClock, fmtVolume, hasEntry, workoutSetCount, workoutVolume } from '../utils';
+import { fmtClock, fmtVolume, hasEntry, workoutElapsed, workoutSetCount, workoutVolume } from '../utils';
 import { t, tp } from '../i18n';
 
 export function ActiveWorkout() {
@@ -20,7 +20,7 @@ export function ActiveWorkout() {
   const [missedAt, setMissedAt] = useState<number | null>(null);
   useEffect(() => {
     const r = state.rest;
-    if (!r || now < r.endsAt || alerted.current === r.endsAt) return;
+    if (!r || r.pausedLeft != null || now < r.endsAt || alerted.current === r.endsAt) return;
     alerted.current = r.endsAt;
     if (now - r.endsAt < 5000) restDoneAlert(state.settings.sound);
     else {
@@ -56,9 +56,13 @@ export function ActiveWorkout() {
   const finish = (includeFilled: boolean) => {
     update((s) => {
       if (!s.active) return s;
+      const elapsed = workoutElapsed(s.active);
       const done: Workout = {
         ...s.active,
-        endedAt: Date.now(),
+        // Recorded duration leaves out pauses.
+        endedAt: s.active.startedAt + elapsed,
+        pausedAt: null,
+        pausedMs: 0,
         exercises: s.active.exercises
           .map((we) => ({
             ...we,
@@ -78,7 +82,22 @@ export function ActiveWorkout() {
   };
 
   const rest = state.rest;
-  const restLeft = rest ? Math.max(0, Math.ceil((rest.endsAt - now) / 1000)) : 0;
+  const restPaused = rest?.pausedLeft != null;
+  const restLeft = rest ? Math.max(0, Math.ceil((restPaused ? rest.pausedLeft! : rest.endsAt - now) / 1000)) : 0;
+  const paused = w.pausedAt != null;
+  const togglePause = () =>
+    setW((x) =>
+      x.pausedAt != null
+        ? { ...x, pausedMs: (x.pausedMs ?? 0) + (Date.now() - x.pausedAt), pausedAt: null }
+        : { ...x, pausedAt: Date.now() },
+    );
+  const toggleRestPause = () =>
+    update((s) => {
+      if (!s.rest) return s;
+      return s.rest.pausedLeft != null
+        ? { ...s, rest: { ...s.rest, endsAt: Date.now() + s.rest.pausedLeft, pausedLeft: null } }
+        : { ...s, rest: { ...s.rest, pausedLeft: Math.max(0, s.rest.endsAt - Date.now()) } };
+    });
 
   return (
     <>
@@ -106,7 +125,12 @@ export function ActiveWorkout() {
       />
       <main className={'page' + (rest || missedAt ? ' has-rest' : '')}>
         <div className="stats-row">
-          <Stat label={t('Duration')} value={fmtClock((now - w.startedAt) / 1000)} />
+          <button className={'stat stat-btn' + (paused ? ' paused' : '')} onClick={togglePause} aria-label={paused ? t('Resume the workout timer') : t('Pause the workout timer')}>
+            <span className="stat-label">{paused ? t('Paused') : t('Duration')}</span>
+            <span className="stat-value">
+              <Icon name={paused ? 'play' : 'pause'} size={16} /> {fmtClock(workoutElapsed(w, now) / 1000)}
+            </span>
+          </button>
           <Stat label={t('Volume')} value={fmtVolume(workoutVolume(w), state.settings.unit)} />
           <Stat label={t('Sets')} value={workoutSetCount(w)} />
         </div>
@@ -138,18 +162,20 @@ export function ActiveWorkout() {
           <div className="rest-progress" style={{ transform: `scaleX(${restLeft / rest.total})` }} />
           <button
             className="btn btn-small"
-            onClick={() => update((s) => (s.rest ? { ...s, rest: { ...s.rest, endsAt: s.rest.endsAt - 15000 } } : s))}
+            onClick={() => update((s) => (s.rest ? (s.rest.pausedLeft != null ? { ...s, rest: { ...s.rest, pausedLeft: Math.max(0, s.rest.pausedLeft - 15000) } } : { ...s, rest: { ...s.rest, endsAt: s.rest.endsAt - 15000 } }) : s))}
           >
             −15s
           </button>
-          <div className="rest-time">
-            <span className="eyebrow">{t('Rest')}</span>
+          <button className="rest-time rest-toggle" onClick={toggleRestPause} aria-label={restPaused ? t('Resume rest') : t('Pause rest')}>
+            <span className="eyebrow">
+              {restPaused ? t('Rest paused') : t('Rest')} <Icon name={restPaused ? 'play' : 'pause'} size={11} />
+            </span>
             <span className="rest-clock">{fmtClock(restLeft)}</span>
-          </div>
+          </button>
           <button
             className="btn btn-small"
             onClick={() =>
-              update((s) => (s.rest ? { ...s, rest: { endsAt: s.rest.endsAt + 15000, total: s.rest.total + 15 } } : s))
+              update((s) => (s.rest ? (s.rest.pausedLeft != null ? { ...s, rest: { ...s.rest, pausedLeft: s.rest.pausedLeft + 15000, total: s.rest.total + 15 } } : { ...s, rest: { ...s.rest, endsAt: s.rest.endsAt + 15000, total: s.rest.total + 15 } }) : s))
             }
           >
             +15s

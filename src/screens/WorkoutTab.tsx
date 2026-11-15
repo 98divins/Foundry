@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { go, useNow } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { Routine, RoutineFolder, State, Workout } from '../types';
-import { defaultWorkoutName, fmtClock, fmtDate, fmtDuration, fmtVolume, uid, weekStart, workoutVolume } from '../utils';
+import { defaultWorkoutName, fmtClock, fmtDate, fmtDuration, fmtVolume, uid, weekStart, workoutVolume , workoutElapsed } from '../utils';
 import { Confirm, Header, Icon, Logo, Sheet } from '../components/ui';
 import { codeFromText, liveSetFromRoutine } from '../routines';
 import { ShareResult, useShareLink } from '../components/Share';
@@ -174,7 +174,7 @@ export function WorkoutTab() {
             <>
               <span className="eyebrow">{t('In progress')}</span>
               <h2 className="hero-title">{active.name}</h2>
-              <p className="hero-clock">{fmtClock((now - active.startedAt) / 1000)}</p>
+              <p className="hero-clock">{fmtClock(workoutElapsed(active, now) / 1000)}</p>
               <button className="btn btn-primary btn-wide" onClick={() => go('active')}>{t('Resume workout')}</button>
             </>
           ) : (

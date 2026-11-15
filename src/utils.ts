@@ -329,3 +329,8 @@ export function fmtHeight(cm: number, unit: 'cm' | 'in' = 'cm'): string {
   const { ft, inch } = cmToFtIn(cm);
   return `${ft}′${inch}″`;
 }
+
+/** Time trained so far, pauses left out. */
+export function workoutElapsed(w: Pick<Workout, 'startedAt' | 'pausedAt' | 'pausedMs'>, now = Date.now()): number {
+  return Math.max(0, (w.pausedAt ?? now) - w.startedAt - (w.pausedMs ?? 0));
+}

@@ -262,3 +262,15 @@ describe('display preferences', () => {
     expect(fmtKm(5)).toBe('5 km');
   });
 });
+
+describe('pausing a workout', () => {
+  it('leaves paused time out of the duration', async () => {
+    const { workoutElapsed } = await import('./utils');
+    const t0 = 1_000_000;
+    expect(workoutElapsed({ startedAt: t0 }, t0 + 60_000)).toBe(60_000);
+    // Paused for 20 s earlier, now running again.
+    expect(workoutElapsed({ startedAt: t0, pausedMs: 20_000 }, t0 + 60_000)).toBe(40_000);
+    // Paused since t0 + 30 s: the clock stays at 30 s.
+    expect(workoutElapsed({ startedAt: t0, pausedAt: t0 + 30_000 }, t0 + 90_000)).toBe(30_000);
+  });
+});

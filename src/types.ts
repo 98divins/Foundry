@@ -93,6 +93,10 @@ export interface Workout {
   exercises: WorkoutExercise[];
   note?: string;
   routineId?: string;
+  /** While paused: when the pause started. */
+  pausedAt?: number | null;
+  /** Total time spent paused, left out of the duration. */
+  pausedMs?: number;
 }
 
 export interface Routine {
@@ -142,6 +146,8 @@ export interface Settings {
 export interface RestTimer {
   endsAt: number;
   total: number;
+  /** While paused: milliseconds that were left. */
+  pausedLeft?: number | null;
 }
 
 export interface State {

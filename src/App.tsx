@@ -32,7 +32,7 @@ import { NutritionHome } from './screens/nutrition/NutritionHome';
 import { AddFood } from './screens/nutrition/AddFood';
 import { MealEditor, MealsPage } from './screens/nutrition/SavedMeals';
 import { InsightsPage, PlanPage, WeightPage } from './screens/nutrition/NutritionPages';
-import { fmtClock } from './utils';
+import { fmtClock , workoutElapsed } from './utils';
 import { t, tk } from './i18n';
 
 const TABS: { path: string; label: string; icon: IconName }[] = [
@@ -162,7 +162,7 @@ export function App() {
         <button className="mini-workout" onClick={() => go('active')}>
           <span className="mini-dot" aria-hidden="true" />
           <span className="mini-name">{state.active.name}</span>
-          <span className="mini-clock">{fmtClock((now - state.active.startedAt) / 1000)}</span>
+          <span className="mini-clock">{fmtClock(workoutElapsed(state.active, now) / 1000)}</span>
           <span className="mini-cta">{t('Resume')}</span>
         </button>
       )}
