@@ -19,7 +19,7 @@ import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { exerciseName, useStore } from '../store';
 import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
-import { fmtDuration, fmtEstimate, fmtNum, fmtVolume } from '../utils';
+import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
 
 const METRICS: { id: BoardMetric; label: string; hint: string; weekHint?: string }[] = [
   { id: 'days', label: tk('Training days'), hint: tk('Days with a workout. Three routines on one day count once.') },
@@ -28,6 +28,7 @@ const METRICS: { id: BoardMetric; label: string; hint: string; weekHint?: string
   { id: 'volume', label: tk('Volume'), hint: tk('Weight × reps lifted.') },
   { id: 'streak', label: tk('Streak'), hint: tk('Weeks in a row with at least one workout.') },
   { id: 'prs', label: tk('Records'), hint: tk('New personal records.'), weekHint: tk('New personal records in the last 30 days.') },
+  { id: 'cardio', label: tk('Cardio'), hint: tk('Minutes of cardio: running, cycling, rowing, walking…'), weekHint: tk('Minutes of cardio this week: running, cycling, rowing, walking…') },
   { id: 'strength', label: tk('Progress'), hint: tk('Strength index change: fair between beginners and experienced lifters.'), weekHint: tk('Strength index change over 4 weeks: fair between beginners and experienced lifters.') },
 ];
 
@@ -79,6 +80,7 @@ function fmtMetric(m: BoardMetric, v: number | null, unit: 'kg' | 'lb'): string 
   if (m === 'volume') return fmtVolume(v, unit);
   if (m === 'strength') return t('{v} pts', { v: (v > 0 ? '+' : '') + fmtNum(v) });
   if (m === 'goals') return `${v} %`;
+  if (m === 'cardio') return fmtDuration(v * 60000);
   return String(v);
 }
 
@@ -386,7 +388,7 @@ export function FriendCompare({ id }: { id: string }) {
   const [period, setPeriod] = useState<BoardPeriod>('week');
   const v = (s: PublicStats | null, m: BoardMetric) => metricValue(s, m, period);
   const score = (() => {
-    const pairs: [number | null, number | null][] = (['days', 'goals', 'sets', 'volume', 'streak', 'prs', 'strength'] as BoardMetric[]).map((m) => [v(mine, m), v(theirs, m)]);
+    const pairs: [number | null, number | null][] = (['days', 'goals', 'sets', 'volume', 'cardio', 'streak', 'prs', 'strength'] as BoardMetric[]).map((m) => [v(mine, m), v(theirs, m)]);
     let a = 0;
     let b = 0;
     for (const [x, y] of pairs) if (x != null && y != null && x !== y) x > y ? a++ : b++;
@@ -422,6 +424,13 @@ export function FriendCompare({ id }: { id: string }) {
               <ul className="cmp-list">
                 <Row label={t('Training days')} a={v(mine, 'days')} b={v(theirs, 'days')} />
                 <Row label={t('Goals met')} a={v(mine, 'goals')} b={v(theirs, 'goals')} fmt={(x) => `${x} %`} />
+                <Row label={t('Cardio')} a={v(mine, 'cardio')} b={v(theirs, 'cardio')} fmt={(x) => fmtDuration(x * 60000)} />
+                <Row
+                  label={t('Cardio distance')}
+                  a={period === 'week' ? (mine.weekCardioKm ?? null) : (mine.periods?.[period]?.cardioKm ?? null)}
+                  b={theirs ? (period === 'week' ? (theirs.week === mine.week ? (theirs.weekCardioKm ?? null) : 0) : (theirs.periods?.[period]?.cardioKm ?? null)) : null}
+                  fmt={(x) => fmtKm(x)}
+                />
                 <Row label={t('Sets')} a={v(mine, 'sets')} b={v(theirs, 'sets')} />
                 <Row label={t('Volume')} a={v(mine, 'volume')} b={v(theirs, 'volume')} fmt={(x) => fmtVolume(x, unit)} />
                 <Row label={period === 'week' ? t('Records (30 d)') : t('Records')} a={v(mine, 'prs')} b={v(theirs, 'prs')} />

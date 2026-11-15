@@ -50,3 +50,22 @@ describe('friends stats', () => {
     expect(metricValue({ ...s, periods: undefined }, 'days', '182', now)).toBeNull();
   });
 });
+
+describe('cardio in the leaderboard', () => {
+  it('sums minutes and km of cardio sets only', async () => {
+    const { cardioIn } = await import('./socialStats');
+    const { registerKinds } = await import('./utils');
+    registerKinds((id) => (id === 'run' ? 'cardio' : 'weight'));
+    const H = 3600000;
+    const t0 = Date.now() - H;
+    const w = {
+      id: 'c', name: 'Run', startedAt: t0, endedAt: t0 + H,
+      exercises: [
+        { id: 'a', exerciseId: 'run', restSec: 0, sets: [{ id: 's1', type: 'normal' as const, weight: null, reps: null, duration: 1800, distance: 5, done: true }] },
+        { id: 'b', exerciseId: 'bench_bb', restSec: 90, sets: [{ id: 's2', type: 'normal' as const, weight: 80, reps: 5, duration: 600, done: true }] },
+      ],
+    };
+    expect(cardioIn([w], t0 - 1, t0 + 2 * H)).toEqual({ cardio: 30, cardioKm: 5 });
+    registerKinds(() => 'weight');
+  });
+});

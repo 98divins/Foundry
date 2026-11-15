@@ -5,7 +5,7 @@
 import { recentPRs, strengthIndexByWeek, trainingDays, weekStarts, weekStreak, periodSummary } from './analytics';
 import { goalRate, weekGoal } from './goals';
 import type { State } from './types';
-import { computePRs, countsForStats, epley, finished, weekStart } from './utils';
+import { computePRs, countsForStats, epley, exerciseKind, finished, weekStart } from './utils';
 
 const DAY = 86400000;
 
@@ -23,6 +23,10 @@ export interface PublicStats {
   /** kg */
   weekVolume: number;
   weekMinutes: number;
+  /** Minutes of cardio this week (cardio exercises: duration of their sets). */
+  weekCardio?: number;
+  /** km of cardio this week. */
+  weekCardioKm?: number;
   /** Average training days per week over the last 4 full weeks. */
   avgDays4w: number;
   streak: number;
@@ -55,6 +59,28 @@ export interface PeriodStats {
   strength: number | null;
   /** % of full weeks where the person met their own goals. */
   goals: number | null;
+  /** Minutes of cardio. */
+  cardio?: number;
+  /** km of cardio. */
+  cardioKm?: number;
+}
+
+/** Cardio minutes and km between two times: every set of a cardio exercise (duration and distance). */
+export function cardioIn(workouts: State['workouts'], from: number, to: number): { cardio: number; cardioKm: number } {
+  let sec = 0;
+  let km = 0;
+  for (const w of finished(workouts)) {
+    if (w.startedAt < from || w.startedAt >= to) continue;
+    for (const we of w.exercises) {
+      if (exerciseKind(we.exerciseId) !== 'cardio') continue;
+      for (const s of we.sets) {
+        if (!s.done) continue;
+        sec += s.duration ?? 0;
+        km += s.distance ?? 0;
+      }
+    }
+  }
+  return { cardio: Math.round(sec / 60), cardioKm: Math.round(km * 10) / 10 };
 }
 
 export function buildPublicStats(state: State, now = Date.now()): PublicStats {
@@ -92,6 +118,7 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
       prs: recentPRs(w, prs, days, now).length,
       strength: idx.length >= 2 ? Math.round((idx[idx.length - 1] - idx[0]) * 10) / 10 : null,
       goals: goalRate(state, state.goals, from, now),
+      ...cardioIn(w, from, now + DAY),
     };
   }
   return {
@@ -102,6 +129,8 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
     weekSets: week.sets,
     weekVolume: Math.round(week.volume),
     weekMinutes: week.minutes,
+    weekCardio: cardioIn(w, start, now + DAY).cardio,
+    weekCardioKm: cardioIn(w, start, now + DAY).cardioKm,
     avgDays4w: Math.round((trainingDays(prev4) / 4) * 10) / 10,
     streak: weekStreak(w, now).weeks,
     prs30: recentPRs(w, computePRs(w), 30, now).length,
@@ -115,7 +144,7 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
   };
 }
 
-export type BoardMetric = 'days' | 'sets' | 'volume' | 'streak' | 'prs' | 'strength' | 'goals';
+export type BoardMetric = 'days' | 'sets' | 'volume' | 'cardio' | 'streak' | 'prs' | 'strength' | 'goals';
 
 /**
  * A person's value for a metric over a period. This week's numbers from an older week count as zero;
@@ -139,10 +168,12 @@ export function metricValue(s: PublicStats | null | undefined, m: BoardMetric, p
         return s.strength4w;
       case 'goals':
         return s.weekGoalPct == null ? null : current ? s.weekGoalPct : 0;
+      case 'cardio':
+        return s.weekCardio == null ? null : current ? s.weekCardio : 0;
     }
   }
   const p = s.periods?.[period];
-  return p ? p[m] : null;
+  return p ? (p[m] ?? null) : null;
 }
 
 export interface BoardRow<P> {
