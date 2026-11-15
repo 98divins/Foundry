@@ -23,6 +23,7 @@ import { ConsentGate } from './components/Legal';
 import { UpdateBanner } from './components/UpdateBanner';
 import { StreakToast } from './components/StreakToast';
 import { StatsPublisher } from './components/StatsPublisher';
+import { useIncomingRequests } from './components/FriendsBadge';
 import { FriendCompare, FriendsHome, InvitePage } from './screens/Friends';
 import { QuickStart, Splash, Welcome } from './components/Onboarding';
 import { useCloud } from './cloud/cloud';
@@ -69,6 +70,7 @@ export function App() {
   const now = useNow(1000, !!state.active && section !== 'active');
 
   const cloud = useCloud();
+  const requests = useIncomingRequests();
   // Accounts are required: nothing but the welcome flow until someone is signed in.
   if (cloud.configured) {
     if (!cloud.authReady) return <Splash />;
@@ -179,6 +181,7 @@ export function App() {
               >
                 <Icon name={tab.icon} />
                 <span>{t(tab.label)}</span>
+                {tab.path === 'friends' && requests > 0 && <span className="tab-badge" aria-label={t('{n} friend requests', { n: requests })}>{requests}</span>}
               </button>
             );
           })}

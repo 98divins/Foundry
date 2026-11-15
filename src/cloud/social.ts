@@ -156,3 +156,28 @@ export async function sendFeedback(kind: string, message: string, email: string)
   });
   check(error);
 }
+
+/** Number of friend requests waiting for this user (for the tab badge). */
+export async function incomingCount(uid: string): Promise<number> {
+  const { count, error } = await (await sb()).from('friendships').select('requester', { count: 'exact', head: true }).eq('addressee', uid).eq('status', 'pending');
+  if (error) return 0;
+  return count ?? 0;
+}
+
+/**
+ * Calls `onChange` when a friendship involving this user is created, accepted or removed.
+ * Uses Supabase Realtime when it is switched on for the table; otherwise nothing happens and the
+ * screens fall back to refreshing on their own. Returns a function that stops listening.
+ */
+export async function watchFriendships(uid: string, onChange: () => void): Promise<() => void> {
+  const c = await getClient();
+  if (!c) return () => {};
+  const ch = c
+    .channel('friendships-' + uid)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships', filter: `addressee=eq.${uid}` }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships', filter: `requester=eq.${uid}` }, onChange)
+    .subscribe();
+  return () => {
+    c.removeChannel(ch);
+  };
+}

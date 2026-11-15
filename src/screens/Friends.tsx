@@ -10,6 +10,7 @@ import {
   removeFriend,
   saveProfile,
   SocialNotReady,
+  watchFriendships,
   suggestUsername,
   type Friend,
   type PublicProfile,
@@ -59,6 +60,22 @@ function useSocial() {
   useEffect(() => {
     reload();
   }, [reload]);
+  // Live: a new request or an accepted invitation shows without leaving the screen.
+  useEffect(() => {
+    if (!uid) return;
+    let stop = () => {};
+    let alive = true;
+    watchFriendships(uid, () => reload()).then((s) => (alive ? (stop = s) : s()));
+    const id = setInterval(() => document.visibilityState === 'visible' && reload(), 20000);
+    const onVisible = () => document.visibilityState === 'visible' && reload();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      alive = false;
+      stop();
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [uid, reload]);
   return { uid, me, setMe, friends, reload, error, notReady };
 }
 

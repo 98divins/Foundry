@@ -91,3 +91,11 @@ create policy "stats: read own and friends" on public.public_stats for select us
 create policy "stats: write own" on public.public_stats for insert with check (user_id = auth.uid());
 create policy "stats: update own" on public.public_stats for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "stats: delete own" on public.public_stats for delete using (user_id = auth.uid());
+
+-- Live updates in the Friends tab (new requests, accepted invitations).
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'friendships') then
+    alter publication supabase_realtime add table public.friendships;
+  end if;
+end $$;
