@@ -175,3 +175,12 @@ describe('saved meals', () => {
     expect(items).toEqual(meal.items);
   });
 });
+
+describe('planned meals', () => {
+  it('do not count until confirmed', async () => {
+    const { dayTotals } = await import('./nutrition');
+    const e = (id: string, kcal: number, planned?: boolean) => ({ id, date: '2026-11-20', meal: 'lunch' as const, name: id, grams: 100, kcal, protein: 10, carbs: 10, fat: 1, createdAt: 0, ...(planned ? { planned } : {}) });
+    expect(dayTotals([e('a', 300), e('b', 500, true)], '2026-11-20').kcal).toBe(300);
+    expect(dayTotals([e('a', 300), e('b', 500, false)], '2026-11-20').kcal).toBe(800);
+  });
+});

@@ -3482,3 +3482,65 @@ span.ex-photo {
   flex-direction: column;
   gap: 8px;
 }
+
+/* Planned meals */
+.plan-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+.entry-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.entry-line > .entry,
+.entry-line > .food-row {
+  flex: 1;
+  min-width: 0;
+}
+li.planned .entry {
+  opacity: 0.55;
+}
+li.planned .entry-name::after {
+  content: ' ·';
+}
+.confirm-btn {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 50%;
+}
+.meal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.plan-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.plan-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: inherit;
+}
+.plan-day.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.plan-day:disabled {
+  opacity: 0.3;
+}

@@ -4,6 +4,7 @@ import { Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { back } from '../../hooks';
 import { FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods } from '../../foods';
 import {
+  dayKey,
   entriesFromMeal,
   kcalFromMacros,
   MACRO_LABEL,
@@ -35,7 +36,7 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
       ...x,
       // Keep a copy of foods from outside the built-in list, so they work offline and show in Recent.
       foods: food && !food.id.startsWith('g-fr-') && !x.foods.some((f) => f.id === food.id) ? [...x.foods, food] : x.foods,
-      log: [...x.log, { ...entry, id: uid(), date, meal, createdAt: Date.now() }],
+      log: [...x.log, { ...entry, id: uid(), date, meal, createdAt: Date.now(), ...(date > dayKey() ? { planned: true } : {}) }],
     }));
     setAdded((a) => [...a, entry.name]);
   };
@@ -78,7 +79,7 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
         {mode === 'meals' && (
           <SavedMealsList
             onLog={(sm, servings) => {
-              setN((x) => ({ ...x, log: [...x.log, ...entriesFromMeal(sm, servings, date, meal, uid)] }));
+              setN((x) => ({ ...x, log: [...x.log, ...entriesFromMeal(sm, servings, date, meal, uid).map((e) => (date > dayKey() ? { ...e, planned: true } : e))] }));
               setAdded((a) => [...a, sm.name]);
             }}
           />

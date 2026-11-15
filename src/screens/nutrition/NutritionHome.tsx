@@ -21,6 +21,7 @@ import {
 import { useNutrition } from '../../store';
 import { fmtNum, fromDisplay, toDisplay, uid } from '../../utils';
 import { EntrySheet } from './EntrySheet';
+import { PlanSheet } from './PlanSheet';
 import { locale, t, tp } from '../../i18n';
 
 export function fmtDay(key: string): string {
@@ -56,6 +57,10 @@ export function NutritionHome({ date }: { date: string }) {
   const [checkIn, setCheckIn] = useState(false);
   const today = dayKey();
   const totals = dayTotals(n.log, date);
+  const planned = n.log.filter((e) => e.date === date && e.planned);
+  const plannedKcal = Math.round(planned.reduce((s, e) => s + e.kcal, 0));
+  const future = date > today;
+  const confirm = (ids: string[]) => setN((x) => ({ ...x, log: x.log.map((e) => (ids.includes(e.id) ? { ...e, planned: false } : e)) }));
   const targets = currentTargets(n);
   const entries = n.log.filter((e) => e.date === date).sort((a, b) => a.createdAt - b.createdAt);
   const weigh = n.weights.find((w) => w.date === date);
@@ -103,12 +108,22 @@ export function NutritionHome({ date }: { date: string }) {
           <button
             className="icon-btn"
             aria-label={t('Next day')}
-            disabled={date >= today}
+            disabled={date >= addDays(today, 60)}
             onClick={() => go('n/' + addDays(date, 1), { replace: true })}
           >
             <Icon name="chevron" />
           </button>
         </div>
+
+        {future && <p className="plan-banner small">{t('Planning ahead: foods you add here are planned. Confirm them on the day.')}</p>}
+        {!future && planned.length > 0 && (
+          <div className="plan-banner small">
+            <span>{tp(planned.length, '{n} planned food to confirm ({kcal} kcal)', '{n} planned foods to confirm ({kcal} kcal)', { kcal: plannedKcal })}</span>
+            <button className="btn btn-small btn-primary" onClick={() => confirm(planned.map((e) => e.id))}>
+              {t('Confirm all')}
+            </button>
+          </div>
+        )}
 
         {due && (
           <button className="checkin-banner" onClick={() => setCheckIn(true)}>
@@ -162,9 +177,11 @@ export function NutritionHome({ date }: { date: string }) {
           <MealSection
             key={meal}
             meal={meal}
+            date={date}
             entries={entries.filter((e) => e.meal === meal)}
             onAdd={() => go(`n/add/${date}/${meal}`)}
             onEdit={setEditing}
+            onConfirm={confirm}
           />
         ))}
 
@@ -199,9 +216,10 @@ export function NutritionHome({ date }: { date: string }) {
   );
 }
 
-function EntryRow({ e, onEdit }: { e: FoodEntry; onEdit: (e: FoodEntry) => void }) {
+function EntryRow({ e, onEdit, onConfirm }: { e: FoodEntry; onEdit: (e: FoodEntry) => void; onConfirm?: (ids: string[]) => void }) {
   return (
-    <li>
+    <li className={e.planned ? 'planned' : ''}>
+      <div className="entry-line">
       <button className="entry" onClick={() => onEdit(e)}>
         <span className="entry-text">
           <span className="entry-name">{e.name}</span>
@@ -212,6 +230,12 @@ function EntryRow({ e, onEdit }: { e: FoodEntry; onEdit: (e: FoodEntry) => void 
         </span>
         <span className="entry-kcal">{Math.round(e.kcal)}</span>
       </button>
+      {e.planned && onConfirm && (
+        <button className="icon-btn confirm-btn" aria-label={t('I ate it')} onClick={() => onConfirm([e.id])}>
+          <Icon name="check" size={18} />
+        </button>
+      )}
+      </div>
     </li>
   );
 }
@@ -221,15 +245,22 @@ const openMeals = new Set<Meal>();
 
 function MealSection({
   meal,
+  date,
   entries,
   onAdd,
   onEdit,
+  onConfirm,
 }: {
   meal: Meal;
+  date: string;
   entries: FoodEntry[];
   onAdd: () => void;
   onEdit: (e: FoodEntry) => void;
+  onConfirm: (ids: string[]) => void;
 }) {
+  const [planning, setPlanning] = useState(false);
+  const canConfirm = date <= dayKey();
+  const plannedHere = entries.filter((e) => e.planned);
   const { setN } = useNutrition();
   const [open, setOpen] = useState<string | null>(null);
   const [groupMenu, setGroupMenu] = useState<FoodEntry[] | null>(null);
@@ -308,21 +339,47 @@ function MealSection({
                 {open === b[0].group!.id && (
                   <ul className="entries nested">
                     {b.map((e) => (
-                      <EntryRow key={e.id} e={e} onEdit={onEdit} />
+                      <EntryRow key={e.id} e={e} onEdit={onEdit} onConfirm={canConfirm ? onConfirm : undefined} />
                     ))}
                   </ul>
                 )}
               </li>
             ) : (
-              <EntryRow key={b.id} e={b} onEdit={onEdit} />
+              <EntryRow key={b.id} e={b} onEdit={onEdit} onConfirm={canConfirm ? onConfirm : undefined} />
             ),
           )}
         </ul>
       )}
-      {expanded && entries.length > 1 && (
-        <button className="add-in-folder" onClick={() => setNaming('')}>
-          <Icon name="copy" size={15} />{' '}{t('Save as meal')}</button>
+      {expanded && entries.length > 0 && (
+        <div className="meal-actions">
+          {canConfirm && plannedHere.length > 0 && (
+            <button className="add-in-folder" onClick={() => onConfirm(plannedHere.map((e) => e.id))}>
+              <Icon name="check" size={15} />{' '}{t('I ate this meal')}</button>
+          )}
+          <button className="add-in-folder" onClick={() => setPlanning(true)}>
+            <Icon name="history" size={15} />{' '}{t('Plan on other days')}</button>
+          {entries.length > 1 && (
+            <button className="add-in-folder" onClick={() => setNaming('')}>
+              <Icon name="copy" size={15} />{' '}{t('Save as meal')}</button>
+          )}
+        </div>
       )}
+      <PlanSheet
+        open={planning}
+        onClose={() => setPlanning(false)}
+        title={t('Plan this {meal}', { meal: t(MEAL_LABEL[meal]).toLowerCase() })}
+        defaultMeal={meal}
+        skipDate={date}
+        make={(d, m) =>
+          entries.map(({ id: _id, planned: _p, group, ...rest }, k) => ({
+            ...rest,
+            date: d,
+            meal: m,
+            createdAt: Date.now() + k,
+            ...(group ? { group: { ...group, id: group.id + '-' + d + '-' + m } } : {}),
+          }))
+        }
+      />
 
       <Sheet open={!!groupMenu} onClose={() => setGroupMenu(null)} title={groupMenu?.[0].group?.name}>
         {groupMenu && (

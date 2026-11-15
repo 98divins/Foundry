@@ -54,6 +54,8 @@ export interface FoodEntry {
   carbs: number;
   fat: number;
   createdAt: number;
+  /** Planned ahead: shown on its day but not counted until confirmed as eaten. */
+  planned?: boolean;
   /** Set when the entry was logged as part of a saved meal. */
   group?: { id: string; savedMealId: string; name: string; servings: number };
 }
@@ -175,7 +177,7 @@ export const kcalFromMacros = (p: number, c: number, f: number) => Math.round(4 
 export function dayTotals(log: FoodEntry[], date: string): Macros {
   const t: Macros = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
   for (const e of log) {
-    if (e.date !== date) continue;
+    if (e.date !== date || e.planned) continue;
     t.kcal += e.kcal;
     t.protein += e.protein;
     t.carbs += e.carbs;

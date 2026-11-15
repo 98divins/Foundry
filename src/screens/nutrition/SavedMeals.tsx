@@ -1,7 +1,8 @@
+import { PlanSheet } from './PlanSheet';
 import { useState } from 'react';
 import { Confirm, Header, Icon, NumInput, Sheet } from '../../components/ui';
 import { back, go } from '../../hooks';
-import { applyMealToLog, mealTotals, scaleFood, type Food, type MealItem, type SavedMeal } from '../../nutrition';
+import { applyMealToLog, entriesFromMeal, mealTotals, scaleFood, type Food, type MealItem, type SavedMeal } from '../../nutrition';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { AmountSheet, SearchFoods, toggleFavorite } from './AddFood';
@@ -103,6 +104,7 @@ export function SavedMealsList({ onLog }: { onLog: (sm: SavedMeal, servings: num
 /** List of saved meals (#/n/meals). */
 export function MealsPage() {
   const { n, setN } = useNutrition();
+  const [planning, setPlanning] = useState<SavedMeal | null>(null);
   return (
     <>
       <Header title={t('My meals')} onBack={() => back('n')} />
@@ -122,17 +124,31 @@ export function MealsPage() {
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((m) => (
               <li key={m.id}>
-                <button className="food-row" onClick={() => go('n/meals/' + m.id)}>
-                  <span className="entry-text">
-                    <span className="entry-name">{m.name}</span>
-                    <MealSummary items={m.items} />
-                  </span>
-                  <Icon name="chevron" size={18} />
-                </button>
+                <div className="entry-line">
+                  <button className="food-row" onClick={() => go('n/meals/' + m.id)}>
+                    <span className="entry-text">
+                      <span className="entry-name">{m.name}</span>
+                      <MealSummary items={m.items} />
+                    </span>
+                    <Icon name="chevron" size={18} />
+                  </button>
+                  <button className="btn btn-small" disabled={!m.items.length} onClick={() => setPlanning(m)}>
+                    {t('Plan')}
+                  </button>
+                </div>
               </li>
             ))}
         </ul>
       </main>
+      {planning && (
+        <PlanSheet
+          open
+          onClose={() => setPlanning(null)}
+          title={t('Plan “{name}”', { name: planning.name })}
+          defaultMeal="lunch"
+          make={(d, meal) => entriesFromMeal(planning, 1, d, meal, uid)}
+        />
+      )}
     </>
   );
 }
