@@ -6,11 +6,12 @@ import { useStore } from '../store';
 import type { NameLang, Settings, Unit } from '../types';
 import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
+import { CONTACT_EMAIL } from '../contact';
 import { LegalBody } from '../components/Legal';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
 
-type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'privacy' | 'terms';
+type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'privacy' | 'terms' | 'contact';
 
 function Row({ icon, label, value, onClick }: { icon: IconName; label: string; value?: string; onClick: () => void }) {
   return (
@@ -62,6 +63,7 @@ export function SettingsHub() {
         <ul className="settings-list">
           <Row icon="info" label={t('Getting started guide')} onClick={() => open('guide')} />
           <Row icon="help" label={t('Frequently asked questions')} onClick={() => open('faq')} />
+          <Row icon="help" label={t('Contact us · ideas and bugs')} onClick={() => open('contact')} />
           <Row icon="logo" label={t('About Foundry')} onClick={() => open('about')} />
         </ul>
         <h2 className="settings-group">{t('Legal')}</h2>
@@ -104,6 +106,8 @@ export function SettingsPage({ page }: { page?: string }) {
       return <GuidePage />;
     case 'faq':
       return <FaqPage />;
+    case 'contact':
+      return <ContactPage />;
     case 'about':
       return <AboutPage />;
     case 'privacy':
@@ -560,6 +564,60 @@ function AboutPage() {
         </ul>
       </section>
       <p className="muted small">{t('Foundry is an estimate tool for healthy adults, not medical advice.')}</p>
+    </Sub>
+  );
+}
+
+type FeedbackKind = 'idea' | 'bug' | 'question' | 'other';
+
+/** Send an idea, a bug or a question by email, with the app details that help to answer. */
+function ContactPage() {
+  const [kind, setKind] = useState<FeedbackKind>('idea');
+  const [text, setText] = useState('');
+  const [copied, setCopied] = useState('');
+  const labels: Record<FeedbackKind, string> = { idea: t('Idea'), bug: t('Bug'), question: t('Question'), other: t('Other') };
+  const subject = `Foundry · ${labels[kind]}`;
+  const body = [text.trim(), '', '—', `Foundry ${__APP_VERSION__} · ${location.hash || '#/'}`, navigator.userAgent].join('\n');
+  const mailto = CONTACT_EMAIL ? `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}` : '';
+  const ready = !!text.trim() && !!mailto;
+  const shareApp = async () => {
+    const url = location.origin + location.pathname;
+    const msg = t('I train and track my nutrition with Foundry. Try it:');
+    try {
+      if (navigator.share) return await navigator.share({ title: 'Foundry', text: msg, url });
+    } catch {
+      return;
+    }
+    await navigator.clipboard?.writeText(`${msg} ${url}`).catch(() => {});
+    setCopied(t('Link copied.'));
+  };
+  return (
+    <Sub title={t('Contact us')}>
+      <p className="muted">{t('An idea, a bug, a question? Every message is read. Your email app opens with the message ready to send.')}</p>
+      <section className="panel form">
+        <span>{t('Subject')}</span>
+        <Segmented<FeedbackKind> label={t('Subject')} value={kind} onChange={setKind} options={(Object.keys(labels) as FeedbackKind[]).map((k) => ({ value: k, label: labels[k] }))} />
+        <label className="field">
+          <span>{t('Your message')}</span>
+          <textarea id="feedback" rows={6} value={text} placeholder={kind === 'bug' ? t('What happened, on which screen, and what you expected.') : t('Tell us what you think.')} onChange={(e) => setText(e.target.value)} />
+        </label>
+        <a className={'btn btn-primary btn-wide' + (ready ? '' : ' disabled')} href={ready ? mailto : undefined} aria-disabled={!ready}>
+          {t('Send by email')}
+        </a>
+        {CONTACT_EMAIL ? (
+          <p className="muted small">{t('The app version and your phone model are added to help us fix bugs.')}</p>
+        ) : (
+          <p className="field-error small">{t('Contact is not set up yet in this version of the app.')}</p>
+        )}
+      </section>
+      <section className="panel">
+        <h2 className="panel-title">{t('Recommend Foundry')}</h2>
+        <p className="muted small">{t('Know someone who would like it? Send them the app.')}</p>
+        <button className="btn btn-wide" onClick={shareApp}>
+          <Icon name="share" size={18} /> {t('Share the app')}
+        </button>
+        {copied && <p className="ok-line small">{copied}</p>}
+      </section>
     </Sub>
   );
 }

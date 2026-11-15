@@ -1,12 +1,13 @@
 import { PlanSheet } from './PlanSheet';
 import { useState } from 'react';
-import { Confirm, Header, Icon, NumInput, Sheet } from '../../components/ui';
+import { Confirm, Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
+import { ideaItems, MEAL_IDEAS, type IdeaTag, type MealIdea } from '../../mealIdeas';
 import { back, go } from '../../hooks';
 import { applyMealToLog, entriesFromMeal, mealTotals, scaleFood, type Food, type MealItem, type SavedMeal } from '../../nutrition';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { AmountSheet, SearchFoods, toggleFavorite } from './AddFood';
-import { t, tp } from '../../i18n';
+import { t, tk, tp } from '../../i18n';
 
 const SERVINGS = [0.5, 1, 1.5, 2];
 
@@ -105,10 +106,33 @@ export function SavedMealsList({ onLog }: { onLog: (sm: SavedMeal, servings: num
 export function MealsPage() {
   const { n, setN } = useNutrition();
   const [planning, setPlanning] = useState<SavedMeal | null>(null);
+  const [tab, setTab] = useState<'mine' | 'explore'>(n.savedMeals.length ? 'mine' : 'explore');
+  const [added, setAdded] = useState<string[]>([]);
   return (
     <>
-      <Header title={t('My meals')} onBack={() => back('n')} />
+      <Header title={t('Meals')} onBack={() => back('n')} />
       <main className="page">
+        <Segmented<'mine' | 'explore'>
+          label={t('Meals')}
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: 'mine', label: t('My meals') },
+            { value: 'explore', label: t('Explore meals') },
+          ]}
+        />
+        {tab === 'explore' ? (
+          <MealIdeasList
+            added={added}
+            onAdd={(idea) => {
+              const id = uid();
+              setN((x) => ({ ...x, savedMeals: [...x.savedMeals, { id, name: t(idea.name), items: ideaItems(idea), updatedAt: Date.now() }] }));
+              setAdded((a) => [...a, idea.id]);
+            }}
+            onPlan={(idea) => setPlanning({ id: 'idea-' + idea.id, name: t(idea.name), items: ideaItems(idea), updatedAt: 0 })}
+          />
+        ) : (
+        <>
         <button
           className="btn btn-primary btn-wide"
           onClick={() => {
@@ -133,12 +157,14 @@ export function MealsPage() {
                     <Icon name="chevron" size={18} />
                   </button>
                   <button className="btn btn-small" disabled={!m.items.length} onClick={() => setPlanning(m)}>
-                    {t('Plan')}
+                    {t('Plan it')}
                   </button>
                 </div>
               </li>
             ))}
         </ul>
+        </>
+        )}
       </main>
       {planning && (
         <PlanSheet
@@ -146,7 +172,7 @@ export function MealsPage() {
           onClose={() => setPlanning(null)}
           title={t('Plan “{name}”', { name: planning.name })}
           defaultMeal="lunch"
-          make={(d, meal) => entriesFromMeal(planning, 1, d, meal, uid)}
+          make={(d, meal) => entriesFromMeal(planning, 1, d, meal, uid).map((e) => (planning.id.startsWith('idea-') ? { ...e, group: e.group && { ...e.group, savedMealId: '' } } : e))}
         />
       )}
     </>
@@ -305,6 +331,55 @@ export function MealEditor({ id }: { id: string }) {
         }}
         onClose={() => setConfirmDelete(false)}
       />
+    </>
+  );
+}
+
+const TAG_LABEL: Record<IdeaTag, string> = { breakfast: tk('Breakfast'), main: tk('Main meal'), snack: tk('Snack'), veggie: tk('Vegetarian') };
+
+/** Classic, balanced meal ideas: add one to My meals or plan it straight away. */
+function MealIdeasList({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: MealIdea) => void; onPlan: (m: MealIdea) => void }) {
+  const [tag, setTag] = useState<IdeaTag | 'all'>('all');
+  const shown = MEAL_IDEAS.filter((m) => tag === 'all' || m.tags.includes(tag));
+  return (
+    <>
+      <p className="muted small">{t('Simple, balanced meals to start from. Add one to My meals to change the amounts, or plan it directly.')}</p>
+      <div className="chips">
+        {(['all', 'breakfast', 'main', 'snack', 'veggie'] as const).map((k) => (
+          <button key={k} className={'chip' + (tag === k ? ' on' : '')} onClick={() => setTag(k)}>
+            {k === 'all' ? t('All') : t(TAG_LABEL[k])}
+          </button>
+        ))}
+      </div>
+      <ul className="routine-list">
+        {shown.map((m) => {
+          const items = ideaItems(m);
+          return (
+            <li key={m.id}>
+              <div className="program-card">
+                <span className="program-tags small">
+                  {m.tags.map((x) => (
+                    <span key={x} className="tag">{t(TAG_LABEL[x])}</span>
+                  ))}
+                  <span className="muted">{t('{n} min', { n: m.minutes })}</span>
+                </span>
+                <span className="program-name">{t(m.name)}</span>
+                <span className="muted small">{t(m.description)}</span>
+                <MealSummary items={items} />
+                <span className="small muted">{items.map((i) => `${i.name} ${fmtNum(i.grams ?? 0)} g`).join(' · ')}</span>
+                <div className="btn-grid">
+                  <button className="btn btn-small" disabled={added.includes(m.id)} onClick={() => onAdd(m)}>
+                    {added.includes(m.id) ? t('Added to My meals') : t('Add to My meals')}
+                  </button>
+                  <button className="btn btn-small btn-primary" onClick={() => onPlan(m)}>
+                    {t('Plan it')}
+                  </button>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </>
   );
 }

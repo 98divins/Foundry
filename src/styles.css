@@ -3544,3 +3544,13 @@ li.planned .entry-name::after {
 .plan-day:disabled {
   opacity: 0.3;
 }
+.plan-days .plan-day strong {
+  font-variant-numeric: tabular-nums;
+}
+a.btn {
+  text-decoration: none;
+}
+a.btn.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}

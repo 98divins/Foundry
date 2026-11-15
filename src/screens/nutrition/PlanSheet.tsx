@@ -34,12 +34,13 @@ export function PlanSheet({
   const { state } = useStore();
   const startsOn = state.settings.weekStartsOn ?? 1;
   const today = dayKey();
-  const [week, setWeek] = useState<'this' | 'next'>('this');
+  const [week, setWeek] = useState<'this' | 'next' | 'month'>('this');
   const [meal, setMeal] = useState<Meal>(defaultMeal);
   const [days, setDays] = useState<string[]>([]);
   const [done, setDone] = useState('');
-  const first = week === 'this' ? weekOf(today, startsOn) : addDays(weekOf(today, startsOn), 7);
-  const week7 = Array.from({ length: 7 }, (_, i) => addDays(first, i));
+  const first = week === 'next' ? addDays(weekOf(today, startsOn), 7) : weekOf(today, startsOn);
+  // A month view shows four full weeks from this one, on a calendar grid.
+  const week7 = Array.from({ length: week === 'month' ? 35 : 7 }, (_, i) => addDays(first, i));
   const usable = week7.filter((d) => d >= today && d !== skipDate);
   const toggle = (d: string) => setDays((x) => (x.includes(d) ? x.filter((y) => y !== d) : [...x, d]));
   const weekdays = usable.filter((d) => {
@@ -77,7 +78,7 @@ export function PlanSheet({
             ))}
           </select>
         </label>
-        <Segmented<'this' | 'next'>
+        <Segmented<'this' | 'next' | 'month'>
           label={t('Week')}
           value={week}
           onChange={(w) => {
@@ -87,6 +88,7 @@ export function PlanSheet({
           options={[
             { value: 'this', label: t('This week') },
             { value: 'next', label: t('Next week') },
+            { value: 'month', label: t('Month') },
           ]}
         />
         <div className="plan-days">
@@ -94,7 +96,7 @@ export function PlanSheet({
             const disabled = !usable.includes(d);
             return (
               <button key={d} type="button" className={'plan-day' + (days.includes(d) ? ' on' : '')} disabled={disabled} aria-pressed={days.includes(d)} onClick={() => toggle(d)}>
-                <span className="small">{parseDay(d).toLocaleDateString(locale(), { weekday: 'short' })}</span>
+                {(week !== 'month' || d < addDays(first, 7)) && <span className="small">{parseDay(d).toLocaleDateString(locale(), { weekday: 'short' })}</span>}
                 <strong>{parseDay(d).getDate()}</strong>
               </button>
             );
