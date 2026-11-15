@@ -43,7 +43,6 @@ export function Welcome() {
         <div className="welcome-actions">
           <button className="btn btn-primary btn-wide welcome-cta" onClick={() => setScreen('signup')}>{t('Create my account')}</button>
           <button className="btn btn-ghost btn-wide" onClick={() => setScreen('login')}>{t('I already have an account')}</button>
-          <p className="muted small center">{t('Free. Your data is saved to your account, on every device.')}</p>
         </div>
       </main>
     );
