@@ -153,6 +153,8 @@ export interface State {
   settings: Settings;
   nutrition: NutritionState;
   profile?: UserProfile;
+  /** Deleted items (key → time), so a deletion reaches the other devices. See cloud/merge.ts. */
+  deleted?: Record<string, number>;
 }
 
 export interface UserProfile {

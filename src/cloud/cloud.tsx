@@ -3,29 +3,22 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { defaultState, parseBackup, useStore } from '../store';
 import type { State } from '../types';
 import { appUrl, cloudConfigured, SUPABASE_KEY, SUPABASE_URL } from './config';
-import { emptyMeta, loadMeta, loginAction, refreshAction, saveMeta, summary, type SyncMeta } from './sync';
+import { mergeStates } from './merge';
+import { emptyMeta, hasData, loadMeta, loginAction, refreshAction, saveMeta, type SyncMeta } from './sync';
 import { t } from '../i18n';
 
-export type SyncStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error' | 'conflict';
-
-interface Conflict {
-  reason: 'login' | 'both-changed';
-  local: State;
-  remote: State;
-  remoteUpdatedAt: string;
-}
+export type SyncStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error';
 
 interface CloudCtx {
   configured: boolean;
   /** False until the saved session (if any) has been read: avoids flashing the welcome screen. */
   authReady: boolean;
-  /** True once the first sync after sign-in has finished (or is waiting on a conflict choice). */
+  /** True once the first sync after sign-in has finished. */
   initialSynced: boolean;
   user: User | null;
   status: SyncStatus;
   error: string;
   lastSyncAt: number | null;
-  conflict: Conflict | null;
   recovering: boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string) => Promise<string | null>;
@@ -37,7 +30,6 @@ interface CloudCtx {
   signOut: () => Promise<string | null>;
   deleteAccount: () => Promise<string | null>;
   syncNow: () => Promise<void>;
-  resolve: (keep: 'local' | 'remote') => Promise<void>;
 }
 
 const Ctx = createContext<CloudCtx | null>(null);
@@ -67,12 +59,11 @@ function explain(message: string): string {
 }
 
 export function CloudProvider({ children }: { children: ReactNode }) {
-  const { state, update } = useStore();
+  const { state, replace } = useStore();
   const configured = cloudConfigured();
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<SyncStatus>(configured ? 'signed-out' : 'off');
   const [error, setError] = useState('');
-  const [conflict, setConflict] = useState<Conflict | null>(null);
   const [recovering, setRecovering] = useState(false);
   const [authReady, setAuthReady] = useState(!configured);
   const [initialSynced, setInitialSynced] = useState(false);
@@ -101,24 +92,61 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     return data as { data?: State; updated_at: string } | null;
   }, []);
 
+  /** Bumped on every local change: an upload only clears "dirty" if nothing changed meanwhile. */
+  const changeSeq = useRef(0);
+  /** One sync at a time; a request during a sync runs once more right after. */
+  const running = useRef<Promise<void> | null>(null);
+  const again = useRef(false);
+
+  /**
+   * Write this device's state to the account. The write only succeeds if the account copy is still
+   * the one this device last saw; otherwise another device wrote first and the caller merges again.
+   */
   const upload = useCallback(
-    async (uid: string) => {
+    async (uid: string): Promise<boolean> => {
       const sb = (await getClient())!;
       const updatedAt = new Date().toISOString();
-      const { error: e } = await sb.from('user_state').upsert({ user_id: uid, data: stateRef.current, updated_at: updatedAt });
-      if (e) throw e;
-      setMeta({ userId: uid, remoteUpdatedAt: updatedAt, dirty: false, lastSyncAt: Date.now() });
+      const seq = changeSeq.current;
+      const data = stateRef.current;
+      const known = metaRef.current.userId === uid ? metaRef.current.remoteUpdatedAt : null;
+      if (known) {
+        const { data: rows, error: e } = await sb
+          .from('user_state')
+          .update({ data, updated_at: updatedAt })
+          .eq('user_id', uid)
+          .eq('updated_at', known)
+          .select('updated_at');
+        if (e) throw e;
+        if (!rows?.length) return false;
+      } else {
+        const { error: e } = await sb.from('user_state').insert({ user_id: uid, data, updated_at: updatedAt });
+        if (e) {
+          if (e.code === '23505') return false; // a copy appeared meanwhile: merge with it
+          throw e;
+        }
+      }
+      setMeta({
+        ...metaRef.current,
+        userId: uid,
+        remoteUpdatedAt: updatedAt,
+        dirty: changeSeq.current !== seq,
+        lastSyncAt: Date.now(),
+      });
+      return true;
     },
     [setMeta],
   );
 
+  /** Put a state from the account (or a merge) into the app without it counting as a local edit. */
   const applyRemote = useCallback(
-    (uid: string, data: State, updatedAt: string) => {
+    (uid: string, data: State, updatedAt: string, dirty = false) => {
+      const next = parseBackup(JSON.stringify(data));
       applyingRemote.current = true;
-      update(() => parseBackup(JSON.stringify(data)));
-      setMeta({ userId: uid, remoteUpdatedAt: updatedAt, dirty: false, lastSyncAt: Date.now() });
+      stateRef.current = next;
+      replace(next);
+      setMeta({ ...metaRef.current, userId: uid, remoteUpdatedAt: updatedAt, dirty, lastSyncAt: Date.now() });
     },
-    [update, setMeta],
+    [replace, setMeta],
   );
 
   const fail = useCallback((e: unknown) => {
@@ -128,57 +156,97 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     setError(offline ? '' : explain(msg));
   }, []);
 
+  /**
+   * Bring this device and the account to the same state: upload, download or merge both, never ask.
+   * Retries when another device wrote in between.
+   */
+  const syncWith = useCallback(
+    async (uid: string, first: boolean) => {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const head = await fetchRemote(uid, false);
+        const meta = metaRef.current;
+        if (!head) {
+          // No copy in the account yet (new account): this device's data becomes it.
+          if (!hasData(stateRef.current) && !meta.dirty) {
+            setMeta({ ...meta, userId: uid, remoteUpdatedAt: null, lastSyncAt: Date.now() });
+            return;
+          }
+          setMeta({ ...meta, userId: uid, remoteUpdatedAt: null });
+          if (await upload(uid)) return;
+          continue;
+        }
+        const action =
+          first && attempt === 0
+            ? loginAction(meta, uid, stateRef.current, { updatedAt: head.updated_at })
+            : refreshAction(meta, head.updated_at);
+        if (action === 'none') {
+          setMeta({ ...meta, userId: uid, lastSyncAt: Date.now() });
+          return;
+        }
+        if (action === 'upload') {
+          if (await upload(uid)) return;
+          continue;
+        }
+        const remote = await fetchRemote(uid, true);
+        if (!remote?.data) continue;
+        if (action === 'download') {
+          applyRemote(uid, remote.data, remote.updated_at);
+          return;
+        }
+        // Both changed: keep everything from both, then save the result to the account.
+        const localNewer = (meta.lastChangeAt ?? 0) > Date.parse(remote.updated_at);
+        const merged = mergeStates(stateRef.current, parseBackup(JSON.stringify(remote.data)), localNewer);
+        applyRemote(uid, merged, remote.updated_at, true);
+        if (await upload(uid)) return;
+      }
+    },
+    [fetchRemote, upload, applyRemote, setMeta],
+  );
+
+  const runSync = useCallback(
+    async (uid: string, first: boolean) => {
+      if (running.current) {
+        again.current = true;
+        return running.current;
+      }
+      const job = (async () => {
+        setStatus('syncing');
+        try {
+          do {
+            again.current = false;
+            await syncWith(uid, first);
+            first = false;
+          } while (again.current);
+          ready.current = true;
+          setStatus('synced');
+          setError('');
+        } catch (e) {
+          fail(e);
+        } finally {
+          running.current = null;
+        }
+      })();
+      running.current = job;
+      return job;
+    },
+    [syncWith, fail],
+  );
+
   /** First sync after signing in. */
   const onLogin = useCallback(
     async (u: User) => {
-      setStatus('syncing');
-      try {
-        const remote = await fetchRemote(u.id, true);
-        const action = loginAction(metaRef.current, u.id, stateRef.current, remote ? { updatedAt: remote.updated_at } : null);
-        if (action === 'upload') await upload(u.id);
-        else if (action === 'download' && remote?.data) applyRemote(u.id, remote.data, remote.updated_at);
-        else if (action === 'ask' && remote?.data) {
-          setConflict({ reason: 'login', local: stateRef.current, remote: remote.data, remoteUpdatedAt: remote.updated_at });
-          setStatus('conflict');
-          return;
-        } else setMeta({ ...metaRef.current, userId: u.id, lastSyncAt: Date.now() });
-        ready.current = true;
-        setStatus('synced');
-        setError('');
-      } catch (e) {
-        fail(e);
-      } finally {
-        setInitialSynced(true);
-      }
+      await runSync(u.id, true);
+      ready.current = true;
+      setInitialSynced(true);
     },
-    [fetchRemote, upload, applyRemote, setMeta, fail],
+    [runSync],
   );
 
-  /** Later syncs: on return to the app, when back online, or on demand. */
+  /** Later syncs: after changes, on return to the app, when back online, or on demand. */
   const refresh = useCallback(async () => {
-    if (!user || conflict) return;
-    setStatus('syncing');
-    try {
-      const head = await fetchRemote(user.id, false);
-      const action = refreshAction(metaRef.current, head?.updated_at ?? null);
-      if (action === 'upload') await upload(user.id);
-      else if (action === 'download' || action === 'ask') {
-        const remote = await fetchRemote(user.id, true);
-        if (remote?.data) {
-          if (action === 'download') applyRemote(user.id, remote.data, remote.updated_at);
-          else {
-            setConflict({ reason: 'both-changed', local: stateRef.current, remote: remote.data, remoteUpdatedAt: remote.updated_at });
-            setStatus('conflict');
-            return;
-          }
-        }
-      }
-      setStatus('synced');
-      setError('');
-    } catch (e) {
-      fail(e);
-    }
-  }, [user, conflict, fetchRemote, upload, applyRemote, fail]);
+    if (!user) return;
+    await runSync(user.id, false);
+  }, [user, runSync]);
 
   // Session: restore on start, follow sign-in / sign-out / password recovery.
   useEffect(() => {
@@ -222,7 +290,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       applyingRemote.current = false;
       return;
     }
-    setMeta({ ...metaRef.current, dirty: true });
+    changeSeq.current++;
+    setMeta({ ...metaRef.current, dirty: true, lastChangeAt: Date.now() });
     const t = setTimeout(() => {
       if (!navigator.onLine) return setStatus('offline');
       refresh();
@@ -246,7 +315,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   /** Accounts are required: once signed out, this device keeps no one's data. */
   const clearDevice = () => {
     setMeta(emptyMeta());
-    update(() => defaultState());
+    replace(defaultState());
   };
 
   const value: CloudCtx = {
@@ -257,7 +326,6 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     status,
     error,
     lastSyncAt: meta.lastSyncAt,
-    conflict,
     recovering,
     signIn: async (email, password) => {
       const sb = await getClient();
@@ -321,19 +389,6 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       return null;
     },
     syncNow: refresh,
-    resolve: async (keep) => {
-      if (!conflict || !user) return;
-      setStatus('syncing');
-      try {
-        if (keep === 'remote') applyRemote(user.id, conflict.remote, conflict.remoteUpdatedAt);
-        else await upload(user.id);
-        setConflict(null);
-        ready.current = true;
-        setStatus('synced');
-      } catch (e) {
-        fail(e);
-      }
-    },
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
@@ -345,4 +400,3 @@ export function useCloud(): CloudCtx {
   return c;
 }
 
-export { summary };

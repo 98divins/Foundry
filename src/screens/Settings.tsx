@@ -232,7 +232,6 @@ function AccountPage() {
     synced: t('All changes saved to your account'),
     offline: t('Offline: changes are kept and sent when you are back online'),
     error: t('Sync problem'),
-    conflict: t('Waiting for you to choose which version to keep'),
   };
   return (
     <Sub title={t('Account')}>

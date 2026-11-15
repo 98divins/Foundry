@@ -65,7 +65,7 @@ export function ConsentGate() {
   const c = useCloud();
   const [ok, setOk] = useState(false);
   const accepted = state.settings.consent?.version === LEGAL_VERSION;
-  if (!c.configured || !c.user || !c.initialSynced || c.status === 'conflict' || accepted) return null;
+  if (!c.configured || !c.user || !c.initialSynced || accepted) return null;
   return (
     <Sheet open onClose={() => {}} title={t('Before you continue')} noClose>
       <p className="sheet-text">

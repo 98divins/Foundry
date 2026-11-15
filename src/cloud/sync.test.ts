@@ -13,19 +13,14 @@ describe('sync decisions', () => {
     expect(hasData(withData)).toBe(true);
   });
 
-  it('first login on a phone with data and an empty account uploads it', () => {
-    expect(loginAction(emptyMeta(), 'u1', withData, null)).toBe('upload');
-    expect(loginAction(emptyMeta(), 'u1', empty, null)).toBe('none');
-  });
-
   it('a fresh phone takes the account data', () => {
     expect(loginAction(emptyMeta(), 'u1', empty, remote)).toBe('download');
   });
 
-  it('asks when both a used phone and the account hold data for the first time', () => {
-    expect(loginAction(emptyMeta(), 'u1', withData, remote)).toBe('ask');
-    // Same phone, other account: also ask.
-    expect(loginAction({ ...emptyMeta(), userId: 'u2', remoteUpdatedAt: remote.updatedAt }, 'u1', withData, remote)).toBe('ask');
+  it('merges when both a used phone and the account hold data for the first time', () => {
+    expect(loginAction(emptyMeta(), 'u1', withData, remote)).toBe('merge');
+    // Same phone, other account: also merge.
+    expect(loginAction({ ...emptyMeta(), userId: 'u2', remoteUpdatedAt: remote.updatedAt }, 'u1', withData, remote)).toBe('merge');
   });
 
   it('same account again: uploads its own changes, takes the cloud when only the cloud moved', () => {
@@ -33,16 +28,15 @@ describe('sync decisions', () => {
     expect(loginAction(synced, 'u1', withData, remote)).toBe('none');
     expect(loginAction({ ...synced, dirty: true }, 'u1', withData, remote)).toBe('upload');
     expect(loginAction(synced, 'u1', withData, { updatedAt: '2026-11-15T08:00:00Z' })).toBe('download');
-    expect(loginAction({ ...synced, dirty: true }, 'u1', withData, { updatedAt: '2026-11-15T08:00:00Z' })).toBe('ask');
+    expect(loginAction({ ...synced, dirty: true }, 'u1', withData, { updatedAt: '2026-11-15T08:00:00Z' })).toBe('merge');
   });
 
-  it('on return to the app: upload, download, or ask if both moved', () => {
+  it('on return to the app: upload, download, or merge if both moved', () => {
     const m = { userId: 'u1', remoteUpdatedAt: 'A', dirty: false, lastSyncAt: 1 };
     expect(refreshAction(m, 'A')).toBe('none');
     expect(refreshAction(m, 'B')).toBe('download');
     expect(refreshAction({ ...m, dirty: true }, 'A')).toBe('upload');
-    expect(refreshAction({ ...m, dirty: true }, 'B')).toBe('ask');
-    expect(refreshAction({ ...m, dirty: true, remoteUpdatedAt: null }, null)).toBe('upload');
+    expect(refreshAction({ ...m, dirty: true }, 'B')).toBe('merge');
   });
 });
 
@@ -51,6 +45,6 @@ describe('timestamps from Postgres', () => {
     const meta = { userId: 'u', remoteUpdatedAt: '2026-11-14T17:15:16.123Z', dirty: true, lastSyncAt: 1 };
     expect(sameTime('2026-11-14T17:15:16.123+00:00', meta.remoteUpdatedAt)).toBe(true);
     expect(refreshAction(meta, '2026-11-14T17:15:16.123+00:00')).toBe('upload');
-    expect(refreshAction(meta, '2026-11-14T17:20:00+00:00')).toBe('ask');
+    expect(refreshAction(meta, '2026-11-14T17:20:00+00:00')).toBe('merge');
   });
 });

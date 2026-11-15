@@ -8,6 +8,8 @@ export interface SyncMeta {
   /** Local changes not yet uploaded. */
   dirty: boolean;
   lastSyncAt: number | null;
+  /** When this device last changed something (decides which side is newer in a merge). */
+  lastChangeAt?: number | null;
 }
 
 const KEY = 'foundry:sync';
@@ -58,34 +60,28 @@ export function sameTime(a: string | null, b: string | null): boolean {
   return Number.isNaN(x) || Number.isNaN(y) ? a === b : x === y;
 }
 
-export type LoginAction = 'upload' | 'download' | 'ask' | 'none';
+export type SyncAction = 'upload' | 'download' | 'merge' | 'none';
 
 /**
- * What to do right after signing in.
- * - No cloud copy yet: upload this device's data.
- * - This device has nothing, or it was last synced with this account and has no unsent change: take the cloud copy.
- * - Same account, local changes, cloud unchanged since: upload them.
- * - Otherwise both sides may hold something the other lacks: ask.
+ * What to do right after signing in (the account already has a copy).
+ * - This device has nothing: take the account copy.
+ * - Same account, nothing unsent: take the account copy if it changed.
+ * - Same account, unsent changes and the account unchanged: send them.
+ * - Anything else (changes on both sides, or data from before this login): merge both, never ask.
  */
-export function loginAction(
-  meta: SyncMeta,
-  userId: string,
-  local: State,
-  remote: { updatedAt: string } | null,
-): LoginAction {
-  if (!remote) return hasData(local) ? 'upload' : 'none';
+export function loginAction(meta: SyncMeta, userId: string, local: State, remote: { updatedAt: string }): SyncAction {
   if (!hasData(local)) return 'download';
   if (meta.userId === userId) {
     const remoteChanged = !sameTime(remote.updatedAt, meta.remoteUpdatedAt);
     if (!meta.dirty) return remoteChanged ? 'download' : 'none';
-    return remoteChanged ? 'ask' : 'upload';
+    return remoteChanged ? 'merge' : 'upload';
   }
-  return 'ask';
+  return 'merge';
 }
 
-/** When the app comes back to the foreground or the network returns. */
-export function refreshAction(meta: SyncMeta, remoteUpdatedAt: string | null): 'upload' | 'download' | 'ask' | 'none' {
-  const remoteChanged = !!remoteUpdatedAt && !sameTime(remoteUpdatedAt, meta.remoteUpdatedAt);
-  if (meta.dirty) return remoteChanged ? 'ask' : 'upload';
+/** After changes, when the app comes back to the foreground, or when the network returns. */
+export function refreshAction(meta: SyncMeta, remoteUpdatedAt: string): SyncAction {
+  const remoteChanged = !sameTime(remoteUpdatedAt, meta.remoteUpdatedAt);
+  if (meta.dirty) return remoteChanged ? 'merge' : 'upload';
   return remoteChanged ? 'download' : 'none';
 }

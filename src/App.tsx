@@ -79,7 +79,7 @@ export function App() {
       );
     // A brand-new, empty account gets the quick start once (after its first sync, so a
     // returning user on a new phone is not asked again).
-    if (cloud.initialSynced && !state.settings.onboarded && !hasData(state) && cloud.status !== 'conflict')
+    if (cloud.initialSynced && !state.settings.onboarded && !hasData(state))
       return <QuickStart />;
   }
 

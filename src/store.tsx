@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { recordDeletions } from './cloud/merge';
 import { displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
 import { registerKinds, registerPrefs } from './utils';
@@ -50,7 +51,10 @@ export function parseBackup(text: string): State {
 
 interface Ctx {
   state: State;
+  /** Every change goes through here; items that disappear are recorded so the deletion syncs. */
   update: (fn: (s: State) => State) => void;
+  /** Swap the whole state without recording deletions (cloud copy arriving, device cleared on log out). */
+  replace: (s: State) => void;
   exercises: Exercise[];
   exMap: Map<string, Exercise>;
   saveError: boolean;
@@ -87,7 +91,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return { exercises, exMap };
   }, [custom, lang, state.settings.appLang]);
 
-  const value = useMemo<Ctx>(() => ({ state, update: setState, ...lib, saveError }), [state, lib, saveError]);
+  const update = useCallback((fn: (s: State) => State) => {
+    setState((prev) => {
+      const next = fn(prev);
+      if (next === prev) return prev;
+      const deleted = recordDeletions(prev, next);
+      return deleted === next.deleted ? next : { ...next, deleted };
+    });
+  }, []);
+  const value = useMemo<Ctx>(() => ({ state, update, replace: setState, ...lib, saveError }), [state, update, lib, saveError]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
