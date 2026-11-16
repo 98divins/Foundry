@@ -21,6 +21,7 @@ import { locale, t, tk, tp } from '../i18n';
 import { requirePro } from '../pro';
 import { LevelChip } from '../components/Level';
 import { ActivityFeed } from './Feed';
+import { ChallengesPanel } from './Challenges';
 import { exerciseName, useStore } from '../store';
 import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
@@ -166,7 +167,7 @@ async function share(url: string, setMsg: (s: string) => void) {
   setMsg(t('Link copied. Send it to your friends.'));
 }
 
-export function FriendsHome() {
+export function FriendsHome({ initialView }: { initialView?: 'feed' | 'challenges' | 'board' } = {}) {
   const { state, update } = useStore();
   const unit = state.settings.unit;
   const { uid, me, setMe, friends, reload, error, notReady } = useSocial();
@@ -177,7 +178,7 @@ export function FriendsHome() {
   const [editing, setEditing] = useState(false);
   const mine = useMemo(() => buildPublicStats(state), [state]);
   const sharing = state.settings.shareStats !== false;
-  const [view, setView] = useState<'feed' | 'board'>('feed');
+  const [view, setView] = useState<'feed' | 'challenges' | 'board'>(initialView ?? 'feed');
 
   const accepted = friends.filter((f) => f.status === 'accepted');
   const incoming = friends.filter((f) => f.status === 'incoming');
@@ -269,12 +270,13 @@ export function FriendsHome() {
               </section>
             )}
 
-            <Segmented<'feed' | 'board'>
+            <Segmented<'feed' | 'challenges' | 'board'>
               label={t('View')}
               value={view}
               onChange={setView}
               options={[
                 { value: 'feed', label: t('Activity') },
+                { value: 'challenges', label: t('Challenges') },
                 { value: 'board', label: t('Leaderboard') },
               ]}
             />
@@ -285,6 +287,7 @@ export function FriendsHome() {
                 levels={new Map([[me.user_id, mine.level], ...accepted.map((f) => [f.profile.user_id, f.stats?.level] as const)])}
               />
             )}
+            {view === 'challenges' && <ChallengesPanel friends={accepted.map((f) => ({ p: f.profile, stats: f.stats }))} />}
             {view === 'board' && (
             <section className="panel">
               <h2 className="panel-title">{t('Leaderboard')}</h2>

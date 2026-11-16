@@ -142,7 +142,7 @@ export function App() {
       screen = <ImportRoutines key={param} code={param ?? ''} />;
       break;
     case 'friends':
-      screen = param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
+      screen = param === 'challenges' ? <FriendsHome key="ch" initialView="challenges" /> : param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
       break;
     case 'levels':
       screen = <LevelsPage />;

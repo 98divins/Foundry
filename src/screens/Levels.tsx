@@ -53,6 +53,7 @@ const GROUPS = [
   ['streak', 'Consistency'],
   ['strength', 'Strength'],
   ['nutrition', 'Nutrition'],
+  ['challenge', 'Challenges'],
   ['gear', 'Gear'],
 ] as const;
 

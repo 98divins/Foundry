@@ -4033,3 +4033,108 @@ a.btn.disabled {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
 }
+
+/* Monthly challenges */
+.challenges {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.challenge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.challenge.done {
+  border-color: color-mix(in srgb, var(--good) 55%, var(--line));
+}
+.challenge p {
+  margin: 0;
+}
+.challenge-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.challenge-done {
+  color: var(--good);
+  background: var(--good-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.challenge-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.challenge-board {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.challenge-board li {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 8px;
+  font-size: 14px;
+}
+.challenge-board li.me {
+  font-weight: 700;
+}
+.challenge-board .ok {
+  color: var(--good);
+}
+.challenge-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.challenge-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.challenge-mini-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 8px;
+}
+.challenge-mini-head svg {
+  grid-row: 1 / 3;
+  grid-column: 2;
+}
+.challenge-bar-line {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.challenge-bar-line .challenge-bar {
+  flex-direction: row;
+  align-items: center;
+}
+.challenge-bar-line .challenge-bar .small {
+  display: none;
+}
+.challenge-bar-line .xp-bar {
+  flex: 1;
+}
+/* Record pills wrap inside the set table, so the 1RM column stays on screen. */
+.set-table .pr-pill {
+  white-space: normal;
+  display: inline;
+  line-height: 1.6;
+}
+.set-table .num-col {
+  white-space: nowrap;
+}

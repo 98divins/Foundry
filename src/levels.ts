@@ -3,6 +3,7 @@
  * the right level and nothing has to be stored or synced. XP rewards showing up, not lifting heavy:
  * a beginner levels up as fast as an advanced lifter with the same consistency.
  */
+import { completedChallenges } from './challenges';
 import { dietOnTarget } from './goals';
 import { gearCount, GEAR_SLOTS } from './gear';
 import { tk } from './i18n';
@@ -61,7 +62,7 @@ export interface BadgeDef {
   id: string;
   name: string;
   text: string;
-  group: 'training' | 'streak' | 'strength' | 'nutrition' | 'gear';
+  group: 'training' | 'streak' | 'strength' | 'nutrition' | 'gear' | 'challenge';
 }
 export const BADGES: BadgeDef[] = [
   { id: 'w1', group: 'training', name: tk('First step'), text: tk('Finish your first workout.') },
@@ -81,6 +82,9 @@ export const BADGES: BadgeDef[] = [
   { id: 's52', group: 'streak', name: tk('Full year'), text: tk('Train 52 weeks in a row.') },
   { id: 'd7', group: 'nutrition', name: tk('On target'), text: tk('7 days within your nutrition targets.') },
   { id: 'd30', group: 'nutrition', name: tk('Dialled in'), text: tk('30 days within your nutrition targets.') },
+  { id: 'c1', group: 'challenge', name: tk('Challenger'), text: tk('Complete a monthly challenge.') },
+  { id: 'c10', group: 'challenge', name: tk('Ten challenges'), text: tk('Complete 10 monthly challenges.') },
+  { id: 'c3', group: 'challenge', name: tk('Clean sweep'), text: tk('Complete all three challenges of a month.') },
   { id: 'g1', group: 'gear', name: tk('Kitted out'), text: tk('Add your first piece of gear.') },
   { id: 'gfull', group: 'gear', name: tk('Full kit'), text: tk('Fill all 13 gear slots.') },
 ];
@@ -199,6 +203,10 @@ export function progression(state: State, now = Date.now()): Progression {
   for (const [w, id] of [[4, 's4'], [12, 's12'], [26, 's26'], [52, 's52']] as const) if (bestStreak >= w) b.push(id);
   if (dietDays >= 7) b.push('d7');
   if (dietDays >= 30) b.push('d30');
+  const ch = completedChallenges(state, now);
+  if (ch.count >= 1) b.push('c1');
+  if (ch.count >= 10) b.push('c10');
+  if (ch.perfectMonths >= 1) b.push('c3');
   const g = gearCount(state.profile?.gear);
   if (g >= 1) b.push('g1');
   if (g >= GEAR_SLOTS.length) b.push('gfull');

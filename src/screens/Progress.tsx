@@ -26,6 +26,7 @@ import { locale, t, tk } from '../i18n';
 import { requirePro } from '../pro';
 import { gearCount } from '../gear';
 import { LevelCard } from './Levels';
+import { ChallengesPanel } from './Challenges';
 
 const DAY = 86400000;
 const PR_LABEL: Record<PRKind, string> = {
@@ -96,6 +97,8 @@ export function Progress() {
         <main className="page">
           <ProfileCard workouts={0} records={0} />
           <LevelCard />
+        <ChallengesPanel compact />
+          <ChallengesPanel compact />
           <GearCard />
           <GoalsCard />
           <div className="empty-card">
