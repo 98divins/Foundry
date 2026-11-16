@@ -16,7 +16,7 @@ import {
   type PublicProfile,
   smallAvatar,
 } from '../cloud/social';
-import { Confirm, Header, Icon, Segmented } from '../components/ui';
+import { Confirm, Header, Icon, Segmented, Logo } from '../components/ui';
 import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { requirePro } from '../pro';
@@ -109,7 +109,7 @@ function fmtMetric(m: BoardMetric, v: number | null, unit: 'kg' | 'lb'): string 
 }
 
 /** Pick a username (and name) so friends can find you. */
-function ProfileSetup({ uid, onSaved, initial }: { uid: string; onSaved: (p: PublicProfile) => void; initial?: PublicProfile | null }) {
+function ProfileSetup({ uid, onSaved, initial, bare }: { uid: string; onSaved: (p: PublicProfile) => void; initial?: PublicProfile | null; bare?: boolean }) {
   const { state } = useStore();
   const [username, setUsername] = useState(initial?.username ?? suggestUsername(state.profile?.name ?? ''));
   const [name, setName] = useState(initial?.display_name ?? state.profile?.name ?? '');
@@ -130,8 +130,8 @@ function ProfileSetup({ uid, onSaved, initial }: { uid: string; onSaved: (p: Pub
   };
   return (
     <section className="panel form">
-      <h2 className="panel-title">{initial ? t('Your public profile') : t('Choose your username')}</h2>
-      {!initial && <p className="muted small">{t('Friends find and invite you with it. Only your name, picture and a summary of your training stats are shared, and only with friends you accept.')}</p>}
+      {!bare && <h2 className="panel-title">{initial ? t('Your public profile') : t('Choose your username')}</h2>}
+      {!initial && !bare && <p className="muted small">{t('Friends find and invite you with it. Only your name, picture and a summary of your training stats are shared, and only with friends you accept.')}</p>}
       <label className="field">
         <span>{t('Username')}</span>
         <input id="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={username} placeholder="alex.lifts" onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} />
@@ -640,5 +640,70 @@ export function InvitePage({ username }: { username: string }) {
         )}
       </main>
     </>
+  );
+}
+
+const HAS_PROFILE = (uid: string) => 'foundry:has-username:' + uid;
+
+/**
+ * Whether this account still has to choose a username. Checked once per account and remembered
+ * on the device; never blocks when offline or when the social tables are not set up.
+ */
+export function useNeedsUsername(uid: string | null | undefined): [boolean, () => void] {
+  const [need, setNeed] = useState(false);
+  useEffect(() => {
+    if (!uid) return;
+    try {
+      if (localStorage.getItem(HAS_PROFILE(uid))) return;
+    } catch {
+      /* ignore */
+    }
+    let alive = true;
+    myProfile(uid).then(
+      (p) => {
+        if (!alive) return;
+        if (p) {
+          try {
+            localStorage.setItem(HAS_PROFILE(uid), '1');
+          } catch {
+            /* ignore */
+          }
+        } else setNeed(true);
+      },
+      () => {},
+    );
+    return () => {
+      alive = false;
+    };
+  }, [uid]);
+  const done = () => {
+    if (uid)
+      try {
+        localStorage.setItem(HAS_PROFILE(uid), '1');
+      } catch {
+        /* ignore */
+      }
+    setNeed(false);
+  };
+  return [need, done];
+}
+
+/** Full screen shown after sign-up (and to older accounts): choosing a username is required. */
+export function UsernameStep({ uid, onDone }: { uid: string; onDone: () => void }) {
+  const { update } = useStore();
+  const saved = (p: PublicProfile) => {
+    // The name typed here also becomes the profile name when there is none yet.
+    if (p.display_name) update((s) => (s.profile?.name ? s : { ...s, profile: { bio: '', ...s.profile, name: p.display_name } }));
+    onDone();
+  };
+  return (
+    <main className="page onboarding-step">
+      <div className="username-step-head">
+        <Logo size={48} />
+        <h1>{t('Choose your username')}</h1>
+        <p className="muted">{t('It is how your friends find you, invite you and see you in the leaderboard. You can change it later in the Friends tab.')}</p>
+      </div>
+      <ProfileSetup uid={uid} onSaved={saved} bare />
+    </main>
   );
 }

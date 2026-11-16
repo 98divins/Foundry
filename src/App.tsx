@@ -31,7 +31,7 @@ import { LevelUpToast } from './components/LevelUpToast';
 import { ActivityPublisher } from './components/ActivityPublisher';
 import { GearPage, GearPublisher, MemberProfile } from './screens/Gear';
 import { useIncomingRequests } from './components/FriendsBadge';
-import { FriendCompare, FriendsHome, InvitePage } from './screens/Friends';
+import { FriendCompare, FriendsHome, InvitePage, UsernameStep, useNeedsUsername } from './screens/Friends';
 import { QuickStart, Splash, Welcome } from './components/Onboarding';
 import { useCloud } from './cloud/cloud';
 import { hasData } from './cloud/sync';
@@ -78,6 +78,7 @@ export function App() {
 
   const cloud = useCloud();
   const requests = useIncomingRequests();
+  const [needsUsername, usernameDone] = useNeedsUsername(cloud.user?.id);
   // Accounts are required: nothing but the welcome flow until someone is signed in.
   if (cloud.configured) {
     if (!cloud.authReady) return <Splash />;
@@ -90,6 +91,8 @@ export function App() {
       );
     // A brand-new, empty account gets the quick start once (after its first sync, so a
     // returning user on a new phone is not asked again).
+    // A username is required: right after sign-up, and once for older accounts without one.
+    if (cloud.initialSynced && needsUsername) return <UsernameStep uid={cloud.user.id} onDone={usernameDone} />;
     if (cloud.initialSynced && !state.settings.onboarded && !hasData(state))
       return <QuickStart />;
   }
