@@ -939,6 +939,8 @@ export const FR: Record<string, string> = {
   "Snacks after dinner": "Collation du soir",
   "Snacks after lunch": "Collation de l’après-midi",
   "Something went wrong": "Un problème est survenu",
+  "Sound off": "Son coupé",
+  "Sound on": "Son activé",
   "Squat 1.5 times your body weight (estimated 1RM).": "Squat à 1,5 fois ton poids de corps (1RM estimé).",
   "Squat × 1.5": "Squat × 1,5",
   "Start": "Démarrer",

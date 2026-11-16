@@ -4446,3 +4446,8 @@ a.btn.disabled {
   height: 64px;
   font-size: 20px;
 }
+.timer-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

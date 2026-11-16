@@ -92,20 +92,59 @@ export function IntervalEditor({ id, folderId }: { id: string; folderId?: string
 
 /* ---------- Runner ---------- */
 
-let audio: AudioContext | null = null;
-function beep(freq: number, ms: number) {
+/**
+ * Beeps as small WAV files played by <audio> elements: on iPhone they play even with the silent
+ * switch on (like a video), which Web Audio does not. They are unlocked by the Start tap.
+ */
+function wav(freq: number, ms: number): string {
+  const rate = 22050;
+  const n = Math.floor((rate * ms) / 1000);
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const str = (o: number, s: string) => [...s].forEach((ch, k) => v.setUint8(o + k, ch.charCodeAt(0)));
+  str(0, 'RIFF');
+  v.setUint32(4, 36 + n * 2, true);
+  str(8, 'WAVEfmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true);
+  v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  str(36, 'data');
+  v.setUint32(40, n * 2, true);
+  for (let k = 0; k < n; k++) {
+    const fade = Math.min(1, k / 200, (n - k) / 400);
+    v.setInt16(44 + k * 2, Math.sin((2 * Math.PI * freq * k) / rate) * 0.6 * fade * 32767, true);
+  }
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+type Sound = 'tick' | 'work' | 'rest' | 'end';
+const SOUND_SPEC: Record<Sound, [number, number]> = { tick: [660, 140], work: [990, 450], rest: [520, 450], end: [880, 900] };
+let sounds: Partial<Record<Sound, HTMLAudioElement>> = {};
+let soundOn = true;
+function unlockSounds() {
+  for (const k of Object.keys(SOUND_SPEC) as Sound[]) {
+    if (!sounds[k]) {
+      const a = new Audio(wav(...SOUND_SPEC[k]));
+      a.preload = 'auto';
+      sounds[k] = a;
+    }
+    const a = sounds[k]!;
+    a.muted = true;
+    a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }, () => { a.muted = false; });
+  }
+}
+function play(k: Sound) {
+  if (!soundOn) return;
+  const a = sounds[k];
+  if (!a) return;
   try {
-    audio ??= new AudioContext();
-    const o = audio.createOscillator();
-    const g = audio.createGain();
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(0.25, audio.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + ms / 1000);
-    o.connect(g).connect(audio.destination);
-    o.start();
-    o.stop(audio.currentTime + ms / 1000);
+    a.currentTime = 0;
+    void a.play().catch(() => {});
   } catch {
-    /* no sound on this device */
+    /* ignore */
   }
 }
 const buzz = (p: number | number[]) => navigator.vibrate?.(p);
@@ -122,6 +161,14 @@ export function IntervalRun({ id }: { id: string }) {
   const pauseStart = useRef(0);
   const [now, setNow] = useState(Date.now());
   const [stopping, setStopping] = useState(false);
+  const [sound, setSound] = useState(() => {
+    try {
+      return localStorage.getItem('foundry:timer-sound') !== 'off';
+    } catch {
+      return true;
+    }
+  });
+  soundOn = sound;
   const lastBeep = useRef(-1);
   const workDone = useRef<number[]>([]);
 
@@ -165,7 +212,7 @@ export function IntervalRun({ id }: { id: string }) {
     const left = Math.ceil((endAt - now) / 1000);
     if (left <= 3 && left >= 1 && lastBeep.current !== left) {
       lastBeep.current = left;
-      beep(660, 120);
+      play('tick');
     }
     if (now < endAt) return;
     let i = idx;
@@ -177,12 +224,12 @@ export function IntervalRun({ id }: { id: string }) {
     }
     lastBeep.current = -1;
     if (i >= phases.length) {
-      beep(880, 700);
+      play('end');
       buzz([300, 100, 300]);
       finish(workDone.current);
       return;
     }
-    beep(phases[i].kind === 'work' ? 990 : 520, 400);
+    play(phases[i].kind === 'work' ? 'work' : 'rest');
     buzz(phases[i].kind === 'work' ? 250 : [120, 80, 120]);
     setIdx(i);
     setEndAt(e);
@@ -199,7 +246,8 @@ export function IntervalRun({ id }: { id: string }) {
   }
 
   const start = () => {
-    beep(990, 200);
+    unlockSounds();
+    setTimeout(() => play('work'), 150);
     const t0 = Date.now();
     setStarted(t0);
     setIdx(0);
@@ -239,7 +287,29 @@ export function IntervalRun({ id }: { id: string }) {
       <div className="timer-top">
         <button className="icon-btn" aria-label={t('Stop')} onClick={() => (started == null ? back('') : setStopping(true))}><Icon name="x" /></button>
         <strong>{r.name}</strong>
-        <span className="muted small">{fmtSec(remaining)}</span>
+        <span className="timer-right">
+          <span className="muted small">{fmtSec(remaining)}</span>
+          <button
+            className="icon-btn"
+            aria-label={sound ? t('Sound on') : t('Sound off')}
+            aria-pressed={sound}
+            onClick={() => {
+              const v = !sound;
+              setSound(v);
+              try {
+                localStorage.setItem('foundry:timer-sound', v ? 'on' : 'off');
+              } catch {
+                /* ignore */
+              }
+              if (v) unlockSounds();
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 9h4l5-4v14l-5-4H4z" />
+              {sound ? <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" /> : <path d="M17 9l5 6M22 9l-5 6" />}
+            </svg>
+          </button>
+        </span>
       </div>
       <div className="timer-main">
         <p className="timer-phase">{started == null ? t('Ready?') : t(PHASE_LABEL[ph.kind])}</p>

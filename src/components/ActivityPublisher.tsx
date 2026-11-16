@@ -77,8 +77,11 @@ export function ActivityPublisher() {
           if (p.level > s.level) await publishActivity(uid, 'level-' + p.level, { kind: 'level', level: p.level });
           for (const b of p.badges.filter((x) => !s.badges.includes(x))) await publishActivity(uid, 'badge-' + b, { kind: 'badge', badge: b });
         }
-        s.level = Math.max(s.level, p.level);
-        s.badges = [...new Set([...s.badges, ...p.badges])];
+        // A level or badge that no longer holds (a workout was deleted): take its post down.
+        for (let l = p.level + 1; l <= s.level; l++) await unpublishActivity(uid, 'level-' + l);
+        for (const b of s.badges.filter((x) => !p.badges.includes(x))) await unpublishActivity(uid, 'badge-' + b);
+        s.level = p.level;
+        s.badges = p.badges;
         // Keep the list short: only what could still be deleted and re-posted.
         s.workouts = s.workouts.filter((wid) => (state.workouts.find((w) => w.id === wid)?.startedAt ?? now) >= now - 30 * DAY);
         localStorage.setItem(keyFor(uid), JSON.stringify(s));
