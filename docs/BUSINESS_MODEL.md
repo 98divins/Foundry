@@ -29,26 +29,77 @@ Foundry est une application **freemium par abonnement** : le suivi de musculatio
 
 ## 4. Offre et prix
 
-### 4.1 Gratuit (pour toujours)
-- Suivi de séances complet : bibliothèque, routines, dossiers, minuteur, historique, records.
-- Programmes de base.
-- Journal alimentaire, scan, base d'aliments et repas de la communauté.
-- Objectif calorique de départ (non adaptatif).
-- Amis, classement de la semaine.
-- Synchronisation et sauvegarde dans le compte.
+### 4.1 Règle de partage gratuit / Pro
 
-*Le gratuit doit être assez bon pour remplacer une app de musculation gratuite : c'est lui qui fait venir et rester les utilisateurs.*
+**Environ 70 % des fonctions gratuites, 30 % Pro dans chaque partie de l'app.**
+- **Gratuit** : tout ce qu'il faut pour utiliser l'app chaque jour (noter une séance, un repas, une pesée, suivre sa semaine, voir ses amis).
+- **Pro** : aller plus loin. Plus de volume (routines, repas), plus d'historique, des analyses, de la planification longue, du confort.
+- **Jamais bloqué** : noter une séance ou un repas, consulter ses propres données, les exporter en format simple (droit à la portabilité, RGPD).
+- **Quotas plutôt que fonctions cachées** : l'utilisateur découvre la fonction, s'y habitue, puis atteint la limite. C'est ce qui convertit le mieux.
+- **Pas de rétroactivité** : quelqu'un qui dépasse déjà un quota garde tout. Il ne peut simplement plus en ajouter sans Pro.
 
-### 4.2 Foundry Pro
-- **Coach nutrition adaptatif** : dépense estimée chaque jour, bilan hebdomadaire et nouveaux objectifs.
-- Plans de macros personnalisés.
-- **Analyses diète × entraînement**, statistiques avancées (équilibre musculaire, bilan du mois, tendances longues).
-- Classements sur 1 mois, 6 mois et 1 an, face-à-face détaillé.
-- Planification des repas au mois.
-- Export Excel complet.
-- Plus tard : analyse de repas par photo (IA), programmes de coachs partenaires.
+### 4.2 Détail par partie
 
-### 4.3 Prix proposés (lancement France)
+#### Séance
+| Gratuit (≈ 70 %) | Pro (≈ 30 %) |
+|---|---|
+| Séances illimitées, minuteur de repos, pause, supersets, types de série | — |
+| Bibliothèque de 451 exercices, photos, recherche, filtres | — |
+| **Jusqu'à 4 routines** | **Routines illimitées** |
+| **1 dossier** | **Dossiers illimités** |
+| **Jusqu'à 5 exercices perso** | **Exercices perso illimités** |
+| Programmes de base (Full Body, Haut/Bas, PPL) | Programmes de coachs partenaires (à venir) |
+| Historique complet, recherche, séances passées | Remplir une séance passée depuis une routine |
+| Partager une routine par lien, importer | Fusionner des routines |
+
+#### Nutrition
+| Gratuit (≈ 70 %) | Pro (≈ 30 %) |
+|---|---|
+| Journal illimité, 6 créneaux, scan, base française, Open Food Facts | — |
+| Aliments créés et partagés à la communauté (illimité : ils enrichissent la base) | — |
+| Objectif calorique et macros de départ, pesées, poids tendance | **Coach adaptatif** : dépense estimée, bilan hebdomadaire, objectifs ajustés |
+| Plans de macros prédéfinis | Plan de macros personnalisé |
+| **Jusqu'à 4 repas enregistrés** | **Repas enregistrés illimités** |
+| Idées de repas et repas de la communauté (consulter, ajouter dans la limite) | Partager ses repas avec la communauté |
+| Planifier **sur la semaine en cours** | Planifier **semaine prochaine et mois** |
+
+#### Progrès (Profil)
+| Gratuit (≈ 70 %) | Pro (≈ 30 %) |
+|---|---|
+| Carte de profil, records, série de semaines, jours d'entraînement | — |
+| Objectifs de la semaine (entraînement) | Objectif diète (jours dans la cible) |
+| Graphiques et tendances des **3 derniers mois** | **Tout l'historique** dans les graphiques |
+| Séries par muscle, muscles semaine par semaine, exercices principaux | Équilibre musculaire (radar), bilan du mois |
+| — | Analyses alimentation × entraînement |
+
+#### Amis
+| Gratuit (≈ 70 %) | Pro (≈ 30 %) |
+|---|---|
+| Pseudo, invitations, demandes, liste d'amis, mises à jour en direct | — |
+| Classement **cette semaine et 1 mois**, tous les critères | Classement **6 mois et 1 an** |
+| Voir la dernière séance de ses amis | **Face-à-face** détaillé avec un ami |
+
+#### Réglages et données
+| Gratuit (≈ 70 %) | Pro (≈ 30 %) |
+|---|---|
+| Thème clair / sombre / système, unités, langues | Couleurs personnalisées, noir pur |
+| Sauvegarde, restauration, import Hevy, export CSV | **Export Excel** (rapport et toutes les données) |
+| Synchronisation multi-appareils, contact, aide | — |
+
+### 4.3 Moments où l'on propose Pro
+
+Une seule fenêtre claire, au moment où la valeur se fait sentir :
+- **5e routine**, **5e repas enregistré**, 2e dossier : « Tu as atteint la limite gratuite. Passe à Pro pour en créer autant que tu veux. »
+- **Premier bilan hebdomadaire** après 7 jours notés : aperçu de la dépense estimée, le détail et les nouveaux objectifs étant réservés au Pro. C'est le meilleur moment de conversion de la nutrition.
+- **Toucher « Comparer »** sur un ami, ou les périodes 6 mois / 1 an du classement.
+- **Graphique au-delà de 3 mois** : la courbe est floutée au-delà, avec un bouton pour la déverrouiller.
+- **Essai de 7 jours** proposé une seule fois, au premier blocage.
+
+### 4.4 Ce qui reste gratuit pour tous
+
+Noter ses séances et ses repas sans limite, voir et exporter ses données (CSV, sauvegarde), ses amis et le classement court, et la base commune d'aliments. Un utilisateur gratuit doit pouvoir s'entraîner et manger correctement avec Foundry pendant des années : c'est lui qui fait venir les autres.
+
+### 4.5 Prix proposés (lancement France)
 
 | Formule | Prix | Équivalent mensuel |
 |---|---|---|
