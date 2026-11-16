@@ -91,11 +91,10 @@ export function canAdd(feature: keyof typeof FREE_LIMITS, current: number): bool
   return requirePro(feature);
 }
 
-export type PlanId = 'free' | 'beta' | 'monthly' | 'yearly' | 'lifetime';
+export type PlanId = 'free' | 'beta' | 'monthly' | 'yearly';
 /** Plans shown in Settings → Subscription (prices from docs/BUSINESS_MODEL.md). */
 export const PLANS: { id: Exclude<PlanId, 'beta'>; name: string; text: string; price: string; badge?: string }[] = [
   { id: 'free', name: tk('Free'), text: tk('Workouts, nutrition, friends: the essentials, forever.'), price: '0 €' },
   { id: 'monthly', name: tk('Pro monthly'), text: tk('Everything in Foundry Pro, cancel any time. 7-day free trial.'), price: tk('5.99 € / month') },
   { id: 'yearly', name: tk('Pro yearly'), text: tk('About 3.33 € a month. 7-day free trial.'), price: tk('39.99 € / year'), badge: tk('-44 %') },
-  { id: 'lifetime', name: tk('Pro lifetime'), text: tk('Pay once, Pro for good.'), price: tk('89.99 €') },
 ];

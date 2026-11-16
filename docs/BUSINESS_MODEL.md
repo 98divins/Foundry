@@ -105,20 +105,18 @@ Noter ses séances et ses repas sans limite, voir et exporter ses données (CSV,
 |---|---|---|
 | Mensuel | **5,99 €** | 5,99 € |
 | Annuel | **39,99 €** | 3,33 € (−44 %) |
-| À vie (offre de lancement, quantité limitée) | **89,99 €** | — |
 
 - **Essai gratuit de 7 jours** sur l'annuel.
 - **Repères concurrents** (ordres de grandeur, à vérifier) : les apps de musculation se situent autour de 3 € par mois, les apps de nutrition adaptative autour de 10 à 12 € par mois. Foundry réunit les deux pour **moins que la nutrition seule**.
 - **Mise en avant de l'annuel** : meilleure rétention, trésorerie immédiate.
-- **Prix « bêta »** pour les premiers testeurs (par exemple −50 % à vie) en remerciement et pour obtenir des avis sur les stores.
+- **Prix « bêta »** pour les premiers testeurs (par exemple −50 % sur la première année) en remerciement et pour obtenir des avis sur les stores.
 
 ## 5. Sources de revenus
 
 1. **Abonnements Pro** : plus de 90 % des revenus visés.
-2. **Licence à vie** : trésorerie de lancement, limitée dans le temps pour ne pas cannibaliser l'abonnement.
-3. **Programmes de coachs** (phase 2) : programmes payants à l'unité ou inclus dans Pro, avec un partage des revenus (par exemple 50/50) avec le coach. Le coach apporte son audience, Foundry l'outil.
-4. **Offre coachs / salles** (phase 3) : tableau de bord multi-clients, environ 15 à 30 € par mois et par coach.
-5. **Pas de publicité, pas de revente de données.** C'est un engagement de marque, cohérent avec des données de santé.
+2. **Programmes de coachs** (phase 2) : programmes payants à l'unité ou inclus dans Pro, avec un partage des revenus (par exemple 50/50) avec le coach. Le coach apporte son audience, Foundry l'outil.
+3. **Offre coachs / salles** (phase 3) : tableau de bord multi-clients, environ 15 à 30 € par mois et par coach.
+4. **Pas de publicité, pas de revente de données.** C'est un engagement de marque, cohérent avec des données de santé.
 
 ## 6. Structure de coûts
 
