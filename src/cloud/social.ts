@@ -301,3 +301,85 @@ export async function loadProfilePage(username: string): Promise<ProfilePage | n
 }
 
 export const profileLink = (username: string) => `${location.origin}${location.pathname}#/u/${encodeURIComponent(username)}`;
+
+/* ---------- Activity feed (supabase/activity.sql) ---------- */
+
+export type ActivityData =
+  | { kind: 'workout'; name: string; at: number; minutes: number; sets: number; volume: number; records: number; exercises: string[] }
+  | { kind: 'level'; level: number }
+  | { kind: 'badge'; badge: string };
+
+export interface ActivityComment {
+  id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+}
+
+export interface FeedItem {
+  id: string;
+  user_id: string;
+  kind: 'workout' | 'level' | 'badge';
+  data: ActivityData;
+  created_at: string;
+  respects: string[];
+  comments: ActivityComment[];
+}
+
+/** Publish (or update) something that happened, keyed by the app's own id. */
+export async function publishActivity(uid: string, ref: string, data: ActivityData, at?: number) {
+  const { error } = await (await sb()).from('activities').upsert(
+    { user_id: uid, ref, kind: data.kind, data, ...(at ? { created_at: new Date(at).toISOString() } : {}) },
+    { onConflict: 'user_id,ref' },
+  );
+  check(error);
+}
+
+export async function unpublishActivity(uid: string, ref: string) {
+  const { error } = await (await sb()).from('activities').delete().eq('user_id', uid).eq('ref', ref);
+  check(error);
+}
+
+/** The latest activities of the user and their friends, with respects and comments. */
+export async function loadFeed(limit = 20): Promise<FeedItem[]> {
+  const c = await sb();
+  const { data, error } = await c.from('activities').select('id, user_id, kind, data, created_at').order('created_at', { ascending: false }).limit(limit);
+  check(error);
+  const rows = (data ?? []) as Omit<FeedItem, 'respects' | 'comments'>[];
+  if (!rows.length) return [];
+  const ids = rows.map((r) => r.id);
+  const [{ data: rs, error: e1 }, { data: cs, error: e2 }] = await Promise.all([
+    c.from('respects').select('activity_id, user_id').in('activity_id', ids),
+    c.from('activity_comments').select('id, activity_id, user_id, body, created_at').in('activity_id', ids).order('created_at'),
+  ]);
+  check(e1);
+  check(e2);
+  return rows.map((r) => ({
+    ...r,
+    respects: ((rs ?? []) as { activity_id: string; user_id: string }[]).filter((x) => x.activity_id === r.id).map((x) => x.user_id),
+    comments: ((cs ?? []) as (ActivityComment & { activity_id: string })[]).filter((x) => x.activity_id === r.id),
+  }));
+}
+
+export async function giveRespect(uid: string, activityId: string, on: boolean) {
+  const c = await sb();
+  const { error } = on
+    ? await c.from('respects').upsert({ activity_id: activityId, user_id: uid }, { onConflict: 'activity_id,user_id', ignoreDuplicates: true })
+    : await c.from('respects').delete().eq('activity_id', activityId).eq('user_id', uid);
+  check(error);
+}
+
+export async function addComment(uid: string, activityId: string, body: string): Promise<ActivityComment> {
+  const { data, error } = await (await sb())
+    .from('activity_comments')
+    .insert({ activity_id: activityId, user_id: uid, body: body.trim().slice(0, 280) })
+    .select('id, user_id, body, created_at')
+    .single();
+  check(error);
+  return data as ActivityComment;
+}
+
+export async function deleteComment(id: string) {
+  const { error } = await (await sb()).from('activity_comments').delete().eq('id', id);
+  check(error);
+}

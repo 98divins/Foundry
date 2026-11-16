@@ -26,6 +26,7 @@ import { StatsPublisher } from './components/StatsPublisher';
 import { ProSheet } from './components/ProSheet';
 import { LevelsPage } from './screens/Levels';
 import { LevelUpToast } from './components/LevelUpToast';
+import { ActivityPublisher } from './components/ActivityPublisher';
 import { GearPage, GearPublisher, MemberProfile } from './screens/Gear';
 import { useIncomingRequests } from './components/FriendsBadge';
 import { FriendCompare, FriendsHome, InvitePage } from './screens/Friends';
@@ -174,6 +175,7 @@ export function App() {
       <StatsPublisher />
       <ProSheet />
       <GearPublisher />
+      <ActivityPublisher />
       {cloud.initialSynced && <LevelUpToast />}
       {isTab && <StreakToast />}
       {state.active && section !== 'active' && (

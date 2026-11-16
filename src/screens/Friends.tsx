@@ -20,6 +20,7 @@ import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { requirePro } from '../pro';
 import { LevelChip } from '../components/Level';
+import { ActivityFeed } from './Feed';
 import { exerciseName, useStore } from '../store';
 import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
@@ -176,6 +177,7 @@ export function FriendsHome() {
   const [editing, setEditing] = useState(false);
   const mine = useMemo(() => buildPublicStats(state), [state]);
   const sharing = state.settings.shareStats !== false;
+  const [view, setView] = useState<'feed' | 'board'>('feed');
 
   const accepted = friends.filter((f) => f.status === 'accepted');
   const incoming = friends.filter((f) => f.status === 'incoming');
@@ -267,6 +269,23 @@ export function FriendsHome() {
               </section>
             )}
 
+            <Segmented<'feed' | 'board'>
+              label={t('View')}
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'feed', label: t('Activity') },
+                { value: 'board', label: t('Leaderboard') },
+              ]}
+            />
+            {view === 'feed' && uid && (
+              <ActivityFeed
+                uid={uid}
+                people={new Map([[me.user_id, me], ...accepted.map((f) => [f.profile.user_id, f.profile] as const)])}
+                levels={new Map([[me.user_id, mine.level], ...accepted.map((f) => [f.profile.user_id, f.stats?.level] as const)])}
+              />
+            )}
+            {view === 'board' && (
             <section className="panel">
               <h2 className="panel-title">{t('Leaderboard')}</h2>
               <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={(p) => (p === 'week' || p === '30' || requirePro('longLeaderboard')) && setPeriod(p)} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
@@ -304,6 +323,7 @@ export function FriendsHome() {
                 <Icon name="share" size={18} /> {t('Invite friends')}
               </button>
             </section>
+            )}
 
             <section className="panel form">
               <h2 className="panel-title">{t('Add a friend')}</h2>
