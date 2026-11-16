@@ -3625,3 +3625,8 @@ a.btn.disabled {
   color: var(--gold);
   flex: none;
 }
+.pro-tag {
+  background: var(--gold);
+  color: #000;
+  margin-left: 6px;
+}

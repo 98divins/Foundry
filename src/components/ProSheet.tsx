@@ -24,7 +24,7 @@ export function ProSheet() {
             <li><Icon name="check" size={16} /> {t('Plan meals a month ahead, Excel export, custom colours')}</li>
           </ul>
           {PRO_FREE_DURING_BETA ? (
-            <p className="muted small">{t('Subscriptions are not open yet. You are previewing the free version: turn it off in Settings → About to get everything back.')}</p>
+            <p className="muted small">{t('Subscriptions are not open yet. You are previewing the free version: turn it off in Settings → Subscription to get everything back.')}</p>
           ) : null}
           <button className="btn btn-primary btn-wide" onClick={() => setFeature(null)}>
             {t('Got it')}

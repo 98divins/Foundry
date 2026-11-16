@@ -10,9 +10,9 @@ import { sendFeedback } from '../cloud/social';
 import { LegalBody } from '../components/Legal';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
-import { previewingFree, requirePro, setPreviewFree } from '../pro';
+import { hasPro, PLANS, PRO_FREE_DURING_BETA, previewingFree, requirePro, setPreviewFree, type PlanId } from '../pro';
 
-type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'privacy' | 'terms' | 'contact';
+type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'privacy' | 'terms' | 'contact';
 
 function Row({ icon, label, value, onClick }: { icon: IconName; label: string; value?: string; onClick: () => void }) {
   return (
@@ -48,6 +48,7 @@ export function SettingsHub() {
         <ul className="settings-list">
           <Row icon="user" label={t('Profile')} value={state.profile?.name || undefined} onClick={() => open('profile')} />
           <Row icon="lock" label={t('Account')} value={c.user?.email ?? undefined} onClick={() => open('account')} />
+          <Row icon="trophy" label={t('Subscription')} value={hasPro() ? (PRO_FREE_DURING_BETA ? t('Pro · beta') : t('Pro')) : t('Free')} onClick={() => open('subscription')} />
         </ul>
         <h2 className="settings-group">{t('Preferences')}</h2>
         <ul className="settings-list">
@@ -111,6 +112,8 @@ export function SettingsPage({ page }: { page?: string }) {
       return <ContactPage />;
     case 'about':
       return <AboutPage />;
+    case 'subscription':
+      return <SubscriptionPage />;
     case 'privacy':
       return (
         <Sub title={t('Privacy policy')}>
@@ -548,7 +551,6 @@ function FaqPage() {
 }
 
 function AboutPage() {
-  const [free, setFree] = useState(previewingFree());
   return (
     <Sub title={t('About')}>
       <div className="about-head">
@@ -565,8 +567,52 @@ function AboutPage() {
           <li>{t('Typefaces: Archivo and IBM Plex Sans (SIL Open Font License).')}</li>
         </ul>
       </section>
+      <p className="muted small">{t('Foundry is an estimate tool for healthy adults, not medical advice.')}</p>
+    </Sub>
+  );
+}
+
+/** Current plan and the other plans. Payment is not open yet: choosing a paid plan says so. */
+function SubscriptionPage() {
+  const [free, setFree] = useState(previewingFree());
+  const [picked, setPicked] = useState<PlanId | null>(null);
+  const current: PlanId = free || !PRO_FREE_DURING_BETA ? 'free' : 'beta';
+  return (
+    <Sub title={t('Subscription')}>
       <section className="panel">
-        <h2 className="panel-title">{t('Foundry Pro')}</h2>
+        <h2 className="panel-title">{t('Current plan')}</h2>
+        <p>
+          <strong>{current === 'beta' ? t('Foundry Pro · offered during the beta') : t('Free')}</strong>
+        </p>
+        <p className="muted small">
+          {current === 'beta'
+            ? t('Every Pro feature is open while Foundry is in beta. Nothing to pay, nothing to cancel.')
+            : t('Logging workouts and meals stays free forever. Pro adds volume, history and analyses.')}
+        </p>
+      </section>
+      <h2 className="settings-group">{t('Change plan')}</h2>
+      <ul className="plan-choices">
+        {PLANS.map((p) => (
+          <li key={p.id}>
+            <button type="button" className="plan-choice" aria-pressed={current === p.id} onClick={() => p.id !== 'free' && setPicked(p.id)}>
+              <span className="plan-choice-text">
+                <strong>
+                  {t(p.name)} {p.badge && <span className="tag pro-tag">{t(p.badge)}</span>}
+                </strong>
+                <span className="muted small">{t(p.text)}</span>
+              </span>
+              <strong>{t(p.price)}</strong>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {picked && (
+        <p className="sheet-text small" role="status">
+          {t('Payments are not open yet. You will be able to subscribe here at the end of the beta; until then you keep every Pro feature for free.')}
+        </p>
+      )}
+      <section className="panel">
+        <h2 className="panel-title">{t('Beta')}</h2>
         <label className="toggle-line">
           <span>
             <strong>{t('Preview the free version')}</strong>
@@ -575,7 +621,6 @@ function AboutPage() {
           <input id="preview-free" type="checkbox" className="switch" checked={free} onChange={(e) => { setPreviewFree(e.target.checked); setFree(e.target.checked); }} />
         </label>
       </section>
-      <p className="muted small">{t('Foundry is an estimate tool for healthy adults, not medical advice.')}</p>
     </Sub>
   );
 }

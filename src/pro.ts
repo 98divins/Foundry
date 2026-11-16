@@ -3,7 +3,7 @@
  * history, analyses and comfort. Logging a workout or a meal, and exporting one's data, are never paid.
  *
  * There is no subscription yet: during the beta every Pro feature is open. To see the app as a free
- * user would, turn on "Preview the free version" in Settings → About (stored on this device only).
+ * user would, turn on "Preview the free version" in Settings → Subscription (stored on this device only).
  */
 import { tk } from './i18n';
 
@@ -90,3 +90,12 @@ export function canAdd(feature: keyof typeof FREE_LIMITS, current: number): bool
   if (current < FREE_LIMITS[feature]) return true;
   return requirePro(feature);
 }
+
+export type PlanId = 'free' | 'beta' | 'monthly' | 'yearly' | 'lifetime';
+/** Plans shown in Settings → Subscription (prices from docs/BUSINESS_MODEL.md). */
+export const PLANS: { id: Exclude<PlanId, 'beta'>; name: string; text: string; price: string; badge?: string }[] = [
+  { id: 'free', name: tk('Free'), text: tk('Workouts, nutrition, friends: the essentials, forever.'), price: '0 €' },
+  { id: 'monthly', name: tk('Pro monthly'), text: tk('Everything in Foundry Pro, cancel any time. 7-day free trial.'), price: tk('5.99 € / month') },
+  { id: 'yearly', name: tk('Pro yearly'), text: tk('About 3.33 € a month. 7-day free trial.'), price: tk('39.99 € / year'), badge: tk('-44 %') },
+  { id: 'lifetime', name: tk('Pro lifetime'), text: tk('Pay once, Pro for good.'), price: tk('89.99 €') },
+];
