@@ -74,7 +74,7 @@ export function ActiveWorkout() {
       };
       return { ...s, active: null, rest: null, workouts: [...s.workouts, done] };
     });
-    go('w/' + w.id, { replace: true });
+    go('w/' + w.id + '/done', { replace: true });
   };
   const discard = () => {
     update((s) => ({ ...s, active: null, rest: null }));

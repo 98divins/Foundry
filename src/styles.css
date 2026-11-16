@@ -4007,3 +4007,29 @@ a.btn.disabled {
   flex: 1;
   min-width: 0;
 }
+
+.share-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.share-card img {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+.share-card-wait {
+  aspect-ratio: 4 / 5;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.done-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}

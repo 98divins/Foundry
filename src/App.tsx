@@ -124,7 +124,7 @@ export function App() {
       screen = <SettingsPage key={param ?? 'hub'} page={param} />;
       break;
     case 'w':
-      screen = <WorkoutDetail key={param} id={param} />;
+      screen = <WorkoutDetail key={param} id={param} justFinished={extra === 'done'} />;
       break;
     case 'edit':
       screen = <EditWorkout key={param} id={param} />;

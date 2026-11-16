@@ -1,3 +1,4 @@
+import { ShareCardSheet } from '../components/ShareCard';
 import { useMemo, useState } from 'react';
 import { Confirm, Header, Icon, Sheet, Stat } from '../components/ui';
 import { back, go } from '../hooks';
@@ -17,7 +18,7 @@ import {
   workoutSetCount,
   workoutVolume,
 } from '../utils';
-import { t, tk } from '../i18n';
+import { t, tk, tp } from '../i18n';
 
 const PR_LABEL: Record<PRKind, string> = {
   weight: tk('Heaviest'),
@@ -36,13 +37,14 @@ const SET_HEADER: Record<ExerciseKind, string> = {
   cardio: tk('Distance · time'),
 };
 
-export function WorkoutDetail({ id }: { id: string }) {
+export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?: boolean }) {
   const { state, update, exMap } = useStore();
   const w = state.workouts.find((x) => x.id === id);
   const prs = useMemo(() => computePRs(state.workouts), [state.workouts]);
   const [menu, setMenu] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState('');
+  const [sharing, setSharing] = useState(false);
   const unit = state.settings.unit;
 
   if (!w) {
@@ -101,6 +103,19 @@ export function WorkoutDetail({ id }: { id: string }) {
           <Stat label={t('Sets')} value={workoutSetCount(w)} />
           <Stat label={t('Records')} value={prSets.length} />
         </div>
+        {justFinished ? (
+          <section className="panel done-banner">
+            <strong>{prSets.length ? tp(prSets.length, 'Workout done, with {n} record!', 'Workout done, with {n} records!') : t('Workout done. Nice work!')}</strong>
+            <button className="btn btn-primary btn-wide" onClick={() => setSharing(true)}>
+              <Icon name="share" size={18} /> {t('Share my workout')}
+            </button>
+          </section>
+        ) : (
+          <button className="btn btn-wide" onClick={() => setSharing(true)}>
+            <Icon name="share" size={18} /> {t('Share as an image')}
+          </button>
+        )}
+        <ShareCardSheet workout={w} open={sharing} onClose={() => setSharing(false)} />
         {w.note && <p className="note-block">{w.note}</p>}
 
         {w.exercises.map((we) => {
