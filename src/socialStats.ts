@@ -4,6 +4,7 @@
  */
 import { recentPRs, strengthIndexByWeek, trainingDays, weekStarts, weekStreak, periodSummary } from './analytics';
 import { goalRate, weekGoal } from './goals';
+import { progression } from './levels';
 import type { State } from './types';
 import { computePRs, countsForStats, epley, exerciseKind, finished, weekStart } from './utils';
 
@@ -43,6 +44,9 @@ export interface PublicStats {
   periods?: Partial<Record<RollingPeriod, PeriodStats>>;
   /** This week's goal progress, 0–100 (null without goals). */
   weekGoalPct?: number | null;
+  /** Level and badge ids (levels.ts). */
+  level?: number;
+  badges?: string[];
 }
 
 export type RollingPeriod = '30' | '182' | '365';
@@ -140,6 +144,10 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
     lifts,
     computedAt: now,
     periods,
+    ...(() => {
+      const p = progression(state, now);
+      return { level: p.level, badges: p.badges };
+    })(),
     weekGoalPct: state.goals ? Math.round(weekGoal(state, state.goals, start, now).progress * 100) : null,
   };
 }

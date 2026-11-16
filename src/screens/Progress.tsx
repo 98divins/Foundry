@@ -25,6 +25,7 @@ import { computePRs, exerciseKind, fmtDate, fmtEstimate, fmtSet, fmtVolume, toDi
 import { locale, t, tk } from '../i18n';
 import { requirePro } from '../pro';
 import { gearCount } from '../gear';
+import { LevelCard } from './Levels';
 
 const DAY = 86400000;
 const PR_LABEL: Record<PRKind, string> = {
@@ -94,6 +95,7 @@ export function Progress() {
         <ProgressHeader />
         <main className="page">
           <ProfileCard workouts={0} records={0} />
+          <LevelCard />
           <GearCard />
           <GoalsCard />
           <div className="empty-card">
@@ -110,6 +112,7 @@ export function Progress() {
       <ProgressHeader />
       <main className="page">
         <ProfileCard workouts={done.length} records={prs.length} />
+        <LevelCard />
         <GearCard />
         <GoalsCard />
 

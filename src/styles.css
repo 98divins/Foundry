@@ -3748,3 +3748,152 @@ a.btn.disabled {
 .lift-row:last-child {
   border-bottom: 0;
 }
+
+/* Levels and badges */
+.level-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rank);
+  border: 1px solid color-mix(in srgb, var(--rank) 60%, transparent);
+  background: color-mix(in srgb, var(--rank) 12%, transparent);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.level-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.level-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.level-card-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.level-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.level-card-badges .muted {
+  margin-left: auto;
+}
+.level-num {
+  --rank: var(--accent);
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: var(--rank);
+  color: #0d1015;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+}
+.level-num.big {
+  width: 84px;
+  height: 84px;
+  font-size: 36px;
+}
+.level-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.level-hero .xp {
+  width: 100%;
+}
+.xp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.xp-bar {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.xp-bar span {
+  display: block;
+  height: 100%;
+  background: var(--rank);
+  border-radius: 99px;
+}
+.badge-medal .badge-hex {
+  fill: var(--surface-2);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.badge-medal .badge-glyph {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.badge-medal.on .badge-hex {
+  fill: color-mix(in srgb, var(--gold) 25%, var(--surface));
+  stroke: var(--gold);
+}
+.badge-medal.on .badge-glyph {
+  stroke: var(--gold);
+}
+.badge-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.badge-grid li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  opacity: 0.55;
+}
+.badge-grid li.on {
+  opacity: 1;
+}
+.badge-row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.badge-row li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 72px;
+  text-align: center;
+}
+.rank-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}

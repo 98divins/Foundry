@@ -9,6 +9,8 @@ import { metricValue } from '../socialStats';
 import { exerciseName, useStore } from '../store';
 import { fmtNum } from '../utils';
 import { Avatar } from './Settings';
+import { BadgeMedal, LevelChip } from '../components/Level';
+import { BADGES, progression } from '../levels';
 
 function SlotIcon({ slot, size = 26 }: { slot: GearSlot; size?: number }) {
   return (
@@ -109,7 +111,7 @@ export function GearPage() {
       <Header title={t('My gear')} onBack={() => back('profile')} />
       <main className="page">
         <p className="muted small">{t('Show what you train with. Tap a slot to add the brand and model.')}</p>
-        <GearBoard gear={gear} onSlot={open} center={<CenterCard avatar={<Avatar size={84} />} name={state.profile?.name || t('You')} count={gearCount(gear)} />} />
+        <GearBoard gear={gear} onSlot={open} center={<CenterCard avatar={<Avatar size={84} />} name={state.profile?.name || t('You')} count={gearCount(gear)} level={progression(state).level} />} />
 
         <section className="panel">
           <h2 className="panel-title">{t('Who sees my profile')}</h2>
@@ -171,12 +173,13 @@ export function GearPage() {
   );
 }
 
-function CenterCard({ avatar, name, count, sub }: { avatar: React.ReactNode; name: string; count: number; sub?: string }) {
+function CenterCard({ avatar, name, count, sub, level }: { avatar: React.ReactNode; name: string; count: number; sub?: string; level?: number }) {
   return (
     <div className="gear-hero">
       {avatar}
       <strong>{name}</strong>
       {sub && <span className="muted small">{sub}</span>}
+      {level != null && <LevelChip level={level} />}
       <span className="gear-count small">{t('{0} / 13 slots', { 0: count })}</span>
     </div>
   );
@@ -216,10 +219,24 @@ export function MemberProfile({ username }: { username: string }) {
                   name={name}
                   sub={'@' + p.username}
                   count={gearCount(p.gear)}
+                  level={p.stats?.level}
                 />
               }
             />
             {p.bio && <p className="center">{p.bio}</p>}
+            {!!p.stats?.badges?.length && (
+              <section className="panel">
+                <h2 className="panel-title">{t('Badges')}</h2>
+                <ul className="badge-row">
+                  {BADGES.filter((b) => p.stats!.badges!.includes(b.id)).map((b) => (
+                    <li key={b.id} title={t(b.text)}>
+                      <BadgeMedal id={b.id} earned size={40} />
+                      <span className="small">{t(b.name)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             <section className="panel">
               <h2 className="panel-title">{t('Training')}</h2>
               {!s ? (

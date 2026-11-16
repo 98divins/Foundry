@@ -24,6 +24,8 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { StreakToast } from './components/StreakToast';
 import { StatsPublisher } from './components/StatsPublisher';
 import { ProSheet } from './components/ProSheet';
+import { LevelsPage } from './screens/Levels';
+import { LevelUpToast } from './components/LevelUpToast';
 import { GearPage, GearPublisher, MemberProfile } from './screens/Gear';
 import { useIncomingRequests } from './components/FriendsBadge';
 import { FriendCompare, FriendsHome, InvitePage } from './screens/Friends';
@@ -141,6 +143,9 @@ export function App() {
     case 'friends':
       screen = param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
       break;
+    case 'levels':
+      screen = <LevelsPage />;
+      break;
     case 'gear':
       screen = <GearPage />;
       break;
@@ -169,6 +174,7 @@ export function App() {
       <StatsPublisher />
       <ProSheet />
       <GearPublisher />
+      {cloud.initialSynced && <LevelUpToast />}
       {isTab && <StreakToast />}
       {state.active && section !== 'active' && (
         <button className="mini-workout" onClick={() => go('active')}>

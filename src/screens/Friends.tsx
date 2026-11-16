@@ -19,6 +19,7 @@ import { Confirm, Header, Icon, Segmented } from '../components/ui';
 import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { requirePro } from '../pro';
+import { LevelChip } from '../components/Level';
 import { exerciseName, useStore } from '../store';
 import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
@@ -180,8 +181,8 @@ export function FriendsHome() {
   const incoming = friends.filter((f) => f.status === 'incoming');
   const outgoing = friends.filter((f) => f.status === 'outgoing');
   const board = me
-    ? rankBoard<{ p: PublicProfile; me: boolean }>(
-        [{ person: { p: me, me: true }, stats: mine }, ...accepted.map((f) => ({ person: { p: f.profile, me: false }, stats: f.stats }))],
+    ? rankBoard<{ p: PublicProfile; me: boolean; level?: number }>(
+        [{ person: { p: me, me: true, level: mine.level }, stats: mine }, ...accepted.map((f) => ({ person: { p: f.profile, me: false, level: f.stats?.level }, stats: f.stats }))],
         metric,
         period,
       )
@@ -287,7 +288,7 @@ export function FriendsHome() {
                       <span className={'rank r' + r.rank}>{r.value == null ? '–' : r.rank}</span>
                       <Avatar p={r.person.p} size={36} />
                       <span className="friend-name">
-                        <strong>{r.person.me ? t('You') : nameOf(r.person.p)}</strong>
+                        <strong>{r.person.me ? t('You') : nameOf(r.person.p)} {r.person.level != null && <LevelChip level={r.person.level} short />}</strong>
                         {!r.person.me && <span className="muted small">@{r.person.p.username}</span>}
                       </span>
                       <span className="board-value">{fmtMetric(metric, r.value, unit)}</span>
