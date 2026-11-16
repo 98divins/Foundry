@@ -7,6 +7,7 @@ import type { Routine, Workout } from '../types';
 import { liveSetFromRoutine } from '../routines';
 import { defaultWorkoutName, previousSets, uid } from '../utils';
 import { t, tp } from '../i18n';
+import { requirePro } from '../pro';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 function toLocalInput(ts: number) {
@@ -129,7 +130,7 @@ export function EditWorkout({ id }: { id: string }) {
           />
         </label>
         {!existing && state.routines.length > 0 && (
-          <button className="btn btn-wide" onClick={() => setPicking(true)}>
+          <button className="btn btn-wide" onClick={() => requirePro('fillFromRoutine') && setPicking(true)}>
             <Icon name="folder" size={18} /> {t('Fill from a routine')}
           </button>
         )}

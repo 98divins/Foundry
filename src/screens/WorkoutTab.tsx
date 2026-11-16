@@ -8,6 +8,7 @@ import { codeFromText, liveSetFromRoutine } from '../routines';
 import { ShareResult, useShareLink } from '../components/Share';
 import { StreakChip } from '../components/StreakToast';
 import { t, tp } from '../i18n';
+import { canAdd, requirePro } from '../pro';
 
 export function startWorkout(update: (fn: (s: State) => State) => void, routine?: Routine) {
   update((s) => {
@@ -131,6 +132,7 @@ export function WorkoutTab() {
     });
 
   const duplicate = (r: Routine) =>
+    canAdd('routines', state.routines.length) &&
     update((s) => {
       const copy: Routine = {
         ...structuredClone(r),
@@ -202,7 +204,7 @@ export function WorkoutTab() {
             <Icon name="list" size={18} />{' '}{t('Exercises')}</button>
         </div>
         <div className="routine-entry">
-          <button className="btn" onClick={() => go('r/new')}>
+          <button className="btn" onClick={() => canAdd('routines', state.routines.length) && go('r/new')}>
             <Icon name="plus" size={18} />{' '}{t('New routine')}</button>
           <button className="btn" onClick={() => go('explore')}>
             <Icon name="search" size={18} />{' '}{t('Explore programs')}</button>
@@ -214,7 +216,7 @@ export function WorkoutTab() {
             <button className="btn btn-small" onClick={() => setImporting(true)} aria-label={t('Import routines from a link')}>
               <Icon name="link" size={16} />
             </button>
-            <button className="btn btn-small" onClick={() => setFolderForm({ name: '' })}>
+            <button className="btn btn-small" onClick={() => canAdd('folders', state.folders.length) && setFolderForm({ name: '' })}>
               <Icon name="folder" size={16} />{' '}{t('Folder')}</button>
           </div>
         </div>
@@ -244,7 +246,7 @@ export function WorkoutTab() {
               {!f.collapsed && (
                 <>
                   {renderRoutines(list)}
-                  <button className="add-in-folder" onClick={() => go('r/new/' + f.id)}>
+                  <button className="add-in-folder" onClick={() => canAdd('routines', state.routines.length) && go('r/new/' + f.id)}>
                     <Icon name="plus" size={15} />{' '}{t('New routine in')}{' '}{f.name}
                   </button>
                 </>
@@ -298,7 +300,7 @@ export function WorkoutTab() {
       <Sheet open={!!folderMenu} onClose={() => setFolderMenu(null)} title={folderMenu?.name}>
         {folderMenu && (
           <div className="menu">
-            <button className="menu-item" onClick={() => { go('r/new/' + folderMenu.id); setFolderMenu(null); }}>
+            <button className="menu-item" onClick={() => { if (canAdd('routines', state.routines.length)) go('r/new/' + folderMenu.id); setFolderMenu(null); }}>
               <Icon name="plus" size={18} />{' '}{t('New routine in this folder')}</button>
             <button
               className="menu-item"
@@ -313,7 +315,7 @@ export function WorkoutTab() {
               disabled={routines.filter((r) => inFolder(r, folders, folderMenu.id)).length < 2}
               onClick={() => {
                 const list = routines.filter((r) => inFolder(r, folders, folderMenu.id));
-                setMerging({ folderId: folderMenu.id, ids: list.map((r) => r.id), name: folderMenu.name, removeOld: true });
+                if (requirePro('mergeRoutines')) setMerging({ folderId: folderMenu.id, ids: list.map((r) => r.id), name: folderMenu.name, removeOld: true });
                 setFolderMenu(null);
               }}
             >
@@ -440,7 +442,7 @@ export function WorkoutTab() {
                 </button>
               );
             })}
-            <button className="menu-item" onClick={() => { setMoving(null); setFolderForm({ name: '' }); }}>
+            <button className="menu-item" onClick={() => { setMoving(null); if (canAdd('folders', state.folders.length)) setFolderForm({ name: '' }); }}>
               <Icon name="plus" size={18} />{' '}{t('New folder…')}</button>
           </div>
         )}

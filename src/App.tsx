@@ -23,6 +23,7 @@ import { ConsentGate } from './components/Legal';
 import { UpdateBanner } from './components/UpdateBanner';
 import { StreakToast } from './components/StreakToast';
 import { StatsPublisher } from './components/StatsPublisher';
+import { ProSheet } from './components/ProSheet';
 import { useIncomingRequests } from './components/FriendsBadge';
 import { FriendCompare, FriendsHome, InvitePage } from './screens/Friends';
 import { QuickStart, Splash, Welcome } from './components/Onboarding';
@@ -159,6 +160,7 @@ export function App() {
       <ConsentGate />
       <UpdateBanner />
       <StatsPublisher />
+      <ProSheet />
       {isTab && <StreakToast />}
       {state.active && section !== 'active' && (
         <button className="mini-workout" onClick={() => go('active')}>

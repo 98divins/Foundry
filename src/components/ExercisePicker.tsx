@@ -6,6 +6,7 @@ import { uid } from '../utils';
 import { ExerciseImage } from './ExerciseImage';
 import { Icon, Sheet } from './ui';
 import { t } from '../i18n';
+import { canAdd } from '../pro';
 
 export interface ExerciseFilter {
   query: string;
@@ -119,6 +120,7 @@ export function ExercisePicker({
   /** Replace mode: one tap picks, and the list starts on the same muscle. */
   replacing?: Exercise;
 }) {
+  const customCount = useStore().state.customExercises.length;
   const startFilter = replacing ? { ...emptyFilter, muscle: replacing.muscle } : emptyFilter;
   const [filter, setFilter] = useState<ExerciseFilter>(startFilter);
   const [picked, setPicked] = useState<string[]>([]);
@@ -169,7 +171,7 @@ export function ExercisePicker({
         {!list.length && <li className="muted empty-line">{t('No exercise matches these filters.')}</li>}
       </ul>
       <div className="sheet-actions sticky-actions">
-        <button className="btn" onClick={() => setCreating(true)}>{t('New exercise')}</button>
+        <button className="btn" onClick={() => canAdd('customExercises', customCount) && setCreating(true)}>{t('New exercise')}</button>
         {!replacing && (
         <button
           className="btn btn-primary"

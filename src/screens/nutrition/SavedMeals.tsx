@@ -10,6 +10,7 @@ import { loadSharedMeals, shareMeal, SocialNotReady, unshareMeal, type SharedMea
 import { fmtNum, uid } from '../../utils';
 import { AmountSheet, SearchFoods, toggleFavorite } from './AddFood';
 import { t, tk, tp } from '../../i18n';
+import { canAdd, requirePro } from '../../pro';
 
 const SERVINGS = [0.5, 1, 1.5, 2];
 
@@ -139,6 +140,7 @@ export function MealsPage() {
             <CommunityMeals
               added={added}
               onAdd={(m) => {
+                if (!canAdd('savedMeals', n.savedMeals.length)) return;
                 const id = uid();
                 setN((x) => ({ ...x, savedMeals: [...x.savedMeals, { id, name: m.name, items: m.items, updatedAt: Date.now() }] }));
                 setAdded((a) => [...a, m.user_id + m.meal_id]);
@@ -149,6 +151,7 @@ export function MealsPage() {
           <MealIdeasList
             added={added}
             onAdd={(idea) => {
+              if (!canAdd('savedMeals', n.savedMeals.length)) return;
               const id = uid();
               setN((x) => ({ ...x, savedMeals: [...x.savedMeals, { id, name: t(idea.name), items: ideaItems(idea), updatedAt: Date.now() }] }));
               setAdded((a) => [...a, idea.id]);
@@ -162,6 +165,7 @@ export function MealsPage() {
         <button
           className="btn btn-primary btn-wide"
           onClick={() => {
+            if (!canAdd('savedMeals', n.savedMeals.length)) return;
             const id = uid();
             setN((x) => ({ ...x, savedMeals: [...x.savedMeals, { id, name: t('New meal'), items: [], updatedAt: Date.now() }] }));
             go('n/meals/' + id);
@@ -276,7 +280,7 @@ export function MealEditor({ id }: { id: string }) {
             <br />
             <span className="muted small">{draft.shared ? t('Other members see this meal in Meals → Explore → Community, with your first name.') : t('Private: only you see this meal.')}</span>
           </span>
-          <input id="meal-shared" type="checkbox" className="switch" checked={!!draft.shared} onChange={(e) => setDraft({ ...draft, shared: e.target.checked })} />
+          <input id="meal-shared" type="checkbox" className="switch" checked={!!draft.shared} onChange={(e) => (!e.target.checked || requirePro('shareMeals')) && setDraft({ ...draft, shared: e.target.checked })} />
         </label>
         <section className="panel">
           <div className="meal-head">

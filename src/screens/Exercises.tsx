@@ -5,6 +5,7 @@ import { Header, Icon } from '../components/ui';
 import { back, go } from '../hooks';
 import { useStore } from '../store';
 import { t } from '../i18n';
+import { canAdd } from '../pro';
 
 export function Exercises() {
   const { state } = useStore();
@@ -30,7 +31,7 @@ export function Exercises() {
         title={t('Exercises')}
         onBack={() => back('')}
         right={
-          <button className="btn btn-small" onClick={() => setCreating(true)}>
+          <button className="btn btn-small" onClick={() => canAdd('customExercises', state.customExercises.length) && setCreating(true)}>
             <Icon name="plus" size={16} />{' '}{t('New')}</button>
         }
       />

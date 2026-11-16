@@ -7,6 +7,7 @@ import { download } from '../utils';
 import { fmtBackupAge, saveBackup } from '../backup';
 import { downloadWorkbook } from '../export';
 import { t, tp } from '../i18n';
+import { requirePro } from '../pro';
 
 /** Settings → Export & import data. */
 export function DataPage() {
@@ -62,7 +63,7 @@ export function DataPage() {
               onClick={() => download(`foundry-workouts-${stamp}.csv`, exportWorkoutCsv(workouts, exMap), 'text/csv')}
             >{t('Export CSV')}</button>
           </div>
-          <button className="btn btn-primary btn-wide" onClick={() => downloadWorkbook(state, exMap)}>
+          <button className="btn btn-primary btn-wide" onClick={() => requirePro('excel') && downloadWorkbook(state, exMap)}>
             <Icon name="download" size={18} /> {t('Export to Excel (report and all data)')}
           </button>
           <p className="muted small">{t('One workbook: weekly report, workouts, every set, weigh-ins, daily nutrition, food log and check-ins. Opens in Excel, Numbers or Google Sheets.')}</p>

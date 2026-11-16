@@ -3607,3 +3607,21 @@ a.btn.disabled {
   vertical-align: 2px;
   font-size: 11px;
 }
+
+.pro-perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pro-perks li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.pro-perks svg {
+  color: var(--gold);
+  flex: none;
+}

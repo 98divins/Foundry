@@ -18,6 +18,7 @@ import {
 import { Confirm, Header, Icon, Segmented } from '../components/ui';
 import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
+import { requirePro } from '../pro';
 import { exerciseName, useStore } from '../store';
 import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
@@ -267,7 +268,7 @@ export function FriendsHome() {
 
             <section className="panel">
               <h2 className="panel-title">{t('Leaderboard')}</h2>
-              <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={setPeriod} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
+              <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={(p) => (p === 'week' || p === '30' || requirePro('longLeaderboard')) && setPeriod(p)} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
               <div className="chips" role="tablist" aria-label={t('Leaderboard')}>
                 {METRICS.map((m) => (
                   <button key={m.id} role="tab" aria-selected={metric === m.id} className={'chip' + (metric === m.id ? ' on' : '')} onClick={() => setMetric(m.id)}>
@@ -282,7 +283,7 @@ export function FriendsHome() {
               <ol className="board">
                 {board.map((r) => (
                   <li key={r.person.p.user_id} className={r.person.me ? 'me' : ''}>
-                    <button className="board-row" onClick={() => !r.person.me && go('friends/' + r.person.p.user_id)} disabled={r.person.me}>
+                    <button className="board-row" onClick={() => !r.person.me && requirePro('compare') && go('friends/' + r.person.p.user_id)} disabled={r.person.me}>
                       <span className={'rank r' + r.rank}>{r.value == null ? '–' : r.rank}</span>
                       <Avatar p={r.person.p} size={36} />
                       <span className="friend-name">
@@ -320,7 +321,7 @@ export function FriendsHome() {
                 <ul className="friend-list">
                   {accepted.map((f) => (
                     <li key={f.profile.user_id}>
-                      <button className="friend-row" onClick={() => go('friends/' + f.profile.user_id)}>
+                      <button className="friend-row" onClick={() => (f.status !== 'accepted' || requirePro('compare')) && go('friends/' + f.profile.user_id)}>
                         <Avatar p={f.profile} />
                         <span className="friend-name">
                           <strong>{nameOf(f.profile)}</strong>
@@ -435,7 +436,7 @@ export function FriendCompare({ id }: { id: string }) {
             </section>
             {!theirs && <p className="muted small center">{t('{name} has not shared stats yet.', { name: nameOf(f.profile) })}</p>}
 
-            <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={setPeriod} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
+            <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={(p) => (p === 'week' || p === '30' || requirePro('longLeaderboard')) && setPeriod(p)} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
             <section className="panel">
               <h2 className="panel-title">{t(PERIOD_LABEL[period])}</h2>
               <ul className="cmp-list">

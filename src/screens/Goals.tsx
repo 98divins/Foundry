@@ -3,6 +3,7 @@ import { Header, Icon, Segmented } from '../components/ui';
 import { goalWeeks, weekGoal } from '../goals';
 import { back, go } from '../hooks';
 import { locale, t, tp } from '../i18n';
+import { requirePro } from '../pro';
 import { useStore } from '../store';
 import { weekStart } from '../utils';
 
@@ -36,7 +37,7 @@ export function GoalsPage() {
           <Segmented<string>
             label={t('Days within my targets per week')}
             value={diet == null ? 'off' : String(diet)}
-            onChange={(v) => setDiet(v === 'off' ? null : Number(v))}
+            onChange={(v) => (v === 'off' || requirePro('dietGoal')) && setDiet(v === 'off' ? null : Number(v))}
             options={[{ value: 'off', label: t('Off') }, ...[3, 4, 5, 6, 7].map((n) => ({ value: String(n), label: String(n) }))]}
           />
           <p className="muted small">{t('A day is within target when it is fully logged, calories are within 10 % of your target and protein reaches 90 % of it.')}</p>

@@ -10,6 +10,7 @@ import { sendFeedback } from '../cloud/social';
 import { LegalBody } from '../components/Legal';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
+import { previewingFree, requirePro, setPreviewFree } from '../pro';
 
 type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'privacy' | 'terms' | 'contact';
 
@@ -454,7 +455,7 @@ function ThemePage() {
       <h2 className="settings-group">{t('Accent colour')}</h2>
       <div className="swatches">
         {ACCENTS.map((a) => (
-          <button key={a.hex} className="swatch" aria-pressed={accent === a.hex} onClick={() => set('accent', a.hex === DEFAULT_ACCENT ? undefined : a.hex)}>
+          <button key={a.hex} className="swatch" aria-pressed={accent === a.hex} onClick={() => (a.hex === DEFAULT_ACCENT || requirePro('customTheme')) && set('accent', a.hex === DEFAULT_ACCENT ? undefined : a.hex)}>
             <span className="swatch-dot" style={{ background: a.hex }}>
               {accent === a.hex && <Icon name="check" size={18} />}
             </span>
@@ -464,7 +465,7 @@ function ThemePage() {
         <label className="swatch" data-on={!isPreset}>
           <span className="swatch-dot swatch-custom" style={!isPreset ? { background: accent } : undefined}>
             {!isPreset && <Icon name="check" size={18} />}
-          </span>{t('Custom')}<input type="color" value={accent} aria-label={t('Custom colour')} onChange={(e) => set('accent', e.target.value)} />
+          </span>{t('Custom')}<input type="color" value={accent} aria-label={t('Custom colour')} onChange={(e) => requirePro('customTheme') && set('accent', e.target.value)} />
         </label>
       </div>
       <div className="theme-preview">
@@ -481,7 +482,7 @@ function ThemePage() {
           <span>{t('Pure black')}<br />
             <span className="muted small">{t('Dark mode only. Saves battery on OLED screens.')}</span>
           </span>
-          <input type="checkbox" className="switch" checked={!!s.pureBlack} onChange={(e) => set('pureBlack', e.target.checked)} />
+          <input type="checkbox" className="switch" checked={!!s.pureBlack} onChange={(e) => (!e.target.checked || requirePro('customTheme')) && set('pureBlack', e.target.checked)} />
         </label>
       </section>
       {(s.accent || s.pureBlack) && (
@@ -547,6 +548,7 @@ function FaqPage() {
 }
 
 function AboutPage() {
+  const [free, setFree] = useState(previewingFree());
   return (
     <Sub title={t('About')}>
       <div className="about-head">
@@ -562,6 +564,16 @@ function AboutPage() {
           <li>{t('Brands and barcodes: Open Food Facts, © its contributors (Open Database License).')}</li>
           <li>{t('Typefaces: Archivo and IBM Plex Sans (SIL Open Font License).')}</li>
         </ul>
+      </section>
+      <section className="panel">
+        <h2 className="panel-title">{t('Foundry Pro')}</h2>
+        <label className="toggle-line">
+          <span>
+            <strong>{t('Preview the free version')}</strong>
+            <span className="muted small">{t('Everything is unlocked during the beta. Switch this on to see the limits of a free account (on this device only).')}</span>
+          </span>
+          <input id="preview-free" type="checkbox" className="switch" checked={free} onChange={(e) => { setPreviewFree(e.target.checked); setFree(e.target.checked); }} />
+        </label>
       </section>
       <p className="muted small">{t('Foundry is an estimate tool for healthy adults, not medical advice.')}</p>
     </Sub>

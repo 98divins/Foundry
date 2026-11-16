@@ -22,6 +22,7 @@ import {
 import { useNutrition, useStore } from '../../store';
 import { fmtNum, fromDisplay, toDisplay } from '../../utils';
 import { locale, t, tk } from '../../i18n';
+import { requirePro } from '../../pro';
 import { CUSTOM_PLAN, MACRO_PLANS, planFor } from '../../macroPlans';
 import { PRO_FREE_DURING_BETA } from '../../pro';
 
@@ -325,7 +326,7 @@ export function PlanPage({ setup }: { setup?: boolean }) {
                       type="button"
                       className="plan-choice"
                       aria-pressed={on}
-                      onClick={() => setDraft({ ...draft, macroPlan: id, ...(m ? { proteinPerKg: m.proteinPerKg, fatShare: m.fatShare } : {}) })}
+                      onClick={() => (m || requirePro('customMacros')) && setDraft({ ...draft, macroPlan: id, ...(m ? { proteinPerKg: m.proteinPerKg, fatShare: m.fatShare } : {}) })}
                     >
                       <span className="plan-choice-text">
                         <strong>

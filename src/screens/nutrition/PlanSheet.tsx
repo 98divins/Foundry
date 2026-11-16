@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Segmented, Sheet } from '../../components/ui';
 import { locale, t, tp } from '../../i18n';
+import { requirePro } from '../../pro';
 import { addDays, dayKey, MEAL_LABEL, MEALS, parseDay, type FoodEntry, type Meal } from '../../nutrition';
 import { useNutrition, useStore } from '../../store';
 import { uid } from '../../utils';
@@ -82,6 +83,7 @@ export function PlanSheet({
           label={t('Week')}
           value={week}
           onChange={(w) => {
+            if (w !== 'this' && !requirePro('planAhead')) return;
             setWeek(w);
             setDays([]);
           }}

@@ -23,6 +23,7 @@ import { exerciseName, useStore } from '../store';
 import type { Muscle, PRKind } from '../types';
 import { computePRs, exerciseKind, fmtDate, fmtEstimate, fmtSet, fmtVolume, toDisplay, weekStart } from '../utils';
 import { locale, t, tk } from '../i18n';
+import { requirePro } from '../pro';
 
 const DAY = 86400000;
 const PR_LABEL: Record<PRKind, string> = {
@@ -309,7 +310,7 @@ function AdvancedStats() {
       <ul className="settings-list">
         {STATS_PAGES.map((p) => (
           <li key={p.id}>
-            <button className="settings-row" onClick={() => go('stats/' + p.id)}>
+            <button className="settings-row" onClick={() => (!p.pro || requirePro('advancedStats')) && go('stats/' + p.id)}>
               <Icon name={p.icon} />
               <span className="settings-label">
                 <span>

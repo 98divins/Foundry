@@ -23,6 +23,7 @@ import { fmtNum, fromDisplay, toDisplay, uid } from '../../utils';
 import { EntrySheet } from './EntrySheet';
 import { PlanSheet } from './PlanSheet';
 import { locale, t, tp } from '../../i18n';
+import { canAdd, requirePro } from '../../pro';
 
 export function fmtDay(key: string): string {
   const today = dayKey();
@@ -126,7 +127,7 @@ export function NutritionHome({ date }: { date: string }) {
         )}
 
         {due && (
-          <button className="checkin-banner" onClick={() => setCheckIn(true)}>
+          <button className="checkin-banner" onClick={() => requirePro('adaptiveCoach') && setCheckIn(true)}>
             <Icon name="trophy" size={18} />
             <span>
               <strong>{t('Weekly check-in')}</strong>
@@ -261,7 +262,8 @@ function MealSection({
   const [planning, setPlanning] = useState(false);
   const canConfirm = date <= dayKey();
   const plannedHere = entries.filter((e) => e.planned);
-  const { setN } = useNutrition();
+  const { n: nAll, setN } = useNutrition();
+  const savedCount = nAll.savedMeals.length;
   const [open, setOpen] = useState<string | null>(null);
   const [groupMenu, setGroupMenu] = useState<FoodEntry[] | null>(null);
   const [naming, setNaming] = useState<string | null>(null);
@@ -289,6 +291,7 @@ function MealSection({
   }
 
   const saveAsMeal = (name: string) => {
+    if (!canAdd('savedMeals', savedCount)) return;
     const id = uid();
     setN((x) => ({
       ...x,
