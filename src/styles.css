@@ -4138,3 +4138,123 @@ a.btn.disabled {
 .set-table .num-col {
   white-space: nowrap;
 }
+
+/* Year in review */
+.year-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 30%, var(--surface)), var(--surface));
+}
+.year-card > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.year-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+}
+.yr {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 72px 28px 48px;
+  background: radial-gradient(circle at 50% 0, color-mix(in srgb, var(--accent) 45%, transparent), transparent 65%), var(--bg);
+  color: var(--fg);
+  user-select: none;
+}
+.yr-dots {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  left: 16px;
+  right: 60px;
+  display: flex;
+  gap: 4px;
+}
+.yr-dots span {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--fg) 20%, transparent);
+}
+.yr-dots span.on {
+  background: var(--fg);
+}
+.yr-close {
+  position: absolute;
+  top: calc(4px + env(safe-area-inset-top));
+  right: 8px;
+}
+.yr-slide {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: yr-in 0.35s ease-out;
+}
+@keyframes yr-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.yr-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 700;
+}
+.yr-big {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(64px, 22vw, 120px);
+  line-height: 1;
+}
+.yr-big.gold {
+  color: var(--gold);
+}
+.yr-mid {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34px;
+  color: var(--gold);
+}
+.yr-text {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.3;
+}
+.yr-sub {
+  margin: 0;
+  color: var(--muted);
+}
+.yr-lift {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.yr-hint {
+  position: absolute;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+.yr-badges {
+  margin-top: 8px;
+}

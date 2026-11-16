@@ -25,6 +25,7 @@ import { StreakToast } from './components/StreakToast';
 import { StatsPublisher } from './components/StatsPublisher';
 import { ProSheet } from './components/ProSheet';
 import { LevelsPage } from './screens/Levels';
+import { YearReviewPage } from './screens/YearReview';
 import { LevelUpToast } from './components/LevelUpToast';
 import { ActivityPublisher } from './components/ActivityPublisher';
 import { GearPage, GearPublisher, MemberProfile } from './screens/Gear';
@@ -143,6 +144,9 @@ export function App() {
       break;
     case 'friends':
       screen = param === 'challenges' ? <FriendsHome key="ch" initialView="challenges" /> : param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
+      break;
+    case 'year':
+      screen = <YearReviewPage key={param} year={Number(param) || new Date().getFullYear()} />;
       break;
     case 'levels':
       screen = <LevelsPage />;

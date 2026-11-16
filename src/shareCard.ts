@@ -186,3 +186,73 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
 
   return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('canvas'))), 'image/png'));
 }
+
+export interface YearCardInput {
+  year: number;
+  author: string;
+  accent: string;
+  lines: [string, string][];
+  level: number;
+  rank: Rank;
+  favourite: string | null;
+}
+
+/** The year in review summary, as a story (1080 × 1920). */
+export async function drawYearCard(y: YearCardInput): Promise<Blob> {
+  await document.fonts?.ready;
+  const c = document.createElement('canvas');
+  c.width = 1080;
+  c.height = 1920;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#0d1015';
+  ctx.fillRect(0, 0, 1080, 1920);
+  const g = ctx.createRadialGradient(540, 0, 80, 540, 0, 1300);
+  g.addColorStop(0, y.accent + '88');
+  g.addColorStop(1, y.accent + '00');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 1080, 1920);
+  const P = 90;
+  logo(ctx, P, 90, 74, y.accent);
+  ctx.fillStyle = '#eef1f5';
+  ctx.font = `800 40px ${DISPLAY}`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('FOUNDRY', P + 92, 121);
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `800 220px ${DISPLAY}`;
+  ctx.fillText(String(y.year), P - 8, 470);
+  ctx.fillStyle = '#8e98a6';
+  ctx.font = `500 40px ${BODY}`;
+  ctx.fillText(fit(ctx, t('My year of training · {name}', { name: y.author }), 1080 - 2 * P), P, 545);
+
+  let top = 640;
+  const colW = (1080 - 2 * P - 30) / 2;
+  y.lines.slice(0, 8).forEach(([value, label], i) => {
+    const x = P + (i % 2) * (colW + 30);
+    const yy = top + Math.floor(i / 2) * 190;
+    round(ctx, x, yy, colW, 165, 26);
+    ctx.fillStyle = '#151a21';
+    ctx.fill();
+    ctx.strokeStyle = '#2a313c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#eef1f5';
+    ctx.font = `800 62px ${DISPLAY}`;
+    ctx.fillText(fit(ctx, value, colW - 50), x + 28, yy + 85);
+    ctx.fillStyle = '#8e98a6';
+    ctx.font = `500 30px ${BODY}`;
+    ctx.fillText(fit(ctx, label, colW - 50), x + 28, yy + 135);
+  });
+  top += Math.ceil(Math.min(8, y.lines.length) / 2) * 190 + 30;
+  if (y.favourite) {
+    ctx.fillStyle = '#8e98a6';
+    ctx.font = `500 32px ${BODY}`;
+    ctx.fillText(t('Favourite exercise'), P, top + 20);
+    ctx.fillStyle = '#e08a4c';
+    ctx.font = `800 54px ${DISPLAY}`;
+    ctx.fillText(fit(ctx, y.favourite, 1080 - 2 * P), P, top + 90);
+  }
+  ctx.fillStyle = y.rank.color;
+  ctx.font = `700 40px ${BODY}`;
+  ctx.fillText(t('Level {n}', { n: y.level }) + ' · ' + t(y.rank.name), P, 1920 - 120);
+  return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('canvas'))), 'image/png'));
+}

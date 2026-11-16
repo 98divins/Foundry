@@ -26,6 +26,7 @@ import { locale, t, tk } from '../i18n';
 import { requirePro } from '../pro';
 import { gearCount } from '../gear';
 import { LevelCard } from './Levels';
+import { YearReviewCard } from './YearReview';
 import { ChallengesPanel } from './Challenges';
 
 const DAY = 86400000;
@@ -96,7 +97,9 @@ export function Progress() {
         <ProgressHeader />
         <main className="page">
           <ProfileCard workouts={0} records={0} />
-          <LevelCard />
+          <YearReviewCard />
+          <YearReviewCard />
+        <LevelCard />
         <ChallengesPanel compact />
           <ChallengesPanel compact />
           <GearCard />
