@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCloud } from '../cloud/cloud';
-import { loadProfilePage, myProfile, profileLink, publishGear, SocialNotReady, type ProfilePage, type PublicProfile } from '../cloud/social';
+import { loadProfilePage, myProfile, profileLink, publishAvatar, publishGear, smallAvatar, SocialNotReady, type ProfilePage, type PublicProfile } from '../cloud/social';
 import { Header, Icon, Sheet } from '../components/ui';
 import { cleanGear, GEAR_ICON, GEAR_LABEL, GEAR_LAYOUT, gearCount, type Gear, type GearItem, type GearSlot } from '../gear';
 import { back, go } from '../hooks';
@@ -282,5 +282,21 @@ export function GearPublisher() {
     const id = setTimeout(() => publishGear(uid, gear, !!pr?.isPublic, pr?.bio ?? '').then(() => (last.current = json), () => {}), 3000);
     return () => clearTimeout(id);
   }, [uid, c.initialSynced, pr]);
+  // The picture: same idea, on its own (it is bigger and changes rarely).
+  const lastAvatar = useRef<string | null | undefined>(undefined);
+  const avatar = pr?.avatar ?? null;
+  useEffect(() => {
+    if (!uid || !c.initialSynced || avatar === lastAvatar.current) return;
+    const id = setTimeout(async () => {
+      try {
+        const small = avatar ? await smallAvatar(avatar) : null;
+        await publishAvatar(uid, small || null);
+        lastAvatar.current = avatar;
+      } catch {
+        /* offline or no public profile yet: try again later */
+      }
+    }, 2000);
+    return () => clearTimeout(id);
+  }, [uid, c.initialSynced, avatar]);
   return null;
 }

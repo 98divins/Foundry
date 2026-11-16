@@ -290,6 +290,29 @@ export async function publishGear(uid: string, gear: import('../gear').Gear, isP
   check(error);
 }
 
+/** Copy the profile picture to the public profile (no-op without a profile row). */
+export async function publishAvatar(uid: string, avatar: string | null) {
+  const { error } = await (await sb()).from('profiles').update({ avatar, updated_at: new Date().toISOString() }).eq('user_id', uid);
+  check(error);
+}
+
+/** A smaller JPEG of a picture, short enough for the public profile (max 20,000 characters). */
+export async function smallAvatar(dataUrl: string): Promise<string> {
+  if (dataUrl.length <= 20000) return dataUrl;
+  const img = new Image();
+  img.src = dataUrl;
+  await img.decode();
+  for (const [size, q] of [[160, 0.8], [128, 0.7], [96, 0.6]] as const) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const s = Math.min(img.width, img.height);
+    c.getContext('2d')!.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+    const out = c.toDataURL('image/jpeg', q);
+    if (out.length <= 20000) return out;
+  }
+  return '';
+}
+
 /** A member's profile page, or null when it does not exist or is not visible to this user. */
 export async function loadProfilePage(username: string): Promise<ProfilePage | null> {
   const { data, error } = await (await sb()).rpc('profile_page', { name: username });

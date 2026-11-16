@@ -14,6 +14,7 @@ import {
   suggestUsername,
   type Friend,
   type PublicProfile,
+  smallAvatar,
 } from '../cloud/social';
 import { Confirm, Header, Icon, Segmented } from '../components/ui';
 import { back, go } from '../hooks';
@@ -116,7 +117,8 @@ function ProfileSetup({ uid, onSaved, initial }: { uid: string; onSaved: (p: Pub
   const [busy, setBusy] = useState(false);
   const save = async () => {
     setBusy(true);
-    const p = { user_id: uid, username: username.trim().toLowerCase(), display_name: name.trim(), avatar: state.profile?.avatar ?? null };
+    const pic = state.profile?.avatar ? await smallAvatar(state.profile.avatar).catch(() => '') : '';
+    const p = { user_id: uid, username: username.trim().toLowerCase(), display_name: name.trim(), avatar: pic || null };
     try {
       const err = await saveProfile(p);
       if (err) setMsg(err);
@@ -172,7 +174,8 @@ async function share(url: string, setMsg: (s: string) => void) {
 export function FriendsHome({ initialView }: { initialView?: 'feed' | 'challenges' | 'board' } = {}) {
   const { state, update } = useStore();
   const unit = state.settings.unit;
-  const { uid, me, setMe, friends, reload, error, notReady } = useSocial();
+  const { uid, me: meServer, setMe, friends, reload, error, notReady } = useSocial();
+  const me = meServer && state.profile?.avatar !== undefined ? { ...meServer, avatar: state.profile?.avatar ?? null } : meServer;
   const [metric, setMetric] = useState<BoardMetric>('days');
   const [period, setPeriod] = useState<BoardPeriod>('week');
   const [search, setSearch] = useState('');
@@ -424,7 +427,8 @@ const Row = ({ label, a, b, fmt = (v: number) => String(v), higher = true }: { l
 export function FriendCompare({ id }: { id: string }) {
   const { state, exMap } = useStore();
   const unit = state.settings.unit;
-  const { uid, me, friends, notReady } = useSocial();
+  const { uid, me: meServer, friends, notReady } = useSocial();
+  const me = meServer ? { ...meServer, avatar: state.profile?.avatar ?? null } : meServer;
   const [confirm, setConfirm] = useState(false);
   const mine = useMemo(() => buildPublicStats(state), [state]);
   const f = friends.find((x) => x.profile.user_id === id);
