@@ -159,7 +159,7 @@ export function WorkoutTab() {
         <RoutineRow
           key={r.id}
           r={r}
-          disabled={!!active || !r.exercises.length}
+          disabled={!!active || (!r.interval && !r.exercises.length)}
           onStart={() => startWorkout(update, r)}
           onMenu={() => setRoutineMenu(r)}
         />
