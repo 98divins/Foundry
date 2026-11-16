@@ -69,3 +69,18 @@ describe('cardio in the leaderboard', () => {
     registerKinds(() => 'weight');
   });
 });
+
+describe('comparisons over any dates', () => {
+  it('sums the shared per-day summary between two dates', async () => {
+    const { encodeDays, rangeTotals } = await import('./socialStats');
+    const H = 3600000;
+    const set = (i: number) => ({ id: 'r' + i, type: 'normal' as const, weight: 100, reps: 5, done: true });
+    const at = (d: number) => new Date(2026, 10, d, 10).getTime();
+    const w = (d: number) => ({ id: 'w' + d, name: 'W', startedAt: at(d), endedAt: at(d) + H, exercises: [{ id: 'e' + d, exerciseId: 'bench_bb', restSec: 90, sets: [set(d * 10), set(d * 10 + 1)] }] });
+    const s = { ...defaultState(), workouts: [w(2), w(5), w(9)] };
+    const enc = encodeDays(s, at(10));
+    const r = rangeTotals(enc, at(4), at(9));
+    expect(r).toMatchObject({ days: 2, sets: 4, volume: 2000 });
+    expect(rangeTotals(undefined, at(1), at(9))).toBeNull();
+  });
+});

@@ -97,11 +97,7 @@ export function Progress() {
         <ProgressHeader />
         <main className="page">
           <ProfileCard workouts={0} records={0} />
-          <YearReviewCard />
-          <YearReviewCard />
-        <LevelCard />
-        <ChallengesPanel compact />
-          <ChallengesPanel compact />
+          <LevelCard />
           <GearCard />
           <GoalsCard />
           <div className="empty-card">
@@ -118,7 +114,10 @@ export function Progress() {
       <ProgressHeader />
       <main className="page">
         <ProfileCard workouts={done.length} records={prs.length} />
+        <YearReviewCard />
         <LevelCard />
+        <ChallengesPanel compact />
+        <RecapRow />
         <GearCard />
         <GoalsCard />
 
@@ -312,6 +311,23 @@ function ProfileCard({ workouts, records }: { workouts: number; records: number 
         </span>
       </span>
     </button>
+  );
+}
+
+function RecapRow() {
+  return (
+    <ul className="settings-list">
+      <li>
+        <button className="settings-row" onClick={() => go('recap')}>
+          <Icon name="share" />
+          <span className="settings-label">
+            {t('My recaps')}
+            <span className="muted small">{t('Your week, month or year in a story, with an image to share.')}</span>
+          </span>
+          <Icon name="chevron" size={18} />
+        </button>
+      </li>
+    </ul>
   );
 }
 

@@ -4258,3 +4258,30 @@ a.btn.disabled {
 .yr-badges {
   margin-top: 8px;
 }
+
+.recap-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  text-align: center;
+  margin: 12px 0;
+}
+.recap-nav strong {
+  text-transform: capitalize;
+}
+.recap-next svg {
+  transform: rotate(180deg);
+}
+.stat-grid.panel {
+  margin-bottom: 12px;
+}
+.date-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.date-range input {
+  width: 100%;
+  min-width: 0;
+}

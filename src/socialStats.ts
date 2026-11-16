@@ -48,6 +48,11 @@ export interface PublicStats {
   /** Level and badge ids (levels.ts). */
   level?: number;
   badges?: string[];
+  /**
+   * Training days of the last 365 days, for comparisons over any dates: "day.sets.volume.cardio.records"
+   * in base 36 (day = days since 1970 in local time; volume in kg), comma separated.
+   */
+  days?: string;
   /** This month's challenges: month key and progress by challenge id. */
   challenges?: { month: string; progress: Record<string, number> };
 }
@@ -152,8 +157,73 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
       const m = monthKey(now);
       return { level: p.level, badges: p.badges, challenges: { month: m, progress: Object.fromEntries(monthChallenges(state, m).map((c) => [c.def.id, c.value])) } };
     })(),
+    days: encodeDays(state, now),
     weekGoalPct: state.goals ? Math.round(weekGoal(state, state.goals, start, now).progress * 100) : null,
   };
+}
+
+const dayNum = (t: number) => {
+  const d = new Date(t);
+  return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY);
+};
+
+/** Compact per-day summary of the last 365 days (see PublicStats.days). */
+export function encodeDays(state: State, now = Date.now()): string {
+  const prs = computePRs(state.workouts);
+  const by = new Map<number, [number, number, number, number]>();
+  for (const w of finished(state.workouts)) {
+    if (w.startedAt < now - 365 * DAY) continue;
+    const k = dayNum(w.startedAt);
+    const v = by.get(k) ?? [0, 0, 0, 0];
+    let sec = 0;
+    for (const we of w.exercises) {
+      const cardio = exerciseKind(we.exerciseId) === 'cardio';
+      for (const s of we.sets) {
+        if (!s.done) continue;
+        if (cardio) sec += s.duration ?? 0;
+        if (prs.has(s.id)) v[3]++;
+      }
+    }
+    v[0] += w.exercises.reduce((n, we) => n + we.sets.filter((s) => s.done && s.type !== 'warmup').length, 0);
+    v[1] += Math.round(w.exercises.reduce((n, we) => n + we.sets.reduce((m, s) => m + (s.done && s.weight && s.reps ? s.weight * s.reps : 0), 0), 0));
+    v[2] += Math.round(sec / 60);
+    by.set(k, v);
+  }
+  const out = [...by.entries()].sort((a, b) => b[0] - a[0]).map(([k, v]) => [k, ...v].map((x) => x.toString(36)).join('.'));
+  // Stay well inside the server's size limit: drop the oldest days if needed.
+  let s = '';
+  for (const e of out) {
+    if (s.length + e.length + 1 > 4500) break;
+    s = s ? s + ',' + e : e;
+  }
+  return s;
+}
+
+export interface RangeTotals {
+  days: number;
+  sets: number;
+  volume: number;
+  cardio: number;
+  records: number;
+}
+
+/** Totals between two dates (inclusive, ms) from an encoded summary; null when it is not shared. */
+export function rangeTotals(days: string | undefined, from: number, to: number): RangeTotals | null {
+  if (days == null) return null;
+  const a = dayNum(from);
+  const b = dayNum(to);
+  const r: RangeTotals = { days: 0, sets: 0, volume: 0, cardio: 0, records: 0 };
+  if (!days) return r;
+  for (const e of days.split(',')) {
+    const [k, sets, vol, cardio, rec] = e.split('.').map((x) => parseInt(x, 36));
+    if (k < a || k > b) continue;
+    r.days++;
+    r.sets += sets;
+    r.volume += vol;
+    r.cardio += cardio;
+    r.records += rec;
+  }
+  return r;
 }
 
 export type BoardMetric = 'days' | 'sets' | 'volume' | 'cardio' | 'streak' | 'prs' | 'strength' | 'goals';

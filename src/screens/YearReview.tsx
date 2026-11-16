@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BadgeMedal } from '../components/Level';
-import { Icon, Sheet } from '../components/ui';
+import { Header, Icon, Segmented, Sheet } from '../components/ui';
 import { back, go } from '../hooks';
 import { locale, t, tp } from '../i18n';
 import { BADGES, rankOf } from '../levels';
@@ -8,7 +8,7 @@ import { drawYearCard } from '../shareCard';
 import { exerciseName, useStore } from '../store';
 import { DEFAULT_ACCENT } from '../theme';
 import { fmtEstimate, fmtNum, toDisplay } from '../utils';
-import { yearReview, yearsWithData } from '../yearReview';
+import { periodRange, periodReview, yearsWithData, type RecapKind } from '../yearReview';
 
 /** Shown in December (this year) and January (last year). */
 export function reviewYear(years: number[], now = new Date()): number | null {
@@ -24,7 +24,7 @@ export function YearReviewCard() {
   const year = reviewYear(yearsWithData(state));
   if (year == null) return null;
   return (
-    <button className="panel year-card" onClick={() => go('year/' + year)}>
+    <button className="panel year-card" onClick={() => go('recap/year/' + year)}>
       <span className="year-num">{year}</span>
       <span>
         <strong>{t('Your {year} in review is ready', { year })}</strong>
@@ -35,9 +35,32 @@ export function YearReviewCard() {
   );
 }
 
+export const recapKey = (t: number) => {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+export const parseKey = (k: string) => {
+  const [y, m = 1, d = 1] = k.split('-').map(Number);
+  return new Date(y, m - 1, d).getTime();
+};
+
+/** Title of a period: "2026", "novembre 2026", "Semaine du 9 nov." */
+export function recapTitle(kind: RecapKind, from: number): string {
+  if (kind === 'year') return String(new Date(from).getFullYear());
+  if (kind === 'month') return new Date(from).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
+  return t('Week of {date}', { date: new Date(from).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) });
+}
+
 export function YearReviewPage({ year }: { year: number }) {
+  return <RecapPage kind="year" start={new Date(year, 0, 1).getTime()} />;
+}
+
+export function RecapPage({ kind, start }: { kind: RecapKind; start: number }) {
   const { state, exMap } = useStore();
-  const r = useMemo(() => yearReview(state, year), [state, year]);
+  const [from, to] = periodRange(kind, start);
+  const year = new Date(from).getFullYear();
+  const r = useMemo(() => periodReview(state, from, to), [state, from, to]);
+  const title = recapTitle(kind, from);
   const unit = state.settings.unit;
   const [i, setI] = useState(0);
   const [sharing, setSharing] = useState(false);
@@ -52,7 +75,7 @@ export function YearReviewPage({ year }: { year: number }) {
       key: 'intro',
       body: (
         <>
-          <p className="yr-kicker">{t('Your year {year}', { year })}</p>
+          <p className="yr-kicker">{kind === 'year' ? t('Your year {year}', { year }) : kind === 'month' ? t('Your month: {name}', { name: title }) : title}</p>
           <p className="yr-big">{r.workouts}</p>
           <p className="yr-text">{tp(r.workouts, 'workout finished. Every one counts.', 'workouts finished. Every one counts.')}</p>
         </>
@@ -65,7 +88,7 @@ export function YearReviewPage({ year }: { year: number }) {
           <p className="yr-kicker">{t('Showing up')}</p>
           <p className="yr-big">{r.days}</p>
           <p className="yr-text">{t('days at the gym, {h} hours under the bar.', { h: fmtNum(r.hours) })}</p>
-          <p className="yr-sub">{t('Longest run: {n} weeks in a row.', { n: r.bestStreak })}</p>
+          {kind !== 'week' && <p className="yr-sub">{t('Longest run: {n} weeks in a row.', { n: r.bestStreak })}</p>}
         </>
       ),
     },
@@ -95,7 +118,7 @@ export function YearReviewPage({ year }: { year: number }) {
               </strong>
             </p>
           ))}
-          {!!r.lifts.length && <p className="yr-sub">{t('Estimated 1RM, start of the year → end of the year.')}</p>}
+          {!!r.lifts.length && <p className="yr-sub">{kind === 'year' ? t('Estimated 1RM, start of the year → end of the year.') : t('Best estimated 1RM before → during this period.')}</p>}
         </>
       ),
     },
@@ -122,7 +145,7 @@ export function YearReviewPage({ year }: { year: number }) {
           <p className="yr-big" style={{ color: rankOf(r.levelTo).color }}>
             {r.levelFrom === r.levelTo ? r.levelTo : `${r.levelFrom} → ${r.levelTo}`}
           </p>
-          <p className="yr-text">{t('{rank} at the end of the year.', { rank: t(rankOf(r.levelTo).name) })}</p>
+          <p className="yr-text">{t(kind === 'year' ? '{rank} at the end of the year.' : '{rank} at the end of the period.', { rank: t(rankOf(r.levelTo).name) })}</p>
           {!!r.newBadges.length && (
             <ul className="badge-row yr-badges">
               {BADGES.filter((b) => r.newBadges.includes(b.id)).map((b) => (
@@ -159,10 +182,10 @@ export function YearReviewPage({ year }: { year: number }) {
       key: 'end',
       body: (
         <>
-          <p className="yr-kicker">{t('See you in {year}', { year: year + 1 })}</p>
-          <p className="yr-text">{t('Share your year with your friends, and keep the streak going.')}</p>
+          <p className="yr-kicker">{kind === 'year' ? t('See you in {year}', { year: year + 1 }) : kind === 'month' ? t('See you next month') : t('See you next week')}</p>
+          <p className="yr-text">{t('Share it with your friends, and keep the streak going.')}</p>
           <button className="btn btn-primary btn-wide" onClick={(e) => { e.stopPropagation(); setSharing(true); }}>
-            <Icon name="share" size={18} /> {t('Share my year')}
+            <Icon name="share" size={18} /> {t('Share as an image')}
           </button>
         </>
       ),
@@ -173,7 +196,8 @@ export function YearReviewPage({ year }: { year: number }) {
   if (!r.workouts)
     return (
       <main className="page">
-        <p className="muted">{t('No workouts in {year}.', { year })}</p>
+        <p className="muted">{t('No workouts in this period.')}</p>
+        <button className="btn btn-wide" onClick={() => back('recap')}>{t('Back')}</button>
       </main>
     );
 
@@ -186,30 +210,30 @@ export function YearReviewPage({ year }: { year: number }) {
       <div className="yr-dots">
         {slides.map((s, k) => <span key={s.key} className={k <= i ? 'on' : ''} />)}
       </div>
-      <button className="icon-btn yr-close" aria-label={t('Close')} onClick={(e) => { e.stopPropagation(); back('profile'); }}>
+      <button className="icon-btn yr-close" aria-label={t('Close')} onClick={(e) => { e.stopPropagation(); back('recap'); }}>
         <Icon name="x" />
       </button>
       <section className="yr-slide" key={slides[i].key}>{slides[i].body}</section>
       {i < last && <p className="yr-hint muted small">{t('Tap to continue')}</p>}
-      <YearShareSheet open={sharing} onClose={() => setSharing(false)} year={year} lines={[
+      <YearShareSheet open={sharing} onClose={() => setSharing(false)} title={title} kind={kind} lines={[
         [String(r.workouts), t('Workouts')],
         [String(r.days), t('Training days')],
         [volumeText, t('Total lifted')],
         [String(r.records), t('Records')],
         [fmtNum(r.hours) + ' h', t('Time training')],
-        [String(r.bestStreak), t('Weeks in a row (best)')],
+        kind === 'week' ? [String(r.sets), t('Sets')] : [String(r.bestStreak), t('Weeks in a row (best)')],
       ]} favourite={fav} level={r.levelTo} accent={state.settings.accent ?? DEFAULT_ACCENT} author={state.profile?.name?.trim() || 'Foundry'} />
     </div>
   );
 }
 
-function YearShareSheet(p: { open: boolean; onClose: () => void; year: number; lines: [string, string][]; favourite: string | null; level: number; accent: string; author: string }) {
+function YearShareSheet(p: { open: boolean; onClose: () => void; title: string; kind: RecapKind; lines: [string, string][]; favourite: string | null; level: number; accent: string; author: string }) {
   const [blob, setBlob] = useState<Blob | null>(null);
   const url = useMemo(() => (blob ? URL.createObjectURL(blob) : ''), [blob]);
   useEffect(() => {
-    if (p.open && !blob) drawYearCard({ year: p.year, author: p.author, accent: p.accent, lines: p.lines, level: p.level, rank: rankOf(p.level), favourite: p.favourite }).then(setBlob, () => {});
+    if (p.open && !blob) drawYearCard({ title: p.title, kind: p.kind, author: p.author, accent: p.accent, lines: p.lines, level: p.level, rank: rankOf(p.level), favourite: p.favourite }).then(setBlob, () => {});
   }, [p.open]); // eslint-disable-line react-hooks/exhaustive-deps
-  const file = () => new File([blob!], `foundry-${p.year}.png`, { type: 'image/png' });
+  const file = () => new File([blob!], `foundry-${p.title.replace(/[^\w-]+/g, '-').toLowerCase()}.png`, { type: 'image/png' });
   const save = () => {
     const a = document.createElement('a');
     a.href = url;
@@ -219,18 +243,61 @@ function YearShareSheet(p: { open: boolean; onClose: () => void; year: number; l
   const share = async () => {
     if (!blob) return;
     const f = file();
-    if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: 'Foundry ' + p.year }).catch(() => {});
+    if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: 'Foundry · ' + p.title }).catch(() => {});
     else save();
   };
   return (
-    <Sheet open={p.open} onClose={p.onClose} title={t('Share my year')} tall>
+    <Sheet open={p.open} onClose={p.onClose} title={t('Share as an image')} tall>
       <div className="share-card" onClick={(e) => e.stopPropagation()}>
-        {url ? <img src={url} alt={t('My year {year}', { year: p.year })} /> : <div className="share-card-wait muted">{t('Preparing the image…')}</div>}
+        {url ? <img src={url} alt={p.title} /> : <div className="share-card-wait muted">{t('Preparing the image…')}</div>}
         <div className="sheet-actions">
           <button className="btn" onClick={save} disabled={!blob}><Icon name="download" size={18} /> {t('Save')}</button>
           <button className="btn btn-primary" onClick={share} disabled={!blob}><Icon name="share" size={18} /> {t('Share')}</button>
         </div>
       </div>
     </Sheet>
+  );
+}
+
+/** Pick a week, month or year and open its review. */
+export function RecapHub() {
+  const { state } = useStore();
+  const [kind, setKind] = useState<RecapKind>('week');
+  const [offset, setOffset] = useState(0);
+  const [from, to] = periodRange(kind, Date.now(), offset);
+  const r = useMemo(() => periodReview(state, from, to), [state, from, to]);
+  const unit = state.settings.unit;
+  return (
+    <>
+      <Header title={t('My recaps')} onBack={() => back('profile')} />
+      <main className="page">
+        <Segmented<RecapKind>
+          label={t('Period')}
+          value={kind}
+          onChange={(k) => { setKind(k); setOffset(0); }}
+          options={[
+            { value: 'week', label: t('Week') },
+            { value: 'month', label: t('Month') },
+            { value: 'year', label: t('Year') },
+          ]}
+        />
+        <div className="recap-nav">
+          <button className="icon-btn" aria-label={t('Previous')} onClick={() => setOffset(offset - 1)}><Icon name="back" /></button>
+          <strong>{recapTitle(kind, from)}</strong>
+          <button className="icon-btn recap-next" aria-label={t('Next')} disabled={offset >= 0} onClick={() => setOffset(offset + 1)}><Icon name="back" /></button>
+        </div>
+        <ul className="stat-grid panel">
+          <li><strong>{r.workouts}</strong><span className="muted small">{t('Workouts')}</span></li>
+          <li><strong>{r.days}</strong><span className="muted small">{t('Training days')}</span></li>
+          <li><strong>{fmtNum(Math.round(toDisplay(r.volume, unit) / 100) / 10)} {unit === 'kg' ? 't' : 'k lb'}</strong><span className="muted small">{t('Total lifted')}</span></li>
+          <li><strong>{r.records}</strong><span className="muted small">{t('Records')}</span></li>
+        </ul>
+        <button className="btn btn-primary btn-wide" disabled={!r.workouts} onClick={() => go(`recap/${kind}/${recapKey(from)}`)}>
+          {t('Open the recap')}
+        </button>
+        {!r.workouts && <p className="muted small center">{t('No workouts in this period.')}</p>}
+        <p className="muted small">{t('Each recap ends with an image to share. To share a single workout, open it from your history.')}</p>
+      </main>
+    </>
   );
 }

@@ -23,6 +23,8 @@ import { LevelChip } from '../components/Level';
 import { ActivityFeed } from './Feed';
 import { ChallengesPanel } from './Challenges';
 import { exerciseName, useStore } from '../store';
+import { rangeTotals } from '../socialStats';
+import { dayKey } from '../nutrition';
 import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
 
@@ -428,6 +430,7 @@ export function FriendCompare({ id }: { id: string }) {
   const f = friends.find((x) => x.profile.user_id === id);
   const theirs: PublicStats | null = f?.stats ?? null;
   const [period, setPeriod] = useState<BoardPeriod>('week');
+  const [custom, setCustom] = useState<{ from: string; to: string } | null>(null);
   const v = (s: PublicStats | null, m: BoardMetric) => metricValue(s, m, period);
   const score = (() => {
     const pairs: [number | null, number | null][] = (['days', 'goals', 'sets', 'volume', 'cardio', 'streak', 'prs', 'strength'] as BoardMetric[]).map((m) => [v(mine, m), v(theirs, m)]);
@@ -463,7 +466,52 @@ export function FriendCompare({ id }: { id: string }) {
             </button>
             {!theirs && <p className="muted small center">{t('{name} has not shared stats yet.', { name: nameOf(f.profile) })}</p>}
 
-            <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={(p) => (p === 'week' || p === '30' || requirePro('longLeaderboard')) && setPeriod(p)} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
+            <Segmented<BoardPeriod | 'custom'>
+              label={t('Period')}
+              value={custom ? 'custom' : period}
+              onChange={(p) => {
+                if (p === 'custom') return setCustom(custom ?? { from: dayKey(new Date(Date.now() - 13 * 86400000)), to: dayKey() });
+                if (p === 'week' || p === '30' || requirePro('longLeaderboard')) {
+                  setCustom(null);
+                  setPeriod(p);
+                }
+              }}
+              options={[...BOARD_PERIODS.map((p) => ({ value: p as BoardPeriod | 'custom', label: t(PERIOD_LABEL[p]) })), { value: 'custom', label: t('Dates') }]}
+            />
+            {custom ? (
+              <section className="panel">
+                <h2 className="panel-title">{t('Chosen dates')}</h2>
+                <div className="date-range">
+                  <label className="field">
+                    <span>{t('From')}</span>
+                    <input id="cmp-from" type="date" value={custom.from} max={custom.to} onChange={(e) => e.target.value && setCustom({ ...custom, from: e.target.value })} />
+                  </label>
+                  <label className="field">
+                    <span>{t('To')}</span>
+                    <input id="cmp-to" type="date" value={custom.to} min={custom.from} max={dayKey()} onChange={(e) => e.target.value && setCustom({ ...custom, to: e.target.value })} />
+                  </label>
+                </div>
+                {(() => {
+                  const a = new Date(custom.from + 'T12:00').getTime();
+                  const b = new Date(custom.to + 'T12:00').getTime();
+                  const x = rangeTotals(mine.days, a, b);
+                  const y = rangeTotals(theirs?.days, a, b);
+                  return (
+                    <>
+                      <ul className="cmp-list">
+                        <Row label={t('Training days')} a={x?.days} b={y?.days} />
+                        <Row label={t('Sets')} a={x?.sets} b={y?.sets} />
+                        <Row label={t('Volume')} a={x?.volume} b={y?.volume} fmt={(v) => fmtVolume(v, unit)} />
+                        <Row label={t('Cardio')} a={x?.cardio} b={y?.cardio} fmt={(v) => fmtDuration(v * 60000)} />
+                        <Row label={t('Records')} a={x?.records} b={y?.records} />
+                      </ul>
+                      {!y && <p className="muted small">{t('{name} needs the latest version of the app to compare over any dates.', { name: nameOf(f.profile) })}</p>}
+                      <p className="muted small">{t('Any dates within the last 12 months.')}</p>
+                    </>
+                  );
+                })()}
+              </section>
+            ) : (
             <section className="panel">
               <h2 className="panel-title">{t(PERIOD_LABEL[period])}</h2>
               <ul className="cmp-list">
@@ -483,6 +531,7 @@ export function FriendCompare({ id }: { id: string }) {
                 {period === 'week' && <Row label={t('Time')} a={mine.weekMinutes} b={theirs ? (theirs.week === mine.week ? theirs.weekMinutes : 0) : null} fmt={(x) => fmtDuration(x * 60000)} />}
               </ul>
             </section>
+            )}
 
             <section className="panel">
               <h2 className="panel-title">{t('Consistency')}</h2>

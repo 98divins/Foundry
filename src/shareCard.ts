@@ -188,7 +188,8 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
 }
 
 export interface YearCardInput {
-  year: number;
+  title: string;
+  kind: 'week' | 'month' | 'year';
   author: string;
   accent: string;
   lines: [string, string][];
@@ -218,11 +219,13 @@ export async function drawYearCard(y: YearCardInput): Promise<Blob> {
   ctx.textBaseline = 'middle';
   ctx.fillText('FOUNDRY', P + 92, 121);
   ctx.textBaseline = 'alphabetic';
-  ctx.font = `800 220px ${DISPLAY}`;
-  ctx.fillText(String(y.year), P - 8, 470);
+  ctx.font = `800 ${y.kind === 'year' ? 220 : 110}px ${DISPLAY}`;
+  const title = y.kind === 'month' ? y.title.charAt(0).toUpperCase() + y.title.slice(1) : y.title;
+  ctx.fillText(fit(ctx, title, 1080 - 2 * P), P - 4, 470);
   ctx.fillStyle = '#8e98a6';
   ctx.font = `500 40px ${BODY}`;
-  ctx.fillText(fit(ctx, t('My year of training · {name}', { name: y.author }), 1080 - 2 * P), P, 545);
+  const sub = y.kind === 'year' ? 'My year of training · {name}' : y.kind === 'month' ? 'My month of training · {name}' : 'My week of training · {name}';
+  ctx.fillText(fit(ctx, t(sub, { name: y.author }), 1080 - 2 * P), P, 545);
 
   let top = 640;
   const colW = (1080 - 2 * P - 30) / 2;
