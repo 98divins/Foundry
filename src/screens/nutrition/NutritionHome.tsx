@@ -329,7 +329,7 @@ function MealSection({
                   <button className="entry-text block-toggle" onClick={() => setOpen(open === b[0].group!.id ? null : b[0].group!.id)} aria-expanded={open === b[0].group!.id}>
                     <span className="entry-name">
                       <Icon name="chevron" size={14} /> {b[0].group!.name}
-                      {b[0].group!.servings !== 1 && <span className="muted"> × {b[0].group!.servings}</span>}
+                      {b[0].group!.servings !== 1 && <span className="muted"> × {fmtNum(b[0].group!.servings)}</span>}
                     </span>
                     <span className="muted small">
                       {t('{0} foods · P {1} · C {3} · F {4}', { 0: b.length, 1: fmtNum(Math.round(b.reduce((t, e) => t + e.protein, 0))), 3: fmtNum(Math.round(b.reduce((t, e) => t + e.carbs, 0))), 4: fmtNum(Math.round(b.reduce((t, e) => t + e.fat, 0))) })}</span>

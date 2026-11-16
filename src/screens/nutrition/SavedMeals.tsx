@@ -23,11 +23,16 @@ function MealSummary({ items, servings = 1 }: { items: MealItem[]; servings?: nu
 }
 
 /** "Meals" tab of the add-food screen: pick a saved meal and a number of servings. */
-export function SavedMealsList({ onLog }: { onLog: (sm: SavedMeal, servings: number) => void }) {
+export function SavedMealsList({ onLog, exclude, addLabel }: { onLog: (sm: SavedMeal, servings: number) => void; exclude?: string; addLabel?: string }) {
   const { n } = useNutrition();
   const [picked, setPicked] = useState<SavedMeal | null>(null);
   const [servings, setServings] = useState<number | null>(1);
-  const meals = [...n.savedMeals].sort((a, b) => a.name.localeCompare(b.name));
+  const [by, setBy] = useState<'servings' | 'grams'>('servings');
+  const [grams, setGrams] = useState<number | null>(null);
+  // Weight of the whole recipe (items logged by weight), so a sauce can be logged by the gram.
+  const recipeGrams = picked ? picked.items.reduce((a, i) => a + (i.grams ?? 0), 0) : 0;
+  const factor = by === 'grams' ? (grams && recipeGrams ? grams / recipeGrams : null) : servings;
+  const meals = n.savedMeals.filter((m) => m.id !== exclude).sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <>
@@ -43,6 +48,8 @@ export function SavedMealsList({ onLog }: { onLog: (sm: SavedMeal, servings: num
               className="food-row"
               onClick={() => {
                 setServings(1);
+                setBy('servings');
+                setGrams(null);
                 setPicked(m);
               }}
             >
@@ -56,8 +63,10 @@ export function SavedMealsList({ onLog }: { onLog: (sm: SavedMeal, servings: num
           </li>
         ))}
       </ul>
-      <button className="btn btn-wide" onClick={() => go('n/meals')}>
-        <Icon name="edit" size={16} />{' '}{t('Create or edit meals')}</button>
+      {!exclude && (
+        <button className="btn btn-wide" onClick={() => go('n/meals')}>
+          <Icon name="edit" size={16} />{' '}{t('Create or edit meals')}</button>
+      )}
 
       <Sheet open={!!picked} onClose={() => setPicked(null)} title={picked?.name}>
         {picked && (
@@ -65,8 +74,8 @@ export function SavedMealsList({ onLog }: { onLog: (sm: SavedMeal, servings: num
             className="form"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!servings) return;
-              onLog(picked, servings);
+              if (!factor) return;
+              onLog(picked, Math.round(factor * 1000) / 1000);
               setPicked(null);
             }}
           >
@@ -75,28 +84,54 @@ export function SavedMealsList({ onLog }: { onLog: (sm: SavedMeal, servings: num
                 <li key={k}>
                   <span>{i.name}</span>
                   <span className="muted small">
-                    {i.grams != null ? `${fmtNum(Math.round(i.grams * (servings ?? 1)))} g` : t('quick add')}
+                    {i.grams != null ? `${fmtNum(Math.round(i.grams * (factor ?? 1)))} g` : t('quick add')}
                   </span>
                 </li>
               ))}
             </ul>
+            {recipeGrams > 0 && (
+              <Segmented<'servings' | 'grams'>
+                label={t('Amount')}
+                value={by}
+                onChange={(v) => {
+                  if (v === 'grams' && !grams) setGrams(Math.round(recipeGrams * (servings ?? 1)));
+                  setBy(v);
+                }}
+                options={[
+                  { value: 'servings', label: t('Servings') },
+                  { value: 'grams', label: t('Grams') },
+                ]}
+              />
+            )}
+            {by === 'grams' && recipeGrams > 0 ? (
+              <>
+                <label className="field">
+                  <span>{t('Grams eaten')}</span>
+                  <NumInput id="meal-grams" label={t('Grams eaten')} value={grams} onChange={setGrams} />
+                </label>
+                <p className="muted small">{t('The whole recipe weighs {g} g. Weigh your portion and enter it here.', { g: fmtNum(Math.round(recipeGrams)) })}</p>
+              </>
+            ) : (
+              <>
             <div className="chips wrap">
-              {SERVINGS.map((s) => (
-                <button type="button" key={s} className={'chip' + (servings === s ? ' on' : '')} onClick={() => setServings(s)}>
-                  {s === 1 ? t('1 serving') : t('{n} servings', { n: s })}
-                </button>
-              ))}
-            </div>
-            <label className="field">
-              <span>{t('Servings')}</span>
-              <NumInput id="meal-servings" label={t('Servings')} value={servings} onChange={setServings} />
-            </label>
+                {SERVINGS.map((s) => (
+                  <button type="button" key={s} className={'chip' + (servings === s ? ' on' : '')} onClick={() => setServings(s)}>
+                    {s === 1 ? t('1 serving') : t('{n} servings', { n: s })}
+                  </button>
+                ))}
+              </div>
+              <label className="field">
+                <span>{t('Servings')}</span>
+                <NumInput id="meal-servings" label={t('Servings')} value={servings} onChange={setServings} />
+              </label>
+              </>
+            )}
             <p className="macro-line">
-              <MealSummary items={picked.items} servings={servings ?? 0} />
+              <MealSummary items={picked.items} servings={factor ?? 0} />
             </p>
             <div className="sheet-actions">
               <button type="button" className="btn" onClick={() => setPicked(null)}>{t('Cancel')}</button>
-              <button type="submit" className="btn btn-primary" disabled={!servings}>{t('Log meal')}</button>
+              <button type="submit" className="btn btn-primary" disabled={!factor}>{addLabel ?? t('Log meal')}</button>
             </div>
           </form>
         )}
@@ -215,6 +250,7 @@ export function MealsPage() {
 /** Edit a saved meal (#/n/meals/<id>). */
 export function MealEditor({ id }: { id: string }) {
   const { n, setN } = useNutrition();
+  const [addingMeal, setAddingMeal] = useState(false);
   const cloud = useCloud();
   const { state } = useStore();
   const sm = n.savedMeals.find((m) => m.id === id);
@@ -340,6 +376,23 @@ export function MealEditor({ id }: { id: string }) {
             </>
           )}
         </section>
+
+        <button className="btn btn-wide" onClick={() => setAddingMeal(true)}>
+          <Icon name="plus" size={16} /> {t('Add a saved meal (sauce, base…)')}
+        </button>
+        <Sheet open={addingMeal} onClose={() => setAddingMeal(false)} title={t('Add a saved meal')} tall>
+          <SavedMealsList
+            exclude={id}
+            addLabel={t('Add to meal')}
+            onLog={(sm, k) => {
+              const tot = mealTotals(sm.items, k);
+              const g = sm.items.reduce((a, i) => a + (i.grams ?? 0), 0) * k;
+              setDraft({ ...draft, items: [...draft.items, { foodId: 'meal-' + sm.id, name: sm.name, grams: g > 0 ? Math.round(g) : null, ...tot }] });
+              setAddingMeal(false);
+              setSaved('');
+            }}
+          />
+        </Sheet>
 
         {loggings > 0 && (
           <label className="toggle-line retro">
