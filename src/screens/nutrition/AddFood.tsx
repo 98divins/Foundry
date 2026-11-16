@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BarcodeScanner } from '../../components/BarcodeScanner';
 import { Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { back } from '../../hooks';
@@ -17,6 +17,8 @@ import {
   type NutritionState,
 } from '../../nutrition';
 import { SavedMealsList } from './SavedMeals';
+import { useCloud } from '../../cloud/cloud';
+import { communityFoodByBarcode, publishFood, searchCommunityFoods } from '../../cloud/social';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { fmtDay } from './NutritionHome';
@@ -26,6 +28,7 @@ type Mode = 'search' | 'meals' | 'scan' | 'quick' | 'create';
 
 export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal }) {
   const { n, setN } = useNutrition();
+  const cloud = useCloud();
   const [mode, setMode] = useState<Mode>('search');
   const [meal, setMeal] = useState<Meal>(MEALS.includes(initialMeal) ? initialMeal : 'snacks');
   const [picked, setPicked] = useState<Food | null>(null);
@@ -88,8 +91,9 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
         {mode === 'quick' && <QuickAdd onAdd={(e) => log(e)} />}
         {mode === 'create' && (
           <CreateFood
-            onCreate={(f) => {
+            onCreate={(f, share) => {
               setN((x) => ({ ...x, foods: [...x.foods, f] }));
+              if (share && cloud.user) publishFood(cloud.user.id, f).catch(() => {});
               setPicked(f);
               setMode('search');
             }}
@@ -177,6 +181,17 @@ export function SearchFoods({
   // Favourites first among matches.
   results.sort((a, b) => Number(isFav(b)) - Number(isFav(a)));
   const more = query.trim() && generic ? searchFoods(generic, query, 30).filter((f) => !results.includes(f)) : [];
+  // Foods created by other members, searched as you type (after a short pause).
+  const [community, setCommunity] = useState<{ q: string; foods: Food[] } | null>(null);
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) return;
+    const id = setTimeout(() => {
+      searchCommunityFoods(q).then((foods) => setCommunity({ q, foods: foods.filter((f) => !local.some((l) => l.id === f.id)) }), () => {});
+    }, 350);
+    return () => clearTimeout(id);
+  }, [query, local]);
+  const communityShown = community && community.q === query.trim() ? community.foods : [];
 
   const loadMore = async () => {
     setBusy('generic');
@@ -262,7 +277,17 @@ export function SearchFoods({
               <FoodRow key={f.id} food={f} onPick={onPick} />
             ))}
           </ul>
-          {!results.length && !more.length && <p className="muted small">{t('No match in your foods or the French list.')}</p>}
+          {communityShown.length > 0 && (
+            <>
+              <h3 className="list-title">{t('Community')}</h3>
+              <ul className="food-list">
+                {communityShown.map((f) => (
+                  <FoodRow key={f.id} food={f} onPick={onPick} />
+                ))}
+              </ul>
+            </>
+          )}
+          {!results.length && !more.length && !communityShown.length && <p className="muted small">{t('No match in your foods or the French list.')}</p>}
           <div className="search-more">
             {!generic && (
               <button className="btn" onClick={loadMore} disabled={busy !== ''}>
@@ -313,7 +338,7 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
       if (mine) return onPick(mine);
       setStatus({ text: t('Looking up {code}…', { code: c }) });
       try {
-        const food = await offByBarcode(c);
+        const food = (await communityFoodByBarcode(c).catch(() => null)) ?? (await offByBarcode(c));
         if (food) {
           setStatus(null);
           onPick(food);
@@ -407,7 +432,8 @@ function QuickAdd({ onAdd }: { onAdd: (e: Omit<FoodEntry, 'id' | 'date' | 'meal'
   );
 }
 
-function CreateFood({ onCreate }: { onCreate: (f: Food) => void }) {
+function CreateFood({ onCreate }: { onCreate: (f: Food, share: boolean) => void }) {
+  const [share, setShare] = useState(true);
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [v, setV] = useState<{ kcal: number | null; protein: number | null; carbs: number | null; fat: number | null }>({
@@ -433,7 +459,7 @@ function CreateFood({ onCreate }: { onCreate: (f: Food) => void }) {
           serving: serving.grams ? { label: serving.label.trim() || t('1 portion'), grams: serving.grams } : null,
           source: 'custom',
           barcode: barcode || undefined,
-        });
+        }, share);
       }}
     >
       <label className="field">
@@ -482,6 +508,10 @@ function CreateFood({ onCreate }: { onCreate: (f: Food) => void }) {
       <label className="field">
         <span>{t('Barcode (optional)')}</span>
         <input id="new-food-barcode" inputMode="numeric" value={barcode} onChange={(e) => setBarcode(e.target.value.replace(/\D/g, ''))} />
+      </label>
+      <label className="toggle-line">
+        <input id="new-food-share" type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
+        <span className="small">{t('Add it to the shared food list so every member can find it')}</span>
       </label>
       <button className="btn btn-primary btn-wide" type="submit" disabled={!name.trim() || kcal == null}>{t('Create and choose the amount')}</button>
     </form>

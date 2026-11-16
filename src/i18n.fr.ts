@@ -44,6 +44,7 @@ export const FR: Record<string, string> = {
   "Add exercise": "Ajouter un exercice",
   "Add exercises": "Ajouter des exercices",
   "Add food to {meal}": "Ajouter un aliment ({meal})",
+  "Add it to the shared food list so every member can find it": "L’ajouter à la base commune pour que tous les membres puissent le trouver",
   "Add note": "Ajouter une note",
   "Add routines": "Ajouter les routines",
   "Add set": "Ajouter une série",

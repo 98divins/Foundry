@@ -224,3 +224,52 @@ export async function loadSharedMeals(uid: string, limit = 60): Promise<SharedMe
   check(error);
   return (data ?? []) as SharedMeal[];
 }
+
+/* ---------- Community foods (supabase/community_foods.sql) ---------- */
+
+type FoodRow = { id: string; name: string; brand: string | null; barcode: string | null; kcal: number; protein: number; carbs: number; fat: number; serving_label: string | null; serving_grams: number | null };
+const rowToFood = (r: FoodRow): import('../nutrition').Food => ({
+  id: r.id,
+  name: r.name,
+  brand: r.brand ?? undefined,
+  barcode: r.barcode ?? undefined,
+  per100: { kcal: r.kcal, protein: r.protein, carbs: r.carbs, fat: r.fat },
+  serving: r.serving_label && r.serving_grams ? { label: r.serving_label, grams: r.serving_grams } : null,
+  source: 'custom',
+});
+
+/** Add a food the user created to the shared database. */
+export async function publishFood(uid: string, f: import('../nutrition').Food) {
+  const { error } = await (await sb()).from('community_foods').upsert({
+    id: f.id,
+    user_id: uid,
+    name: f.name.slice(0, 80),
+    brand: f.brand?.slice(0, 60) ?? null,
+    barcode: f.barcode && /^[0-9]{8,14}$/.test(f.barcode) ? f.barcode : null,
+    kcal: f.per100.kcal,
+    protein: f.per100.protein,
+    carbs: f.per100.carbs,
+    fat: f.per100.fat,
+    serving_label: f.serving?.label?.slice(0, 40) ?? null,
+    serving_grams: f.serving?.grams ?? null,
+  });
+  check(error);
+}
+
+/** Foods from the shared database whose name contains every word typed. */
+export async function searchCommunityFoods(query: string, limit = 20): Promise<import('../nutrition').Food[]> {
+  const words = query.trim().split(/\s+/).filter((w) => w.length >= 2).slice(0, 4);
+  if (!words.length) return [];
+  let q = (await sb()).from('community_foods').select('id, name, brand, barcode, kcal, protein, carbs, fat, serving_label, serving_grams');
+  for (const w of words) q = q.ilike('name', `%${w.replace(/[%_,()]/g, '')}%`);
+  const { data, error } = await q.order('uses', { ascending: false }).limit(limit);
+  check(error);
+  return ((data ?? []) as FoodRow[]).map(rowToFood);
+}
+
+export async function communityFoodByBarcode(code: string): Promise<import('../nutrition').Food | null> {
+  const { data, error } = await (await sb()).from('community_foods').select('id, name, brand, barcode, kcal, protein, carbs, fat, serving_label, serving_grams').eq('barcode', code).limit(1);
+  check(error);
+  const r = (data ?? [])[0] as FoodRow | undefined;
+  return r ? rowToFood(r) : null;
+}
