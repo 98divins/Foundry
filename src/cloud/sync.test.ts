@@ -17,10 +17,10 @@ describe('sync decisions', () => {
     expect(loginAction(emptyMeta(), 'u1', empty, remote)).toBe('download');
   });
 
-  it('merges when both a used phone and the account hold data for the first time', () => {
-    expect(loginAction(emptyMeta(), 'u1', withData, remote)).toBe('merge');
-    // Same phone, other account: also merge.
-    expect(loginAction({ ...emptyMeta(), userId: 'u2', remoteUpdatedAt: remote.updatedAt }, 'u1', withData, remote)).toBe('merge');
+  it('never merges another account’s data: takes the account copy when both a used phone and the account hold data for the first time', () => {
+    expect(loginAction(emptyMeta(), 'u1', withData, remote)).toBe('download');
+    // Same phone, other account: the account copy wins, the other account's data is not merged in.
+    expect(loginAction({ ...emptyMeta(), userId: 'u2', remoteUpdatedAt: remote.updatedAt }, 'u1', withData, remote)).toBe('download');
   });
 
   it('same account again: uploads its own changes, takes the cloud when only the cloud moved', () => {
@@ -46,5 +46,14 @@ describe('timestamps from Postgres', () => {
     expect(sameTime('2026-11-14T17:15:16.123+00:00', meta.remoteUpdatedAt)).toBe(true);
     expect(refreshAction(meta, '2026-11-14T17:15:16.123+00:00')).toBe('upload');
     expect(refreshAction(meta, '2026-11-14T17:20:00+00:00')).toBe('merge');
+  });
+});
+
+describe('switching accounts on one phone', () => {
+  it('a brand-new account does not inherit the previous account’s data', async () => {
+    const { belongsToOtherAccount } = await import('./sync');
+    expect(belongsToOtherAccount({ ...emptyMeta(), userId: 'u2' }, 'u1')).toBe(true);
+    expect(belongsToOtherAccount(emptyMeta(), 'u1')).toBe(false);
+    expect(belongsToOtherAccount({ ...emptyMeta(), userId: 'u1' }, 'u1')).toBe(false);
   });
 });

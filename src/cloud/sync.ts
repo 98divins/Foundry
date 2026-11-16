@@ -64,19 +64,25 @@ export type SyncAction = 'upload' | 'download' | 'merge' | 'none';
 
 /**
  * What to do right after signing in (the account already has a copy).
- * - This device has nothing: take the account copy.
+ * - This device has nothing, or holds data that is not this account's (another account, or data
+ *   from before accounts existed): take the account copy. Data never moves from one account to another.
  * - Same account, nothing unsent: take the account copy if it changed.
  * - Same account, unsent changes and the account unchanged: send them.
- * - Anything else (changes on both sides, or data from before this login): merge both, never ask.
+ * - Same account, changes on both sides: merge both, never ask.
  */
 export function loginAction(meta: SyncMeta, userId: string, local: State, remote: { updatedAt: string }): SyncAction {
-  if (!hasData(local)) return 'download';
-  if (meta.userId === userId) {
-    const remoteChanged = !sameTime(remote.updatedAt, meta.remoteUpdatedAt);
-    if (!meta.dirty) return remoteChanged ? 'download' : 'none';
-    return remoteChanged ? 'merge' : 'upload';
-  }
-  return 'merge';
+  if (!hasData(local) || meta.userId !== userId) return 'download';
+  const remoteChanged = !sameTime(remote.updatedAt, meta.remoteUpdatedAt);
+  if (!meta.dirty) return remoteChanged ? 'download' : 'none';
+  return remoteChanged ? 'merge' : 'upload';
+}
+
+/**
+ * A new account (no copy in the cloud yet) signing in on a device that holds another account's data:
+ * start empty instead of handing that data to the new account.
+ */
+export function belongsToOtherAccount(meta: SyncMeta, userId: string): boolean {
+  return meta.userId != null && meta.userId !== userId;
 }
 
 /** After changes, when the app comes back to the foreground, or when the network returns. */

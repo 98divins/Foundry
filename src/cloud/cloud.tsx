@@ -4,7 +4,7 @@ import { defaultState, parseBackup, useStore } from '../store';
 import type { State } from '../types';
 import { appUrl, cloudConfigured, SUPABASE_KEY, SUPABASE_URL } from './config';
 import { mergeStates } from './merge';
-import { emptyMeta, hasData, loadMeta, loginAction, refreshAction, saveMeta, type SyncMeta } from './sync';
+import { belongsToOtherAccount, emptyMeta, hasData, loadMeta, loginAction, refreshAction, saveMeta, type SyncMeta } from './sync';
 import { t } from '../i18n';
 
 export type SyncStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error';
@@ -166,7 +166,15 @@ export function CloudProvider({ children }: { children: ReactNode }) {
         const head = await fetchRemote(uid, false);
         const meta = metaRef.current;
         if (!head) {
-          // No copy in the account yet (new account): this device's data becomes it.
+          // No copy in the account yet (new account). Another account's data on this device stays out
+          // of it; data from before accounts existed becomes the new account's.
+          if (belongsToOtherAccount(meta, uid)) {
+            applyingRemote.current = true;
+            stateRef.current = defaultState();
+            replace(stateRef.current);
+            setMeta({ ...emptyMeta(), userId: uid, lastSyncAt: Date.now() });
+            return;
+          }
           if (!hasData(stateRef.current) && !meta.dirty) {
             setMeta({ ...meta, userId: uid, remoteUpdatedAt: null, lastSyncAt: Date.now() });
             return;
