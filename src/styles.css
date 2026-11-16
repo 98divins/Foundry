@@ -3602,3 +3602,8 @@ a.btn.disabled {
   line-height: 18px;
   text-align: center;
 }
+.shared-tag {
+  margin-left: 8px;
+  vertical-align: 2px;
+  font-size: 11px;
+}

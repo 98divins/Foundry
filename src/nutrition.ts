@@ -66,6 +66,8 @@ export interface SavedMeal {
   name: string;
   items: MealItem[];
   updatedAt: number;
+  /** Shared with other members (shown in Meals → Explore → Community). */
+  shared?: boolean;
 }
 
 /** One ingredient of a saved meal, for one serving of the meal. */

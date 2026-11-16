@@ -1,10 +1,12 @@
 import { PlanSheet } from './PlanSheet';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Confirm, Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { ideaItems, MEAL_IDEAS, type IdeaTag, type MealIdea } from '../../mealIdeas';
 import { back, go } from '../../hooks';
 import { applyMealToLog, entriesFromMeal, mealTotals, scaleFood, type Food, type MealItem, type SavedMeal } from '../../nutrition';
-import { useNutrition } from '../../store';
+import { useNutrition, useStore } from '../../store';
+import { useCloud } from '../../cloud/cloud';
+import { loadSharedMeals, shareMeal, SocialNotReady, unshareMeal, type SharedMeal } from '../../cloud/social';
 import { fmtNum, uid } from '../../utils';
 import { AmountSheet, SearchFoods, toggleFavorite } from './AddFood';
 import { t, tk, tp } from '../../i18n';
@@ -108,6 +110,7 @@ export function MealsPage() {
   const [planning, setPlanning] = useState<SavedMeal | null>(null);
   const [tab, setTab] = useState<'mine' | 'explore'>(n.savedMeals.length ? 'mine' : 'explore');
   const [added, setAdded] = useState<string[]>([]);
+  const [source, setSource] = useState<'ideas' | 'community'>('ideas');
   return (
     <>
       <Header title={t('Meals')} onBack={() => back('n')} />
@@ -122,6 +125,27 @@ export function MealsPage() {
           ]}
         />
         {tab === 'explore' ? (
+          <>
+          <Segmented<'ideas' | 'community'>
+            label={t('Source')}
+            value={source}
+            onChange={setSource}
+            options={[
+              { value: 'ideas', label: t('Foundry ideas') },
+              { value: 'community', label: t('Community') },
+            ]}
+          />
+          {source === 'community' ? (
+            <CommunityMeals
+              added={added}
+              onAdd={(m) => {
+                const id = uid();
+                setN((x) => ({ ...x, savedMeals: [...x.savedMeals, { id, name: m.name, items: m.items, updatedAt: Date.now() }] }));
+                setAdded((a) => [...a, m.user_id + m.meal_id]);
+              }}
+              onPlan={(m) => setPlanning({ id: 'idea-' + m.meal_id, name: m.name, items: m.items, updatedAt: 0 })}
+            />
+          ) : (
           <MealIdeasList
             added={added}
             onAdd={(idea) => {
@@ -131,6 +155,8 @@ export function MealsPage() {
             }}
             onPlan={(idea) => setPlanning({ id: 'idea-' + idea.id, name: t(idea.name), items: ideaItems(idea), updatedAt: 0 })}
           />
+          )}
+          </>
         ) : (
         <>
         <button
@@ -151,7 +177,10 @@ export function MealsPage() {
                 <div className="entry-line">
                   <button className="food-row" onClick={() => go('n/meals/' + m.id)}>
                     <span className="entry-text">
-                      <span className="entry-name">{m.name}</span>
+                      <span className="entry-name">
+                        {m.name}
+                        {m.shared && <span className="tag shared-tag">{t('Shared')}</span>}
+                      </span>
                       <MealSummary items={m.items} />
                     </span>
                     <Icon name="chevron" size={18} />
@@ -182,6 +211,8 @@ export function MealsPage() {
 /** Edit a saved meal (#/n/meals/<id>). */
 export function MealEditor({ id }: { id: string }) {
   const { n, setN } = useNutrition();
+  const cloud = useCloud();
+  const { state } = useStore();
   const sm = n.savedMeals.find((m) => m.id === id);
   const [draft, setDraft] = useState<SavedMeal | null>(sm ?? null);
   const [adding, setAdding] = useState(false);
@@ -217,6 +248,12 @@ export function MealEditor({ id }: { id: string }) {
     });
     setSaved(retro ? tp(changed || loggings, 'Saved. {n} past logging updated too.', 'Saved. {n} past loggings updated too.') : t('Saved. Days already logged keep what you ate then.'));
     setRetro(false);
+    // Keep the community copy in step with the meal.
+    if (cloud.user) {
+      const author = state.profile?.name?.trim() || t('A member');
+      const job = next.shared ? shareMeal(cloud.user.id, next, author) : sm?.shared ? unshareMeal(cloud.user.id, next.id) : null;
+      job?.catch((e: Error) => setSaved(t('Saved on your account, but sharing failed: {e}', { e: e.message })));
+    }
   };
 
   return (
@@ -232,6 +269,14 @@ export function MealEditor({ id }: { id: string }) {
         <label className="field">
           <span>{t('Meal name')}</span>
           <input id="meal-name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+        </label>
+        <label className="setting panel">
+          <span>
+            {t('Share with the community')}
+            <br />
+            <span className="muted small">{draft.shared ? t('Other members see this meal in Meals → Explore → Community, with your first name.') : t('Private: only you see this meal.')}</span>
+          </span>
+          <input id="meal-shared" type="checkbox" className="switch" checked={!!draft.shared} onChange={(e) => setDraft({ ...draft, shared: e.target.checked })} />
         </label>
         <section className="panel">
           <div className="meal-head">
@@ -327,6 +372,7 @@ export function MealEditor({ id }: { id: string }) {
         danger
         onConfirm={() => {
           setN((x) => ({ ...x, savedMeals: x.savedMeals.filter((m) => m.id !== id) }));
+          if (sm?.shared && cloud.user) unshareMeal(cloud.user.id, id).catch(() => {});
           go('n/meals', { replace: true });
         }}
         onClose={() => setConfirmDelete(false)}
@@ -370,6 +416,62 @@ function MealIdeasList({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: M
                 <div className="btn-grid">
                   <button className="btn btn-small" disabled={added.includes(m.id)} onClick={() => onAdd(m)}>
                     {added.includes(m.id) ? t('Added to My meals') : t('Add to My meals')}
+                  </button>
+                  <button className="btn btn-small btn-primary" onClick={() => onPlan(m)}>
+                    {t('Plan it')}
+                  </button>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
+/** Meals other members chose to share. */
+function CommunityMeals({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: SharedMeal) => void; onPlan: (m: SharedMeal) => void }) {
+  const cloud = useCloud();
+  const [meals, setMeals] = useState<SharedMeal[] | null>(null);
+  const [error, setError] = useState('');
+  const [q, setQ] = useState('');
+  useEffect(() => {
+    if (!cloud.user) return;
+    loadSharedMeals(cloud.user.id).then(setMeals, (e: Error) => {
+      setError(e instanceof SocialNotReady ? t('Community meals are not switched on on the server yet.') : e.message);
+      setMeals([]);
+    });
+  }, [cloud.user]);
+  const query = q.trim().toLowerCase();
+  const shown = (meals ?? []).filter((m) => !query || m.name.toLowerCase().includes(query) || m.items.some((i) => i.name.toLowerCase().includes(query)));
+  return (
+    <>
+      <p className="muted small">{t('Meals shared by other members. Share yours from its edit page.')}</p>
+      {meals && meals.length > 4 && (
+        <label className="search">
+          <Icon name="search" size={18} />
+          <input id="community-search" type="search" placeholder={t('Search a meal or an ingredient')} value={q} onChange={(e) => setQ(e.target.value)} />
+        </label>
+      )}
+      {meals === null && <p className="muted">{t('Loading…')}</p>}
+      {error && <p className="field-error small">{error}</p>}
+      {meals && !meals.length && !error && <div className="empty-card"><p>{t('No shared meal yet. Be the first: open one of your meals and switch on Share with the community.')}</p></div>}
+      <ul className="routine-list">
+        {shown.map((m) => {
+          const key = m.user_id + m.meal_id;
+          return (
+            <li key={key}>
+              <div className="program-card">
+                <span className="program-tags small">
+                  <span className="muted">{t('By {name}', { name: m.author || t('A member') })}</span>
+                </span>
+                <span className="program-name">{m.name}</span>
+                <MealSummary items={m.items} />
+                <span className="small muted">{m.items.map((i) => (i.grams != null ? `${i.name} ${fmtNum(i.grams)} g` : i.name)).join(' · ')}</span>
+                <div className="btn-grid">
+                  <button className="btn btn-small" disabled={added.includes(key)} onClick={() => onAdd(m)}>
+                    {added.includes(key) ? t('Added to My meals') : t('Add to My meals')}
                   </button>
                   <button className="btn btn-small btn-primary" onClick={() => onPlan(m)}>
                     {t('Plan it')}

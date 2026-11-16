@@ -181,3 +181,46 @@ export async function watchFriendships(uid: string, onChange: () => void): Promi
     c.removeChannel(ch);
   };
 }
+
+export interface SharedMeal {
+  user_id: string;
+  meal_id: string;
+  author: string;
+  name: string;
+  items: import('../nutrition').MealItem[];
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  updated_at: string;
+}
+
+/** Publish (or update) one of the user's meals for other members. */
+export async function shareMeal(uid: string, meal: { id: string; name: string; items: import('../nutrition').MealItem[] }, author: string) {
+  const tot = meal.items.reduce((a, i) => ({ kcal: a.kcal + i.kcal, protein: a.protein + i.protein, carbs: a.carbs + i.carbs, fat: a.fat + i.fat }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  const { error } = await (await sb()).from('shared_meals').upsert({
+    user_id: uid,
+    meal_id: meal.id,
+    author: author.slice(0, 40),
+    name: meal.name.slice(0, 80),
+    items: meal.items.slice(0, 40).map(({ foodId, name, brand, grams, kcal, protein, carbs, fat }) => ({ foodId, name, brand, grams, kcal, protein, carbs, fat })),
+    kcal: Math.round(tot.kcal),
+    protein: Math.round(tot.protein * 10) / 10,
+    carbs: Math.round(tot.carbs * 10) / 10,
+    fat: Math.round(tot.fat * 10) / 10,
+    updated_at: new Date().toISOString(),
+  });
+  check(error);
+}
+
+export async function unshareMeal(uid: string, mealId: string) {
+  const { error } = await (await sb()).from('shared_meals').delete().eq('user_id', uid).eq('meal_id', mealId);
+  check(error);
+}
+
+/** The most recent meals shared by other members. */
+export async function loadSharedMeals(uid: string, limit = 60): Promise<SharedMeal[]> {
+  const { data, error } = await (await sb()).from('shared_meals').select('*').neq('user_id', uid).order('updated_at', { ascending: false }).limit(limit);
+  check(error);
+  return (data ?? []) as SharedMeal[];
+}
