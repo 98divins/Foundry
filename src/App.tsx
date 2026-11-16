@@ -25,6 +25,7 @@ import { StreakToast } from './components/StreakToast';
 import { StatsPublisher } from './components/StatsPublisher';
 import { ProSheet } from './components/ProSheet';
 import { LevelsPage } from './screens/Levels';
+import { IntervalEditor, IntervalRun } from './screens/IntervalTimer';
 import { parseKey, RecapHub, RecapPage, YearReviewPage } from './screens/YearReview';
 import { LevelUpToast } from './components/LevelUpToast';
 import { ActivityPublisher } from './components/ActivityPublisher';
@@ -150,6 +151,12 @@ export function App() {
       break;
     case 'year':
       screen = <YearReviewPage key={param} year={Number(param) || new Date().getFullYear()} />;
+      break;
+    case 'ti':
+      screen = <IntervalEditor key={param + (extra ?? '')} id={param ?? 'new'} folderId={extra} />;
+      break;
+    case 'timer':
+      screen = <IntervalRun key={param} id={param ?? ''} />;
       break;
     case 'levels':
       screen = <LevelsPage />;

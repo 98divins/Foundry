@@ -9,8 +9,13 @@ import { ShareResult, useShareLink } from '../components/Share';
 import { StreakChip } from '../components/StreakToast';
 import { t, tp } from '../i18n';
 import { canAdd, requirePro } from '../pro';
+import { planSummary } from '../intervals';
 
 export function startWorkout(update: (fn: (s: State) => State) => void, routine?: Routine) {
+  if (routine?.interval) {
+    go('timer/' + routine.id);
+    return;
+  }
   update((s) => {
     if (s.active) return s;
     const now = Date.now();
@@ -40,6 +45,7 @@ const inFolder = (r: Routine, folders: RoutineFolder[], folderId: string | undef
 
 export function WorkoutTab() {
   const { state, update } = useStore();
+  const [newIn, setNewIn] = useState<{ folderId?: string } | null>(null);
   const { active, routines, folders, workouts } = state;
   const now = useNow(1000, !!active);
   const thisWeek = workouts.filter((w) => w.endedAt && w.startedAt >= weekStart(Date.now()));
@@ -204,7 +210,7 @@ export function WorkoutTab() {
             <Icon name="list" size={18} />{' '}{t('Exercises')}</button>
         </div>
         <div className="routine-entry">
-          <button className="btn" onClick={() => canAdd('routines', state.routines.length) && go('r/new')}>
+          <button className="btn" onClick={() => canAdd('routines', state.routines.length) && setNewIn({})}>
             <Icon name="plus" size={18} />{' '}{t('New routine')}</button>
           <button className="btn" onClick={() => go('explore')}>
             <Icon name="search" size={18} />{' '}{t('Explore programs')}</button>
@@ -221,7 +227,25 @@ export function WorkoutTab() {
           </div>
         </div>
         {active && routines.length > 0 && <p className="muted small">{t('Finish the workout in progress to start a routine.')}</p>}
-        <ShareResult shared={shared} onClose={clear} />
+        <Sheet open={!!newIn} onClose={() => setNewIn(null)} title={t('New routine')}>
+        <div className="menu">
+          <button className="menu-item routine-kind" onClick={() => { const f = newIn?.folderId; setNewIn(null); go('r/new' + (f ? '/' + f : '')); }}>
+            <Icon name="dumbbell" size={22} />
+            <span>
+              <strong>{t('Strength training')}</strong>
+              <span className="muted small">{t('Exercises with sets, reps and weights.')}</span>
+            </span>
+          </button>
+          <button className="menu-item routine-kind" onClick={() => { const f = newIn?.folderId; setNewIn(null); go('ti/new' + (f ? '/' + f : '')); }}>
+            <Icon name="timer" size={22} />
+            <span>
+              <strong>{t('Intervals (timer)')}</strong>
+              <span className="muted small">{t('HIIT, Tabata, circuits, run/walk: work, rest, rounds and cycles.')}</span>
+            </span>
+          </button>
+        </div>
+      </Sheet>
+      <ShareResult shared={shared} onClose={clear} />
 
         {folders.map((f) => {
           const list = routines.filter((r) => inFolder(r, folders, f.id));
@@ -246,7 +270,7 @@ export function WorkoutTab() {
               {!f.collapsed && (
                 <>
                   {renderRoutines(list)}
-                  <button className="add-in-folder" onClick={() => canAdd('routines', state.routines.length) && go('r/new/' + f.id)}>
+                  <button className="add-in-folder" onClick={() => canAdd('routines', state.routines.length) && setNewIn({ folderId: f.id })}>
                     <Icon name="plus" size={15} />{' '}{t('New routine in')}{' '}{f.name}
                   </button>
                 </>
@@ -300,7 +324,7 @@ export function WorkoutTab() {
       <Sheet open={!!folderMenu} onClose={() => setFolderMenu(null)} title={folderMenu?.name}>
         {folderMenu && (
           <div className="menu">
-            <button className="menu-item" onClick={() => { if (canAdd('routines', state.routines.length)) go('r/new/' + folderMenu.id); setFolderMenu(null); }}>
+            <button className="menu-item" onClick={() => { if (canAdd('routines', state.routines.length)) setNewIn({ folderId: folderMenu.id }); setFolderMenu(null); }}>
               <Icon name="plus" size={18} />{' '}{t('New routine in this folder')}</button>
             <button
               className="menu-item"
@@ -505,10 +529,12 @@ function RoutineRow({
   const { exMap } = useStore();
   return (
     <li className="routine">
-      <button className="routine-body" onClick={() => go('rv/' + r.id)} aria-label={t('Open {name}', { name: r.name })}>
-        <span className="routine-name">{r.name}</span>
+      <button className="routine-body" onClick={() => go((r.interval ? 'ti/' : 'rv/') + r.id)} aria-label={t('Open {name}', { name: r.name })}>
+        <span className="routine-name">{r.interval && <Icon name="timer" size={15} />} {r.name}</span>
         <span className="muted small routine-ex">
-          {r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ') || t('No exercises yet')}
+          {r.interval
+            ? planSummary(r.interval, t)
+            : r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ') || t('No exercises yet')}
         </span>
       </button>
       <button className="icon-btn" aria-label={t('Options for {name}', { name: r.name })} onClick={onMenu}>

@@ -106,6 +106,8 @@ export interface Routine {
   updatedAt: number;
   /** Folder the routine is filed in; none means "My routines". */
   folderId?: string;
+  /** An interval (timer) routine instead of sets: see intervals.ts. */
+  interval?: import('./intervals').IntervalPlan;
 }
 
 export interface RoutineFolder {
