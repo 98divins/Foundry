@@ -4459,3 +4459,30 @@ a.btn.disabled {
   gap: 8px;
   margin: 32px 0 20px;
 }
+.theme-preview {
+  display: flex !important;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch !important;
+}
+.theme-preview-tag {
+  align-self: flex-start;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--muted);
+}
+.theme-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.theme-preview-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.theme-preview-btn {
+  pointer-events: none;
+}

@@ -471,21 +471,40 @@ function ThemePage() {
           </span>{t('Custom')}<input type="color" value={accent} aria-label={t('Custom colour')} onChange={(e) => requirePro('customTheme') && set('accent', e.target.value)} />
         </label>
       </div>
-      <div className="theme-preview">
-        <Avatar size={40} />
-        <span className="small">{t('Preview')}<br />
-          <span className="muted">{t('Colours adjust a little in light and dark mode to stay readable.')}</span>
-        </span>
-        <span className="btn btn-primary">{t('Start')}</span>
+      <div className="theme-preview" aria-label={t('Preview')}>
+        <span className="theme-preview-tag small">{t('Preview')}</span>
+        <div className="theme-preview-row">
+          <Avatar size={40} />
+          <span className="theme-preview-text">
+            <strong>{t('Push day')}</strong>
+            <span className="xp-bar"><span style={{ width: '65%', background: 'var(--accent)' }} /></span>
+          </span>
+          <span className="chip on" aria-hidden="true">{t('Today')}</span>
+        </div>
+        <span className="btn btn-primary btn-wide theme-preview-btn" aria-hidden="true">{t('Example button')}</span>
+        <span className="muted small">{t('This is only a preview of the colours. Colours adjust a little in light and dark mode to stay readable.')}</span>
       </div>
 
       <h2 className="settings-group">{t('Background')}</h2>
       <section className="panel">
         <label className="setting">
           <span>{t('Pure black')}<br />
-            <span className="muted small">{t('Dark mode only. Saves battery on OLED screens.')}</span>
+            <span className="muted small">
+              {s.theme === 'light'
+                ? t('Only in dark mode: switching it on also turns on dark mode.')
+                : t('Pure black background in dark mode. Saves battery on OLED screens.')}
+            </span>
           </span>
-          <input type="checkbox" className="switch" checked={!!s.pureBlack} onChange={(e) => (!e.target.checked || requirePro('customTheme')) && set('pureBlack', e.target.checked)} />
+          <input
+            type="checkbox"
+            className="switch"
+            checked={!!s.pureBlack}
+            onChange={(e) => {
+              if (e.target.checked && !requirePro('customTheme')) return;
+              set('pureBlack', e.target.checked);
+              if (e.target.checked && s.theme === 'light') set('theme', 'dark');
+            }}
+          />
         </label>
       </section>
       {(s.accent || s.pureBlack) && (
