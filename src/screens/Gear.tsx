@@ -12,6 +12,16 @@ import { Avatar } from './Settings';
 import { BadgeMedal, LevelChip } from '../components/Level';
 import { BADGES, progression } from '../levels';
 
+/** The plain silhouette, for someone without a picture (never the viewer's own photo). */
+function AnonAvatar({ size }: { size: number }) {
+  return (
+    <svg className="avatar avatar-anon" width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="39" r="17" />
+      <path d="M16 92C16 72 31 61 50 61S84 72 84 92Z" />
+    </svg>
+  );
+}
+
 function SlotIcon({ slot, size = 26 }: { slot: GearSlot; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -215,7 +225,7 @@ export function MemberProfile({ username }: { username: string }) {
               gear={p.gear}
               center={
                 <CenterCard
-                  avatar={p.avatar ? <img className="avatar" src={p.avatar} alt="" width={84} height={84} /> : <Avatar size={84} />}
+                  avatar={p.avatar ? <img className="avatar" src={p.avatar} alt="" width={84} height={84} /> : <AnonAvatar size={84} />}
                   name={name}
                   sub={'@' + p.username}
                   count={gearCount(p.gear)}

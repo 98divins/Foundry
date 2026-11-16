@@ -456,6 +456,7 @@ export function FriendCompare({ id }: { id: string }) {
               <span className="cmp-person">
                 <Avatar p={me} size={56} />
                 <strong>{t('You')}</strong>
+                {mine.level != null && <LevelChip level={mine.level} />}
               </span>
               <span className="cmp-score">
                 {score[0]} <span className="muted">–</span> {score[1]}
@@ -463,6 +464,7 @@ export function FriendCompare({ id }: { id: string }) {
               <span className="cmp-person">
                 <Avatar p={f.profile} size={56} />
                 <strong>{nameOf(f.profile)}</strong>
+                {theirs?.level != null && <LevelChip level={theirs.level} />}
               </span>
             </section>
             <button className="btn btn-wide" onClick={() => go('u/' + f.profile.username)}>
