@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Confirm, Header, Icon } from '../components/ui';
+import { Header, Icon, Sheet } from '../components/ui';
 import { back, go } from '../hooks';
 import { t } from '../i18n';
 import { DEFAULT_PLAN, fmtSec, PHASE_LABEL, phasesOf, PRESETS, totalSeconds, type IntervalPlan, type Phase } from '../intervals';
@@ -170,6 +170,7 @@ export function IntervalRun({ id }: { id: string }) {
   });
   soundOn = sound;
   const lastBeep = useRef(-1);
+  const wasRunning = useRef(false);
   const workDone = useRef<number[]>([]);
 
   // Keep the screen on while it runs.
@@ -285,7 +286,12 @@ export function IntervalRun({ id }: { id: string }) {
   return (
     <div className={'timer phase-' + (started == null ? 'idle' : ph.kind)}>
       <div className="timer-top">
-        <button className="icon-btn" aria-label={t('Stop')} onClick={() => (started == null ? back('') : setStopping(true))}><Icon name="x" /></button>
+        <button className="icon-btn" aria-label={t('Stop')} onClick={() => {
+          if (started == null) return back('');
+          wasRunning.current = pausedLeft == null;
+          if (wasRunning.current) pause();
+          setStopping(true);
+        }}><Icon name="x" /></button>
         <strong>{r.name}</strong>
         <span className="timer-right">
           <span className="muted small">{fmtSec(remaining)}</span>
@@ -336,14 +342,19 @@ export function IntervalRun({ id }: { id: string }) {
           </>
         )}
       </div>
-      <Confirm
-        open={stopping}
-        title={t('Stop the timer?')}
-        message={workDone.current.length ? t('The rounds already done are saved as a workout.') : t('Nothing done yet: nothing will be saved.')}
-        confirmLabel={t('Stop')}
-        onConfirm={() => finish(workDone.current)}
-        onClose={() => setStopping(false)}
-      />
+      <Sheet open={stopping} onClose={() => { setStopping(false); if (wasRunning.current) resume(); }} title={t('Stop the timer?')}>
+        <div className="menu">
+          {workDone.current.length > 0 && (
+            <button className="btn btn-primary btn-wide" onClick={() => finish(workDone.current)}>
+              {t('Stop and save ({n} rounds)', { n: workDone.current.length })}
+            </button>
+          )}
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => { setStopping(false); back(''); }}>
+            {t('Quit without saving')}
+          </button>
+          <button className="btn btn-wide" onClick={() => { setStopping(false); if (wasRunning.current) resume(); }}>{t('Keep going')}</button>
+        </div>
+      </Sheet>
     </div>
   );
 }
