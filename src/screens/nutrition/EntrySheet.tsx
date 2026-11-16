@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NumInput, Sheet } from '../../components/ui';
-import { MACRO_LABEL, MEAL_LABEL, MEALS, round1, type FoodEntry, type Meal } from '../../nutrition';
+import { dayKey, MACRO_LABEL, MEAL_LABEL, MEALS, round1, type FoodEntry, type Meal } from '../../nutrition';
 import { useNutrition } from '../../store';
 import { t } from '../../i18n';
 
@@ -9,12 +9,14 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
   const { setN } = useNutrition();
   const [grams, setGrams] = useState<number | null>(null);
   const [meal, setMeal] = useState<Meal>('breakfast');
+  const [date, setDate] = useState('');
   const [quick, setQuick] = useState({ kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
   useEffect(() => {
     if (!entry) return;
     setGrams(entry.grams);
     setMeal(entry.meal);
+    setDate(entry.date);
     setQuick({ kcal: entry.kcal, protein: entry.protein, carbs: entry.carbs, fat: entry.fat });
   }, [entry]);
 
@@ -34,7 +36,7 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
     setN((n) => ({
       ...n,
       log: n.log.map((e) =>
-        e.id === entry.id ? { ...e, meal, ...(entry.grams != null ? { grams: grams ?? e.grams } : {}), ...preview } : e,
+        e.id === entry.id ? { ...e, meal, date: date || e.date, ...(date > dayKey() ? { planned: true } : {}), ...(entry.grams != null ? { grams: grams ?? e.grams } : {}), ...preview } : e,
       ),
     }));
     onClose();
@@ -76,6 +78,10 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
               </option>
             ))}
           </select>
+        </label>
+        <label className="field">
+          <span>{t('Day')}</span>
+          <input id="edit-date" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
         </label>
         <p className="macro-line">
           <strong>{t('{0} kcal', { 0: preview.kcal })}</strong> · P {preview.protein} g · C {preview.carbs} g · F {preview.fat} g

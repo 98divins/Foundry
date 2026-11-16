@@ -21,6 +21,7 @@ import {
 import { useNutrition } from '../../store';
 import { fmtNum, fromDisplay, toDisplay, uid } from '../../utils';
 import { EntrySheet } from './EntrySheet';
+import { MoveSheet } from './MoveSheet';
 import { PlanSheet } from './PlanSheet';
 import { locale, t, tp } from '../../i18n';
 import { canAdd, requirePro } from '../../pro';
@@ -266,6 +267,7 @@ function MealSection({
   const savedCount = nAll.savedMeals.length;
   const [open, setOpen] = useState<string | null>(null);
   const [groupMenu, setGroupMenu] = useState<FoodEntry[] | null>(null);
+  const [moving, setMoving] = useState<{ entries: FoodEntry[]; title: string } | null>(null);
   const [naming, setNaming] = useState<string | null>(null);
   const kcal = entries.reduce((t, e) => t + e.kcal, 0);
   const sum = (k: 'protein' | 'carbs' | 'fat') => fmtNum(Math.round(entries.reduce((t, e) => t + e[k], 0)));
@@ -359,6 +361,8 @@ function MealSection({
             <button className="add-in-folder" onClick={() => onConfirm(plannedHere.map((e) => e.id))}>
               <Icon name="check" size={15} />{' '}{t('I ate this meal')}</button>
           )}
+          <button className="add-in-folder" onClick={() => setMoving({ entries, title: t('Move: {meal}', { meal: t(MEAL_LABEL[meal]) }) })}>
+            <Icon name="swap" size={15} />{' '}{t('Move')}</button>
           <button className="add-in-folder" onClick={() => setPlanning(true)}>
             <Icon name="history" size={15} />{' '}{t('Plan on other days')}</button>
           {entries.length > 1 && (
@@ -384,6 +388,7 @@ function MealSection({
         }
       />
 
+      <MoveSheet entries={moving?.entries ?? null} title={moving?.title} onClose={() => setMoving(null)} />
       <Sheet open={!!groupMenu} onClose={() => setGroupMenu(null)} title={groupMenu?.[0].group?.name}>
         {groupMenu && (
           <div className="menu">
@@ -396,6 +401,8 @@ function MealSection({
               }}
             >
               <Icon name="unlink" size={18} />{' '}{t('Show as separate foods')}</button>
+            <button className="menu-item" onClick={() => { setMoving({ entries: groupMenu, title: t('Move “{name}”', { name: groupMenu[0].group!.name }) }); setGroupMenu(null); }}>
+              <Icon name="swap" size={18} />{' '}{t('Move to another meal or day')}</button>
             <button className="menu-item" onClick={() => { go('n/meals/' + groupMenu[0].group!.savedMealId); setGroupMenu(null); }}>
               <Icon name="edit" size={18} />{' '}{t('Edit the saved meal')}</button>
             <button
