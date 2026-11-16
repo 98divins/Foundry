@@ -338,7 +338,17 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
       if (mine) return onPick(mine);
       setStatus({ text: t('Looking up {code}…', { code: c }) });
       try {
-        const food = (await communityFoodByBarcode(c).catch(() => null)) ?? (await offByBarcode(c));
+        // Open Food Facts first: a member-created food must not be able to override a known product.
+        // The community copy is only a fallback (product unknown to OFF, or OFF unreachable).
+        let food: Food | null = null;
+        let offError: unknown = null;
+        try {
+          food = await offByBarcode(c);
+        } catch (e) {
+          offError = e;
+        }
+        food ??= await communityFoodByBarcode(c).catch(() => null);
+        if (!food && offError) throw offError;
         if (food) {
           setStatus(null);
           onPick(food);

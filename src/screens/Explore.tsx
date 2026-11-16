@@ -46,14 +46,6 @@ export function ExplorePrograms() {
                 </span>
                 <span className="program-name">{t(p.name)}</span>
                 <span className="muted small">{t(p.description)}</span>
-                {p.videos && (
-                  <>
-                    <a className="link-btn small" href={p.videos} target="_blank" rel="noopener noreferrer">
-                      {t('Watch the videos on YouTube')}
-                    </a>
-                    <span className="muted small">{t('Foundry is not affiliated with or endorsed by {name}.', { name: p.coach ?? '' })}</span>
-                  </>
-                )}
               </div>
             </li>
           ))}

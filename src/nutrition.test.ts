@@ -184,3 +184,23 @@ describe('planned meals', () => {
     expect(dayTotals([e('a', 300), e('b', 500, false)], '2026-11-20').kcal).toBe(800);
   });
 });
+
+describe('planned foods', () => {
+  it('are left out of the expenditure estimate until confirmed', () => {
+    const today = '2026-11-16';
+    const build = (withPlanned: boolean): NutritionState => {
+      const n = { ...defaultNutrition(), profile };
+      for (let i = 60; i >= 1; i--) {
+        const date = addDays(today, -i);
+        n.weights.push({ date, kg: 80 });
+        n.log.push({ id: 'a' + i, date, meal: 'lunch', name: 'x', grams: null, kcal: 2500, protein: 0, carbs: 0, fat: 0, createdAt: 0 });
+        if (withPlanned) n.log.push({ id: 'p' + i, date, meal: 'dinner', name: 'planned', grams: null, kcal: 800, protein: 0, carbs: 0, fat: 0, createdAt: 0, planned: true });
+      }
+      return n;
+    };
+    const plain = expenditureSeries(build(false), today).at(-1)!;
+    const planned = expenditureSeries(build(true), today).at(-1)!;
+    expect(plain.raw).toBe(2500);
+    expect(planned).toEqual(plain);
+  });
+});

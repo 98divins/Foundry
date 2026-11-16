@@ -83,6 +83,10 @@ create policy "friendships: ask" on public.friendships for insert with check (re
 create policy "friendships: accept" on public.friendships for update using (addressee = auth.uid()) with check (addressee = auth.uid() and status = 'accepted');
 create policy "friendships: remove" on public.friendships for delete using (auth.uid() in (requester, addressee));
 
+-- Accepting a request may only change its status (never who asked): see security.sql.
+revoke update on public.friendships from anon, authenticated;
+grant update (status) on public.friendships to authenticated;
+
 drop policy if exists "stats: read own and friends" on public.public_stats;
 drop policy if exists "stats: write own" on public.public_stats;
 drop policy if exists "stats: update own" on public.public_stats;

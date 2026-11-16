@@ -244,7 +244,8 @@ export function expenditureSeries(n: NutritionState, until = dayKey()): Expendit
   const seed = initialExpenditure(n.profile, byDay.get(firstWeigh)!, until);
   const incomplete = new Set(n.incompleteDays);
   const intake = new Map<string, number>();
-  for (const e of n.log) if (!incomplete.has(e.date)) intake.set(e.date, (intake.get(e.date) ?? 0) + e.kcal);
+  // Planned foods that were never confirmed were not eaten: they must not count as intake.
+  for (const e of n.log) if (!e.planned && !incomplete.has(e.date)) intake.set(e.date, (intake.get(e.date) ?? 0) + e.kcal);
 
   const firstLog = n.log.length ? n.log.reduce((m, e) => (e.date < m ? e.date : m), n.log[0].date) : until;
   const start = firstLog < firstWeigh ? firstLog : firstWeigh;

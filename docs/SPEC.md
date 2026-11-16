@@ -71,7 +71,7 @@ Quatre onglets : **Séance · Nutrition · Amis · Profil**.
 - **Fusion de routines** d'un même dossier en une nouvelle routine nommée.
 - Dupliquer, déplacer, partager par lien (un dossier entier ou une routine), importer depuis un lien.
 - Résumé de routine : exercices, séries, durée estimée, séries par muscle.
-- **Explorer les programmes** : Full Body (3 j), Haut/Bas (4 j), Push/Pull/Legs (3–6 j), copiés dans un dossier. Fiches « Bientôt » : programmes futurs et deux coachs (Jeff Nippard, CBum) avec lien vers leurs vidéos et mention de non-affiliation.
+- **Explorer les programmes** : Full Body (3 j), Haut/Bas (4 j), Push/Pull/Legs (3–6 j), copiés dans un dossier. Fiches « Bientôt » : programmes futurs écrits par Foundry (aucun nom de personnalité sans accord signé).
 
 ### 5.3 Séance en cours
 - Démarrage libre ou depuis une routine ; nom modifiable.
