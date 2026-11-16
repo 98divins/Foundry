@@ -24,6 +24,7 @@ import type { Muscle, PRKind } from '../types';
 import { computePRs, exerciseKind, fmtDate, fmtEstimate, fmtSet, fmtVolume, toDisplay, weekStart } from '../utils';
 import { locale, t, tk } from '../i18n';
 import { requirePro } from '../pro';
+import { gearCount } from '../gear';
 
 const DAY = 86400000;
 const PR_LABEL: Record<PRKind, string> = {
@@ -93,6 +94,7 @@ export function Progress() {
         <ProgressHeader />
         <main className="page">
           <ProfileCard workouts={0} records={0} />
+          <GearCard />
           <GoalsCard />
           <div className="empty-card">
             <Icon name="chart" size={28} />
@@ -108,6 +110,7 @@ export function Progress() {
       <ProgressHeader />
       <main className="page">
         <ProfileCard workouts={done.length} records={prs.length} />
+        <GearCard />
         <GoalsCard />
 
         <div className="stats-row">
@@ -300,6 +303,25 @@ function ProfileCard({ workouts, records }: { workouts: number; records: number 
         </span>
       </span>
     </button>
+  );
+}
+
+function GearCard() {
+  const { state } = useStore();
+  const n = gearCount(state.profile?.gear);
+  return (
+    <ul className="settings-list">
+      <li>
+        <button className="settings-row" onClick={() => go('gear')}>
+          <Icon name="dumbbell" />
+          <span className="settings-label">
+            {t('My gear')}
+            <span className="muted small">{n ? t('{0} / 13 slots', { 0: n }) : t('Belt, gloves, shoes, shaker… show what you train with.')}</span>
+          </span>
+          <Icon name="chevron" size={18} />
+        </button>
+      </li>
+    </ul>
   );
 }
 

@@ -273,3 +273,31 @@ export async function communityFoodByBarcode(code: string): Promise<import('../n
   const r = (data ?? [])[0] as FoodRow | undefined;
   return r ? rowToFood(r) : null;
 }
+
+/* ---------- Gear and profile pages (supabase/gear.sql) ---------- */
+
+export interface ProfilePage extends PublicProfile {
+  bio: string;
+  gear: import('../gear').Gear;
+  is_public: boolean;
+  stats: PublicStats | null;
+  stats_at: string | null;
+}
+
+/** Copy the gear, bio and visibility to the public profile (no-op without a profile row). */
+export async function publishGear(uid: string, gear: import('../gear').Gear, isPublic: boolean, bio: string) {
+  const { error } = await (await sb()).from('profiles').update({ gear, is_public: isPublic, bio: bio.slice(0, 160) }).eq('user_id', uid);
+  check(error);
+}
+
+/** A member's profile page, or null when it does not exist or is not visible to this user. */
+export async function loadProfilePage(username: string): Promise<ProfilePage | null> {
+  const { data, error } = await (await sb()).rpc('profile_page', { name: username });
+  check(error);
+  const r = ((data as ProfilePage[] | null) ?? [])[0];
+  if (!r) return null;
+  const { cleanGear } = await import('../gear');
+  return { ...r, gear: cleanGear(r.gear) };
+}
+
+export const profileLink = (username: string) => `${location.origin}${location.pathname}#/u/${encodeURIComponent(username)}`;

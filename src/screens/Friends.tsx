@@ -434,6 +434,9 @@ export function FriendCompare({ id }: { id: string }) {
                 <strong>{nameOf(f.profile)}</strong>
               </span>
             </section>
+            <button className="btn btn-wide" onClick={() => go('u/' + f.profile.username)}>
+              {t('See profile and gear')}
+            </button>
             {!theirs && <p className="muted small center">{t('{name} has not shared stats yet.', { name: nameOf(f.profile) })}</p>}
 
             <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={(p) => (p === 'week' || p === '30' || requirePro('longLeaderboard')) && setPeriod(p)} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />

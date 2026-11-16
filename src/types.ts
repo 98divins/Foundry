@@ -172,6 +172,10 @@ export interface UserProfile {
   bio: string;
   /** Small JPEG data URL (256 px), synced with the rest of the data. */
   avatar?: string | null;
+  /** Equipment the user shows on their profile, one item per slot (see gear.ts). */
+  gear?: import('./gear').Gear;
+  /** Anyone signed in with the profile link can see it (otherwise friends only). */
+  isPublic?: boolean;
 }
 
 export type PRKind = 'weight' | '1rm' | 'volume' | 'reps' | 'duration' | 'distance';

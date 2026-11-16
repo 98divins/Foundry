@@ -3630,3 +3630,121 @@ a.btn.disabled {
   color: #000;
   margin-left: 6px;
 }
+
+/* Gear board: the person in the middle, equipment around */
+.gear-board {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1fr;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.gear-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gear-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gear-bottom {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.gear-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  min-height: 92px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  text-align: center;
+}
+.gear-slot.filled {
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  color: var(--fg);
+}
+.gear-slot.filled .gear-icon {
+  color: var(--accent);
+}
+.gear-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  line-height: 1.25;
+  min-width: 0;
+  max-width: 100%;
+}
+.gear-text strong,
+.gear-text .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gear-slot-name {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.gear-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 16px 8px;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%);
+  width: 100%;
+}
+.gear-count {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.stat-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.stat-grid li {
+  display: flex;
+  flex-direction: column;
+}
+.stat-grid strong {
+  font-size: 22px;
+}
+.gear-toggle > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lift-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lift-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.lift-row:last-child {
+  border-bottom: 0;
+}
