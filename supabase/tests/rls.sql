@@ -149,6 +149,19 @@ select t.ok(t.seen($$select 1 from public.community_foods$$) = 1, 'community foo
 select t.rows($$update public.community_foods set kcal = 1 where id = 'f-alice'$$, 0, 'community foods: nobody changes another member''s food');
 select t.fails($$insert into public.community_foods (id, user_id, name, kcal) values ('f-x', 'aaaaaaaa-0000-0000-0000-00000000000a', 'x', 1)$$, 'community foods: nobody adds in someone else''s name');
 
+/* ---------- identity columns never change, even on your own rows ---------- */
+select t.login(:alice);
+select t.fails($$update public.shared_meals set meal_id = 'other' where user_id = auth.uid()$$, 'identity: a shared meal keeps its id');
+select t.fails($$update public.community_foods set id = 'other' where user_id = auth.uid()$$, 'identity: a community food keeps its id');
+select t.fails($$update public.community_foods set uses = 9999 where user_id = auth.uid()$$, 'identity: members cannot inflate a food''s use count');
+select t.fails($$update public.community_foods set user_id = null where user_id = auth.uid()$$, 'identity: members cannot detach their food from their account');
+select t.fails($$update public.activities set ref = 'other' where user_id = auth.uid()$$, 'identity: a post keeps its reference');
+-- The app's own writes (upserts that resend the key) still work.
+select t.rows($$insert into public.profiles (user_id, username, display_name) values (auth.uid(), 'alice', 'Alice B') on conflict (user_id) do update set user_id = excluded.user_id, username = excluded.username, display_name = excluded.display_name$$, 1, 'identity: the app''s profile upsert still works');
+select t.rows($$insert into public.public_stats (user_id, stats) values (auth.uid(), '{"v":1}') on conflict (user_id) do update set user_id = excluded.user_id, stats = excluded.stats$$, 1, 'identity: the app''s stats upsert still works');
+select t.rows($$insert into public.shared_meals (user_id, meal_id, name, items) values (auth.uid(), 'm1', 'Bowl 2', '[{"name":"rice"}]') on conflict (user_id, meal_id) do update set user_id = excluded.user_id, meal_id = excluded.meal_id, name = excluded.name$$, 1, 'identity: the app''s shared meal upsert still works');
+select t.rows($$update public.user_state set data = '{"workouts":[1]}', updated_at = now() where user_id = auth.uid()$$, 1, 'identity: syncing your own data still works');
+
 /* ---------- feedback and reports: write-only ---------- */
 select t.ok(t.seen($$select 1 from public.feedback$$) = 0, 'feedback: nobody reads messages');
 select t.fails($$insert into public.feedback (user_id, email, kind, message) values (auth.uid(), 'someone@else.invalid', 'idea', 'x')$$, 'feedback: the email must be your own');
