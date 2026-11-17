@@ -4582,3 +4582,14 @@ a.btn.disabled {
   text-align: center;
   margin: 0;
 }
+.feed-toggle {
+  margin: 12px 0;
+}
+.btn-wrap {
+  white-space: normal;
+  height: auto;
+  min-height: 44px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  line-height: 1.3;
+}

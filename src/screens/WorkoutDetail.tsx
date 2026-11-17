@@ -116,6 +116,22 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
           </button>
         )}
         <ShareCardSheet workout={w} open={sharing} onClose={() => setSharing(false)} />
+        {state.settings.shareStats !== false && (
+          <section className="panel feed-toggle"><label className="setting">
+            <span>
+              {t('Show in my friends’ activity feed')}
+              <br />
+              <span className="muted small">{w.hideFromFeed ? t('Only you see this workout.') : t('Your friends see a summary: name, duration, sets, volume, records.')}</span>
+            </span>
+            <input
+              id="feed-toggle"
+              type="checkbox"
+              className="switch"
+              checked={!w.hideFromFeed}
+              onChange={(e) => update((s) => ({ ...s, workouts: s.workouts.map((x) => (x.id === w.id ? { ...x, hideFromFeed: e.target.checked ? undefined : true } : x)) }))}
+            />
+          </label></section>
+        )}
         {w.note && <p className="note-block">{w.note}</p>}
 
         {w.exercises.map((we) => {

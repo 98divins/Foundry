@@ -201,6 +201,7 @@ export function IntervalRun({ id }: { id: string }) {
       endedAt: end,
       pausedMs,
       routineId: r.id,
+      hideFromFeed: state.settings.postWorkouts === false || undefined,
       exercises: [{ id: uid(), exerciseId: 'hiit', restSec: 0, sets: completed.map((sec) => ({ id: uid(), type: 'normal' as const, weight: null, reps: null, duration: sec, done: true })) }],
     };
     update((s) => ({ ...s, workouts: [...s.workouts, w] }));

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useCloud } from '../cloud/cloud';
 import { publishActivity, unpublishActivity } from '../cloud/social';
-import { countsForXp, progression } from '../levels';
+import { progression } from '../levels';
+import { feedChanges } from '../feedPosts';
 import { exerciseName, useStore } from '../store';
-import { computePRs, finished, workoutSetCount, workoutVolume } from '../utils';
+import { computePRs, workoutSetCount, workoutVolume } from '../utils';
 
 const DAY = 86400000;
 const keyFor = (uid: string) => 'foundry:feed:' + uid;
@@ -42,11 +43,9 @@ export function ActivityPublisher() {
         const now = Date.now();
         // On the very first run, only the last 2 days are posted, so friends are not flooded.
         const since = now - (first ? 2 : 7) * DAY;
-        const done = finished(state.workouts);
-        const recent = done.filter((w) => w.startedAt >= since && countsForXp(w));
+        const { post, remove } = feedChanges(state.workouts, s.workouts, since);
         const prs = computePRs(state.workouts);
-        for (const w of recent) {
-          if (s.workouts.includes(w.id)) continue;
+        for (const w of post) {
           let records = 0;
           for (const we of w.exercises) for (const x of we.sets) if (prs.has(x.id)) records++;
           await publishActivity(
@@ -67,10 +66,8 @@ export function ActivityPublisher() {
           );
           s.workouts.push(w.id);
         }
-        // A posted workout that was deleted: take its post down.
-        const ids = new Set(state.workouts.map((w) => w.id));
-        for (const wid of [...s.workouts]) {
-          if (ids.has(wid)) continue;
+        // A posted workout that was deleted, or hidden from the feed afterwards: take its post down.
+        for (const wid of remove) {
           await unpublishActivity(uid, 'w-' + wid);
           s.workouts = s.workouts.filter((x) => x !== wid);
         }

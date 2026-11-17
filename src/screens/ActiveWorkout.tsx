@@ -61,6 +61,7 @@ export function ActiveWorkout() {
         ...s.active,
         // Recorded duration leaves out pauses.
         endedAt: s.active.startedAt + elapsed,
+        hideFromFeed: s.settings.postWorkouts === false || undefined,
         pausedAt: null,
         pausedMs: 0,
         exercises: s.active.exercises

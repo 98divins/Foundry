@@ -93,6 +93,8 @@ export interface Workout {
   exercises: WorkoutExercise[];
   note?: string;
   routineId?: string;
+  /** Kept out of the friends' activity feed (chosen when finishing, or later on the workout). */
+  hideFromFeed?: boolean;
   /** While paused: when the pause started. */
   pausedAt?: number | null;
   /** Total time spent paused, left out of the duration. */
@@ -143,6 +145,8 @@ export interface Settings {
   healthConsent?: { at: number; version: string; withdrawn?: boolean };
   /** Share a training summary with accepted friends (default on). */
   shareStats?: boolean;
+  /** Post finished workouts to the friends' feed by default (true when absent). */
+  postWorkouts?: boolean;
   /** Custom accent colour (hex). Absent = Foundry cobalt. */
   accent?: string;
   /** Pure black background in dark mode (OLED). */

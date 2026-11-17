@@ -676,7 +676,7 @@ function PrivacyPage() {
         {consent ? (
           <>
             <p className="small">{t('You agreed that Foundry processes your weight, measurements and food intake. Withdrawing erases them, on this phone and in your account. Your training stays.')}</p>
-            <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirm(true)}>{t('Withdraw my consent and erase my nutrition and weight data')}</button>
+            <button className="btn btn-ghost-danger btn-wide btn-wrap" onClick={() => setConfirm(true)}>{t('Withdraw my consent and erase my nutrition and weight data')}</button>
           </>
         ) : (
           <>

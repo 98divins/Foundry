@@ -818,6 +818,14 @@ export function FriendsSettings() {
                 </span>
                 <input type="checkbox" className="switch" checked={sharing} onChange={(e) => update((s) => ({ ...s, settings: { ...s.settings, shareStats: e.target.checked } }))} />
               </label>
+              <label className="setting">
+                <span>
+                  {t('Post my workouts in the activity feed')}
+                  <br />
+                  <span className="muted small">{t('The default for each new workout. You can still change it on any workout.')}</span>
+                </span>
+                <input id="post-workouts" type="checkbox" className="switch" checked={state.settings.postWorkouts !== false} disabled={!sharing} onChange={(e) => update((s) => ({ ...s, settings: { ...s.settings, postWorkouts: e.target.checked } }))} />
+              </label>
             </section>
           </>
         )}
