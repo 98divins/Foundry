@@ -23,6 +23,8 @@ in this order (a new project runs them all; an existing one runs the ones it doe
 | 16 | `admin_reports.sql` | Private view `admin.reports` (reports to review) |
 | 17 | `user_items.sql` | Sync v2 tables (`user_items`, `entitlements`) and the freeze of the old copy |
 | 18 | `retention.sql` | `admin.purge_expired()` (run monthly) and `admin.inactive_accounts` |
+| 19 | `rollback_v1.sql` | Sync v2 safety net: fold rows back into the old single copy |
+| 20 | `photos.sql` | Private `photos` bucket: exercise and food photos for their owner, meal photos for friends (and everyone once the meal is shared) |
 
 The access rules are tested on a local PostgreSQL by `npm run test:rls` (`tests/rls.sql`), in CI
 before every deploy. Never run the files in `tests/` on the real project.

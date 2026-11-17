@@ -4816,3 +4816,35 @@ a.btn.disabled {
 .load-scale .z-low { border-color: #8e98a6; }
 .load-scale .z-steady { border-color: #2f9d55; }
 .load-scale .z-jump { border-color: #e07a22; }
+
+/* Photos of meals, foods and exercises. */
+.photo {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--line);
+}
+.photo-field {
+  margin: 4px 0 14px;
+}
+.photo-field .photo {
+  margin-bottom: 8px;
+}
+.photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.photo-card {
+  max-height: 180px;
+  margin-bottom: 6px;
+}
+.photo-thumb {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 10px;
+}

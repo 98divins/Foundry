@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { PhotoField } from '../components/Photo';
 import { LineChart } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Confirm, Header, Segmented, Stat } from '../components/ui';
@@ -98,6 +99,15 @@ export function ExerciseDetail({ id }: { id: string }) {
           {ex.custom && t(' · Custom')}
           {otherName && otherName !== label && <> · {otherName}</>}
         </p>
+        {ex.custom && (
+          <PhotoField
+            kind="exercise"
+            id={ex.id}
+            label={label}
+            value={ex.photo}
+            onChange={(photo) => update((s) => ({ ...s, customExercises: s.customExercises.map((c) => (c.id === ex.id ? { ...c, photo } : c)) }))}
+          />
+        )}
 
         <div className="stats-row">
           {kind === 'weight' && <Stat label={t('Heaviest')} value={fmtWeight(best('weight') || null, unit)} />}

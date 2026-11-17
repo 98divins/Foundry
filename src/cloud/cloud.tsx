@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { removeAllPhotos } from './photos';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { forgetLegacyCopy, defaultState, parseBackup, useStore } from '../store';
 import type { State } from '../types';
@@ -524,6 +525,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     deleteAccount: async () => {
       const sb = await getClient();
       if (!sb || !user) return t('Not signed in.');
+      // Photos are files, not rows: remove them first (best effort).
+      await removeAllPhotos(user.id).catch(() => {});
       const { error: e } = await sb.rpc('delete_my_account');
       if (e) return explain(e.message);
       await sb.auth.signOut();

@@ -1,4 +1,6 @@
 import { PlanSheet } from './PlanSheet';
+import { PhotoField, PhotoView } from '../../components/Photo';
+import { photoPath } from '../../cloud/photos';
 import { useEffect, useState } from 'react';
 import { Confirm, Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { ideaItems, MEAL_IDEAS, type IdeaTag, type MealIdea } from '../../mealIdeas';
@@ -55,6 +57,7 @@ export function SavedMealsList({ onLog, exclude, addLabel }: { onLog: (sm: Saved
               }}
             >
               <span className="entry-text">
+                {m.photo && <PhotoView path={m.photo.path} at={m.photo.at} alt="" className="photo photo-thumb" />}
                 <span className="entry-name">{m.name}</span>
                 <MealSummary items={m.items} />
                 <span className="muted small meal-items">{m.items.map((i) => i.name).join(', ')}</span>
@@ -80,6 +83,7 @@ export function SavedMealsList({ onLog, exclude, addLabel }: { onLog: (sm: Saved
               setPicked(null);
             }}
           >
+            {picked.photo && <PhotoView path={picked.photo.path} at={picked.photo.at} alt={picked.name} />}
             <ul className="meal-item-list">
               {picked.items.map((i, k) => (
                 <li key={k}>
@@ -305,6 +309,17 @@ export function MealEditor({ id }: { id: string }) {
         }
       />
       <main className="page">
+        <PhotoField
+          kind="meal"
+          id={draft.id}
+          label={draft.name}
+          value={draft.photo}
+          onChange={(photo) => {
+            // Saved at once: the file is already stored.
+            setDraft((d) => (d ? { ...d, photo } : d));
+            setN((x) => ({ ...x, savedMeals: x.savedMeals.map((m) => (m.id === id ? { ...m, photo } : m)) }));
+          }}
+        />
         <label className="field">
           <span>{t('Meal name')}</span>
           <input id="meal-name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
@@ -524,6 +539,7 @@ function CommunityMeals({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: 
                 <span className="program-tags small">
                   <span className="muted">{t('By {name}', { name: m.author || t('A member') })}</span>
                 </span>
+                <PhotoView path={photoPath(m.user_id, 'meal', m.meal_id)} alt={m.name} className="photo photo-card" />
                 <span className="program-name">{m.name}</span>
                 <MealSummary items={m.items} />
                 <span className="small muted">{m.items.map((i) => (i.grams != null ? `${i.name} ${fmtNum(i.grams)} g` : i.name)).join(' · ')}</span>

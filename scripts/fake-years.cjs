@@ -27,7 +27,7 @@ for (let d = 0; d < years * 365; d++) {
 }
 const state = {
   version: 1, workouts, routines: [], folders: [], customExercises: [], active: null, rest: null,
-  settings: { unit: 'kg', defaultRest: 90, sound: true, exerciseLang: 'fr', consent: { at: 1, version: '2026-11-v2' }, healthConsent: { at: 1, version: '2026-11-v1' } },
+  settings: { unit: 'kg', defaultRest: 90, sound: true, exerciseLang: 'fr', consent: { at: 1, version: '2026-11-v3' }, healthConsent: { at: 1, version: '2026-11-v1' } },
   nutrition: { profile: { sex: 'male', birthYear: 1990, heightCm: 180, activity: 'moderate' }, rateKgPerWeek: 0, proteinPerKg: 2, fatShare: 0.28, checkInDay: 1, foods: [], log, weights, incompleteDays: [], checkIns: [], favorites: [], savedMeals: [] },
 };
 process.stdout.write(JSON.stringify(state));

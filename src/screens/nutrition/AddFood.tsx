@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PhotoField } from '../../components/Photo';
 import { useFeature } from '../../features';
 import { BarcodeScanner } from '../../components/BarcodeScanner';
 import { Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
@@ -619,6 +620,7 @@ export function AmountSheet({
   const [grams, setGrams] = useState<number | null>(null);
   const [lastId, setLastId] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
+  const { n, setN } = useNutrition();
   if (food && food.id !== lastId) {
     setLastId(food.id);
     setGrams(food.serving?.grams ?? 100);
@@ -639,6 +641,15 @@ export function AmountSheet({
           if (grams) onAdd(food, grams);
         }}
       >
+        {food.source === 'custom' && (
+          <PhotoField
+            kind="food"
+            id={food.id}
+            label={food.name}
+            value={n.foods.find((f) => f.id === food.id)?.photo ?? food.photo}
+            onChange={(photo) => setN((x) => ({ ...x, foods: x.foods.map((f) => (f.id === food.id ? { ...f, photo } : f)) }))}
+          />
+        )}
         <div className="amount-head">
           <span className="muted small">{food.brand ?? ''}</span>
           {onToggleFavorite && (

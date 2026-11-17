@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { photoUrls } from '../exercises';
 import type { Exercise } from '../types';
 import { t } from '../i18n';
+import { PhotoView } from './Photo';
 
 /**
  * Exercise photo with fallbacks: CDN, then GitHub, then the first letter of the name.
@@ -21,6 +22,8 @@ export function ExerciseImage({
   const urls = ex?.image ? photoUrls(ex.image, frame) : [];
   const [attempt, setAttempt] = useState(0);
   const cls = size === 'thumb' ? 'ex-thumb' : 'ex-photo';
+  // A custom exercise with the person's own photo.
+  if (ex?.photo && size === 'thumb') return <PhotoView path={ex.photo.path} at={ex.photo.at} alt="" className={cls} />;
   if (attempt >= urls.length) {
     return (
       <span className={cls + ' ex-thumb-letter'} aria-hidden="true">

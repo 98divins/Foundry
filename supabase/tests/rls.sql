@@ -139,6 +139,26 @@ select t.rows($$delete from public.activities where user_id = 'aaaaaaaa-0000-000
 select t.login(:alice);
 select t.rows($$delete from public.activity_comments where user_id = 'bbbbbbbb-0000-0000-0000-00000000000b'$$, 1, 'feed: you can remove a comment left on your post');
 
+/* ---------- photos: exercises and foods private, meals for friends (and everyone once shared) ---------- */
+set role authenticated;
+select t.login(:alice);
+select t.rows($$insert into storage.objects (bucket_id, name) values
+  ('photos', 'aaaaaaaa-0000-0000-0000-00000000000a/exercise/x1.jpg'),
+  ('photos', 'aaaaaaaa-0000-0000-0000-00000000000a/food/f1.jpg'),
+  ('photos', 'aaaaaaaa-0000-0000-0000-00000000000a/meal/m1.jpg'),
+  ('photos', 'aaaaaaaa-0000-0000-0000-00000000000a/meal/m2.jpg')$$, 4, 'photos: a member adds photos in their own folder');
+select t.fails($$insert into storage.objects (bucket_id, name) values ('photos', 'bbbbbbbb-0000-0000-0000-00000000000b/meal/m9.jpg')$$, 'photos: nobody adds a photo in someone else''s folder');
+select t.fails($$insert into storage.objects (bucket_id, name) values ('photos', 'aaaaaaaa-0000-0000-0000-00000000000a/other/../x.jpg')$$, 'photos: only known kinds and plain file names');
+select t.ok(t.seen($$select 1 from storage.objects where bucket_id = 'photos'$$) = 4, 'photos: the owner sees all their photos');
+select t.login(:bob);
+select t.ok(t.seen($$select name from storage.objects where bucket_id = 'photos'$$) = 2, 'photos: a friend sees meal photos only');
+select t.rows($$delete from storage.objects where bucket_id = 'photos'$$, 0, 'photos: a friend cannot remove them');
+select t.login(:carol);
+select t.ok((select array_agg(name) from storage.objects where bucket_id = 'photos') = array['aaaaaaaa-0000-0000-0000-00000000000a/meal/m1.jpg'], 'photos: a stranger sees only the photo of a meal shared with the community');
+select t.rows($$update storage.objects set name = 'cccccccc-0000-0000-0000-00000000000c/meal/m1.jpg' where bucket_id = 'photos'$$, 0, 'photos: a stranger cannot take a photo over');
+select t.login(null);
+select t.ok(t.seen($$select 1 from storage.objects$$) = 0, 'photos: nothing for signed-out visitors');
+
 /* ---------- shared meals and community foods: readable by members, owned by their author ---------- */
 select t.login(:carol);
 select t.ok(t.seen($$select 1 from public.shared_meals$$) = 1, 'shared meals: members read them');

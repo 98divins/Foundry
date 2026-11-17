@@ -18,8 +18,9 @@ export const CSP = [
   "script-src 'self'",
   // Inline style attributes are used by React components (sizes, colours, progress bars).
   "style-src 'self' 'unsafe-inline'",
-  // data:/blob: = profile pictures, share images, generated sounds; the others = exercise photos.
-  "img-src 'self' data: blob: https://cdn.jsdelivr.net https://raw.githubusercontent.com",
+  // data:/blob: = profile pictures, share images, generated sounds; jsDelivr/GitHub = exercise photos;
+  // Supabase = the person's own photos (signed links to the private "photos" bucket).
+  `img-src 'self' data: blob: https://cdn.jsdelivr.net https://raw.githubusercontent.com ${SUPABASE.origin}`,
   "media-src 'self' data: blob:",
   "font-src 'self' data:",
   `connect-src 'self' ${SUPABASE.origin} wss://${SUPABASE.host} https://world.openfoodfacts.org https://fr.openfoodfacts.org`,

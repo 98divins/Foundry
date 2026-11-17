@@ -7,7 +7,7 @@
 import { getLang } from './i18n';
 import { LEGAL, LEGAL_DRAFT, type LegalField } from './legalConfig';
 
-export const LEGAL_VERSION = '2026-11-v2';
+export const LEGAL_VERSION = '2026-11-v3';
 /** Version of the health-data consent text (asked separately, when nutrition is first used). */
 export const HEALTH_CONSENT_VERSION = '2026-11-v1';
 export { LEGAL_DRAFT };
@@ -70,8 +70,8 @@ const privacy = (): LegalDoc =>
             h: 'Les données traitées',
             p: [
               'Compte : adresse e-mail et mot de passe (conservé sous forme chiffrée par notre prestataire d’authentification, jamais lisible par nous).',
-              'Entraînement : séances, séries, exercices perso, records, objectifs.',
-              'Nutrition et corps (données de santé) : aliments et repas notés, pesées, et pour calculer tes objectifs ton sexe, ton année de naissance, ta taille et ton niveau d’activité.',
+              'Entraînement : séances, séries, exercices perso (et leurs photos si tu en ajoutes), records, objectifs.',
+              'Nutrition et corps (données de santé) : aliments et repas notés (et les photos que tu y ajoutes), pesées, et pour calculer tes objectifs ton sexe, ton année de naissance, ta taille et ton niveau d’activité.',
               'Profil et vie sociale : pseudo, nom affiché, photo, bio, équipement, liste d’amis, publications du fil, Respect et commentaires, repas et aliments que tu partages, signalements que tu envoies.',
               'Messages envoyés depuis « Nous contacter », avec ton adresse e-mail pour te répondre.',
               'Réglages de l’app (unités, langue, thème…).',
@@ -90,8 +90,8 @@ const privacy = (): LegalDoc =>
             h: 'Qui voit quoi',
             p: [
               'Tes données d’entraînement et de nutrition détaillées ne sont visibles que par toi.',
-              'Tes amis acceptés voient : ton pseudo, ton nom, ta photo, ton niveau et tes badges, un résumé chiffré de ton entraînement (jours, séries, volume, cardio, records, meilleures charges estimées, défis), et les publications de ton fil (résumé de séance, nouveau niveau, nouveau badge). Jamais ta nutrition ni ton poids.',
-              'Tous les membres voient : les repas et aliments que tu choisis de partager (avec ton nom), et ta page de profil si tu la rends publique.',
+              'Tes amis acceptés voient : ton pseudo, ton nom, ta photo, ton niveau et tes badges, un résumé chiffré de ton entraînement (jours, séries, volume, cardio, records, meilleures charges estimées, défis), et les publications de ton fil (résumé de séance, nouveau niveau, nouveau badge). Jamais ta nutrition ni ton poids, sauf les photos que tu ajoutes à tes repas enregistrés.',
+              'Tous les membres voient : les repas et aliments que tu choisis de partager (avec ton nom et la photo du repas), et ta page de profil si tu la rends publique. Les photos d’exercices et d’aliments ne sont visibles que par toi.',
               'Tout se désactive dans Réglages → Amis : partage des stats, profil public ; un repas se partage ou non depuis sa page.',
             ],
           },
@@ -141,8 +141,8 @@ const privacy = (): LegalDoc =>
             h: 'The data we process',
             p: [
               'Account: email address and password (kept encrypted by our authentication provider, never readable by us).',
-              'Training: workouts, sets, custom exercises, records, goals.',
-              'Nutrition and body (health data): foods and meals you log, weigh-ins, and to compute your targets your sex, birth year, height and activity level.',
+              'Training: workouts, sets, custom exercises (and their photos, if you add any), records, goals.',
+              'Nutrition and body (health data): foods and meals you log (and the photos you add to them), weigh-ins, and to compute your targets your sex, birth year, height and activity level.',
               'Profile and social: username, display name, picture, bio, gear, friend list, feed posts, Respect and comments, meals and foods you share, reports you send.',
               'Messages sent from "Contact us", with your email address so we can reply.',
               'App settings (units, language, theme…).',
@@ -161,8 +161,8 @@ const privacy = (): LegalDoc =>
             h: 'Who sees what',
             p: [
               'Your detailed training and nutrition data is visible to you only.',
-              'Accepted friends see: your username, name, picture, level and badges, a numeric summary of your training (days, sets, volume, cardio, records, estimated best lifts, challenges), and your feed posts (workout summary, new level, new badge). Never your nutrition or weight.',
-              'All members see: the meals and foods you choose to share (with your name), and your profile page if you make it public.',
+              'Accepted friends see: your username, name, picture, level and badges, a numeric summary of your training (days, sets, volume, cardio, records, estimated best lifts, challenges), and your feed posts (workout summary, new level, new badge). Never your nutrition or weight, except the photos you add to your saved meals.',
+              'All members see: the meals and foods you choose to share (with your name and the meal’s photo), and your profile page if you make it public. Photos of exercises and foods stay visible to you only.',
               'Everything can be turned off in Settings → Friends: shared stats, public profile; each meal is shared or not from its page.',
             ],
           },

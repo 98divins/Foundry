@@ -40,6 +40,8 @@ export interface Food {
   /** custom: created by this user; community: created by another member (shared database). */
   source: 'custom' | 'generic' | 'off' | 'community';
   barcode?: string;
+  /** The person's own photo (custom foods), see cloud/photos.ts. */
+  photo?: { path: string; at: number } | null;
 }
 
 export interface FoodEntry {
@@ -71,6 +73,8 @@ export interface SavedMeal {
   updatedAt: number;
   /** Shared with other members (shown in Meals → Explore → Community). */
   shared?: boolean;
+  /** Photo of the meal (visible to friends; to everyone once shared), see cloud/photos.ts. */
+  photo?: { path: string; at: number } | null;
 }
 
 /** One ingredient of a saved meal, for one serving of the meal. */

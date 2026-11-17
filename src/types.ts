@@ -56,6 +56,8 @@ export interface Exercise {
   equipment: Equipment;
   kind: ExerciseKind;
   custom?: boolean;
+  /** The person's own photo (custom exercises), see cloud/photos.ts. */
+  photo?: { path: string; at: number } | null;
 }
 
 /** Weights are always stored in kilograms. */
