@@ -35,6 +35,8 @@ const BUILD_ID = `${pkg.version}-${Date.now().toString(36)}`;
 
 // Relative base so the build works from any sub-path (e.g. GitHub Pages).
 export default defineConfig({
+  // Unit tests only (the end-to-end journeys in e2e/ run with Playwright).
+  test: { include: ['src/**/*.test.ts'] },
   base: './',
   plugins: [
     react(),

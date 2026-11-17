@@ -12,6 +12,8 @@
   --accent: #3d5bff;
   --accent-ink: #ffffff;
   --accent-soft: rgba(61, 91, 255, 0.16);
+  /* Accent used for small text on dark backgrounds: lightened to keep a 4.5:1 contrast. */
+  --accent-text: color-mix(in srgb, var(--accent) 62%, #ffffff);
   --good: #2fbf86;
   --good-soft: rgba(47, 191, 134, 0.14);
   /* Copper: records, trophies, check-ins. */
@@ -40,10 +42,11 @@
     --accent: #2443f2;
     --accent-ink: #ffffff;
     --accent-soft: rgba(36, 67, 242, 0.1);
+    --accent-text: var(--accent);
     --good: #138a5c;
     --good-soft: rgba(19, 138, 92, 0.12);
     --gold: #b5622a;
-    --danger: #d63939;
+    --danger: #c42b2b;
     color-scheme: light;
   }
 }
@@ -58,10 +61,11 @@
   --accent: #2443f2;
   --accent-ink: #ffffff;
   --accent-soft: rgba(36, 67, 242, 0.1);
+  --accent-text: var(--accent);
   --good: #138a5c;
   --good-soft: rgba(19, 138, 92, 0.12);
   --gold: #b5622a;
-  --danger: #d63939;
+  --danger: #c42b2b;
   color-scheme: light;
 }
 
@@ -309,7 +313,7 @@ ul {
   letter-spacing: 0.02em;
 }
 .tab.on {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .mini-workout {
@@ -2393,7 +2397,7 @@ span.ex-photo {
   flex: none;
 }
 .tab.on {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .eyebrow,
 .stat-label,

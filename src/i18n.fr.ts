@@ -974,6 +974,7 @@ export const FR: Record<string, string> = {
   "Search a meal or an ingredient": "Chercher un repas ou un ingrédient",
   "Search a workout or an exercise": "Chercher une séance ou un exercice",
   "Search brands (Open Food Facts)": "Chercher les marques (Open Food Facts)",
+  "Search exercises": "Rechercher un exercice",
   "Searching…": "Recherche…",
   "Sedentary (desk job, little walking)": "Sédentaire (travail de bureau, peu de marche)",
   "See my friends": "Voir mes amis",

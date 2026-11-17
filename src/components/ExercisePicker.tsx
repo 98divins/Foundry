@@ -42,12 +42,14 @@ export function ExerciseFilters({ value, onChange, idPrefix }: { value: Exercise
         <Icon name="search" size={18} />
         <input
           id={idPrefix + '-search'}
+          type="search"
+          aria-label={t('Search exercises')}
           placeholder={t('Search (English or French)')}
           value={value.query}
           onChange={(e) => onChange({ ...value, query: e.target.value })}
         />
         {value.query && (
-          <button className="icon-btn search-clear" aria-label={t('Clear search')} onClick={() => onChange({ ...value, query: '' })}>
+          <button type="button" className="icon-btn search-clear" aria-label={t('Clear search')} onClick={() => onChange({ ...value, query: '' })}>
             <Icon name="x" size={16} />
           </button>
         )}
