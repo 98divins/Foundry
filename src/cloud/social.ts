@@ -70,6 +70,45 @@ export async function findProfile(username: string): Promise<PublicProfile | nul
   return ((data as PublicProfile[] | null) ?? [])[0] ?? null;
 }
 
+/* ---------- Mutual friends and suggestions (supabase/mutual_friends.sql) ---------- */
+
+export type Link = 'me' | 'friend' | 'sent' | 'received' | 'none';
+export interface Suggestion extends PublicProfile {
+  mutual: number;
+}
+
+/** Your friends who are also friends with this person. */
+export async function mutualFriends(other: string): Promise<PublicProfile[]> {
+  const { data, error } = await (await sb()).rpc('mutual_friends', { other });
+  check(error);
+  return (data as PublicProfile[] | null) ?? [];
+}
+
+/** A friend's friends (empty when they hide their list), with where you stand with each. */
+export async function friendsOf(other: string): Promise<(PublicProfile & { link: Link })[]> {
+  const { data, error } = await (await sb()).rpc('friends_of', { other });
+  check(error);
+  return (data as (PublicProfile & { link: Link })[] | null) ?? [];
+}
+
+/** Friends of your friends, most friends in common first. */
+export async function friendSuggestions(max = 20): Promise<Suggestion[]> {
+  const { data, error } = await (await sb()).rpc('friend_suggestions', { max_rows: max });
+  check(error);
+  return (data as Suggestion[] | null) ?? [];
+}
+
+/** Whether your friends can see your friend list (and get suggestions through you). */
+export async function setShowFriends(uid: string, on: boolean) {
+  const { error } = await (await sb()).from('profiles').update({ show_friends: on }).eq('user_id', uid);
+  check(error);
+}
+export async function getShowFriends(uid: string): Promise<boolean> {
+  const { data, error } = await (await sb()).from('profiles').select('show_friends').eq('user_id', uid).maybeSingle();
+  check(error);
+  return (data as { show_friends?: boolean } | null)?.show_friends !== false;
+}
+
 /** Friends, requests both ways, and friends' shared stats. */
 export async function loadFriends(uid: string): Promise<Friend[]> {
   const c = await sb();

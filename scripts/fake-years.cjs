@@ -56,7 +56,7 @@ const state = {
     defaultRest: 90,
     sound: true,
     exerciseLang: 'fr',
-    consent: { at: 1, version: '2026-11-v3' },
+    consent: { at: 1, version: '2026-11-v4' },
     healthConsent: { at: 1, version: '2026-11-v1' },
   },
   nutrition: {

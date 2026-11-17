@@ -7,7 +7,7 @@
 import { getLang } from './i18n';
 import { LEGAL, LEGAL_DRAFT, type LegalField } from './legalConfig';
 
-export const LEGAL_VERSION = '2026-11-v3';
+export const LEGAL_VERSION = '2026-11-v4';
 /** Version of the health-data consent text (asked separately, when nutrition is first used). */
 export const HEALTH_CONSENT_VERSION = '2026-11-v1';
 export { LEGAL_DRAFT };
@@ -97,7 +97,7 @@ const privacy = (): LegalDoc =>
             h: 'Qui voit quoi',
             p: [
               'Tes données d’entraînement et de nutrition détaillées ne sont visibles que par toi.',
-              'Tes amis acceptés voient : ton pseudo, ton nom, ta photo, ton niveau et tes badges, un résumé chiffré de ton entraînement (jours, séries, volume, cardio, records, meilleures charges estimées, défis), et les publications de ton fil (résumé de séance, nouveau niveau, nouveau badge). Jamais ta nutrition ni ton poids, sauf les photos que tu ajoutes à tes repas enregistrés.',
+              'Tes amis acceptés voient : ton pseudo, ton nom, ta photo, ton niveau et tes badges, un résumé chiffré de ton entraînement (jours, séries, volume, cardio, records, meilleures charges estimées, défis), et les publications de ton fil (résumé de séance, nouveau niveau, nouveau badge), ainsi que ta liste d’amis (désactivable dans Réglages → Amis : « Montrer mes amis à mes amis »). Sur la page d’un autre membre, tu vois seulement les amis que vous avez en commun. Jamais ta nutrition ni ton poids, sauf les photos que tu ajoutes à tes repas enregistrés.',
               'Tous les membres voient : les repas et aliments que tu choisis de partager (avec ton nom et la photo du repas), et ta page de profil si tu la rends publique. Les photos d’exercices et d’aliments ne sont visibles que par toi.',
               'Tout se désactive dans Réglages → Amis : partage des stats, profil public ; un repas se partage ou non depuis sa page.',
             ],
@@ -170,7 +170,7 @@ const privacy = (): LegalDoc =>
             h: 'Who sees what',
             p: [
               'Your detailed training and nutrition data is visible to you only.',
-              'Accepted friends see: your username, name, picture, level and badges, a numeric summary of your training (days, sets, volume, cardio, records, estimated best lifts, challenges), and your feed posts (workout summary, new level, new badge). Never your nutrition or weight, except the photos you add to your saved meals.',
+              'Accepted friends see: your username, name, picture, level and badges, a numeric summary of your training (days, sets, volume, cardio, records, estimated best lifts, challenges), and your feed posts (workout summary, new level, new badge), and your friend list (can be turned off in Settings → Friends: “Show my friends to my friends”). On another member’s page you only see the friends you have in common. Never your nutrition or weight, except the photos you add to your saved meals.',
               'All members see: the meals and foods you choose to share (with your name and the meal’s photo), and your profile page if you make it public. Photos of exercises and foods stay visible to you only.',
               'Everything can be turned off in Settings → Friends: shared stats, public profile; each meal is shared or not from its page.',
             ],

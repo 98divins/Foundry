@@ -159,6 +159,40 @@ select t.rows($$update storage.objects set name = 'cccccccc-0000-0000-0000-00000
 select t.login(null);
 select t.ok(t.seen($$select 1 from storage.objects$$) = 0, 'photos: nothing for signed-out visitors');
 
+/* ---------- mutual friends, a friend's friends, suggestions ---------- */
+-- Eve - Finn - Gus are friends in a chain (Eve and Gus do not know each other); Hal is a stranger.
+reset role;
+insert into auth.users (id, email) values
+  ('e0000000-0000-0000-0000-00000000000e', 'eve@test.invalid'), ('f0000000-0000-0000-0000-00000000000f', 'finn@test.invalid'),
+  ('90000000-0000-0000-0000-000000000009', 'gus@test.invalid'), ('a0000000-0000-0000-0000-0000000000a0', 'hal@test.invalid');
+insert into public.profiles (user_id, username, display_name) values
+  ('e0000000-0000-0000-0000-00000000000e', 'eve', 'Eve'), ('f0000000-0000-0000-0000-00000000000f', 'finn', 'Finn'),
+  ('90000000-0000-0000-0000-000000000009', 'gus', 'Gus'), ('a0000000-0000-0000-0000-0000000000a0', 'hal', 'Hal');
+insert into public.friendships (requester, addressee, status) values
+  ('e0000000-0000-0000-0000-00000000000e', 'f0000000-0000-0000-0000-00000000000f', 'accepted'),
+  ('f0000000-0000-0000-0000-00000000000f', '90000000-0000-0000-0000-000000000009', 'accepted');
+set role authenticated;
+select t.login('e0000000-0000-0000-0000-00000000000e');
+select t.ok((select array_agg(username) from public.mutual_friends('90000000-0000-0000-0000-000000000009')) = array['finn'], 'mutual friends: Eve sees Finn in common with Gus');
+select t.ok((select array_agg(username || ':' || link order by username) from public.friends_of('f0000000-0000-0000-0000-00000000000f')) = array['eve:me', 'gus:none'], 'friends of a friend: Eve sees Finn''s friends and where she stands');
+select t.ok((select array_agg(username || ':' || mutual) from public.friend_suggestions()) = array['gus:1'], 'suggestions: friends of friends, with the number in common');
+select t.ok(not exists (select 1 from public.friends_of('90000000-0000-0000-0000-000000000009')), 'friends of a friend: nothing for someone who is not your friend');
+select t.fails($$select * from public.friend_ids('f0000000-0000-0000-0000-00000000000f')$$, 'friend lists: not readable directly');
+select t.login('a0000000-0000-0000-0000-0000000000a0');
+select t.ok(not exists (select 1 from public.mutual_friends('f0000000-0000-0000-0000-00000000000f')), 'mutual friends: a stranger learns nothing (no friends in common)');
+select t.ok(not exists (select 1 from public.friends_of('f0000000-0000-0000-0000-00000000000f')) and not exists (select 1 from public.friend_suggestions()), 'a stranger sees no friend list and no suggestion');
+-- Finn hides his friend list: it disappears from his friends' screens and from suggestions.
+select t.login('f0000000-0000-0000-0000-00000000000f');
+update public.profiles set show_friends = false where user_id = auth.uid();
+select t.login('e0000000-0000-0000-0000-00000000000e');
+select t.ok(not exists (select 1 from public.friends_of('f0000000-0000-0000-0000-00000000000f')) and not exists (select 1 from public.friend_suggestions()), 'hidden list: no friends shown, no suggestion through Finn');
+select t.ok((select count(*) from public.mutual_friends('90000000-0000-0000-0000-000000000009')) = 1, 'hidden list: mutual friends still shown (Eve already knows Finn)');
+select t.login(null);
+set role anon;
+select t.fails($$select * from public.friend_suggestions()$$, 'signed out: no suggestions');
+select t.fails($$select * from public.mutual_friends('f0000000-0000-0000-0000-00000000000f')$$, 'signed out: no mutual friends');
+set role authenticated;
+
 /* ---------- shared meals and community foods: readable by members, owned by their author ---------- */
 select t.login(:carol);
 select t.ok(t.seen($$select 1 from public.shared_meals$$) = 1, 'shared meals: members read them');

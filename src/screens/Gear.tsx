@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { MutualLine } from '../components/MutualFriends';
 import { useFeature } from '../features';
 import { useCloud } from '../cloud/cloud';
 import {
@@ -288,6 +289,7 @@ export function MemberProfile({ username }: { username: string }) {
               }
             />
             {p.bio && <p className="center">{p.bio}</p>}
+            <MutualLine userId={p.user_id} />
             {levelsOn && !!p.stats?.badges?.length && (
               <section className="panel">
                 <h2 className="panel-title">{t('Badges')}</h2>

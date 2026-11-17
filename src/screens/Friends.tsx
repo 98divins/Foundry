@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FriendsOfFriend, MutualLine, Suggestions } from '../components/MutualFriends';
 import { useCloud } from '../cloud/cloud';
 import {
   acceptFriend,
@@ -16,6 +17,8 @@ import {
   type Friend,
   type PublicProfile,
   smallAvatar,
+  getShowFriends,
+  setShowFriends,
 } from '../cloud/social';
 import { Confirm, Header, Icon, Segmented, Logo } from '../components/ui';
 import { back, go } from '../hooks';
@@ -382,6 +385,7 @@ export function FriendsHome({ initialView, manage }: { initialView?: 'feed' | 'c
 
             {manage ? (
               <>
+                <Suggestions />
                 <section className="panel form">
                   <h2 className="panel-title">{t('Add a friend')}</h2>
                   <div className="inline-form">
@@ -744,6 +748,7 @@ export function FriendCompare({ id }: { id: string }) {
             <p className="muted small center">
               {t('Score: one point per figure won in “{period}” below. Ties and figures not shared count for nobody.', { period: periodName })}
             </p>
+            <MutualLine userId={f.profile.user_id} />
             <button className="btn btn-wide" onClick={() => go('u/' + f.profile.username)}>
               {t('See profile and gear')}
             </button>
@@ -816,6 +821,8 @@ export function FriendCompare({ id }: { id: string }) {
               )}
               <p className="muted small">{t('Estimated from your best set (weight × reps). Train for yourself first: everyone starts somewhere.')}</p>
             </section>
+
+            <FriendsOfFriend userId={f.profile.user_id} name={nameOf(f.profile)} />
 
             <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirm(true)}>
               {t('Remove from friends')}
@@ -1062,6 +1069,7 @@ export function FriendsSettings() {
 
             <h2 className="settings-group">{t('What friends see')}</h2>
             <section className="panel">
+              <ShowFriendsSetting />
               <label className="setting">
                 <span>
                   {t('Share my stats with friends')}
@@ -1096,6 +1104,45 @@ export function FriendsSettings() {
           </>
         )}
       </main>
+    </>
+  );
+}
+
+/** Whether friends can see your friend list (and get suggestions through you). Stored on the server. */
+function ShowFriendsSetting() {
+  const uid = useCloud().user?.id;
+  const [on, setOn] = useState<boolean | null>(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    if (uid) getShowFriends(uid).then(setOn, () => setOn(null));
+  }, [uid]);
+  if (!uid || on === null) return null;
+  return (
+    <>
+      <label className="setting">
+        <span>
+          {t('Show my friends to my friends')}
+          <br />
+          <span className="muted small">
+            {t('Your friends see your friend list, and you can be suggested to their friends. Friends in common are always shown.')}
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          className="switch"
+          checked={on}
+          onChange={(e) => {
+            const v = e.target.checked;
+            setOn(v);
+            setErr('');
+            setShowFriends(uid, v).catch((x: Error) => {
+              setOn(!v);
+              setErr(x.message);
+            });
+          }}
+        />
+      </label>
+      {err && <p className="field-error">{err}</p>}
     </>
   );
 }
