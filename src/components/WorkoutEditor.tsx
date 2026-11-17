@@ -8,6 +8,8 @@ import { ExercisePicker } from './ExercisePicker';
 import { fmtRepRange, linkWithNext, parseRepRange, supersetSlots, unlink, type SupersetSlot } from '../routines';
 import { Icon, NumInput, Sheet, TimeInput } from './ui';
 import { t } from '../i18n';
+import { useFeature } from '../features';
+import { suggestNext, warmupSets, withWarmups } from '../progression';
 
 export type EditorMode = 'live' | 'edit' | 'routine';
 
@@ -126,6 +128,16 @@ export function supersetClass(slot: SupersetSlot): string {
   return `ss ss-c${slot.group % 4}` + (slot.first ? ' ss-first' : '') + (slot.last ? ' ss-last' : '');
 }
 
+/**
+ * Last time's set facing set i: warm-ups face warm-ups and working sets face working sets, so adding
+ * warm-ups does not shift the Previous column.
+ */
+export function prevFor(sets: SetEntry[], i: number, prev: SetEntry[]): SetEntry | undefined {
+  const warm = (s: SetEntry) => s.type === 'warmup';
+  const k = sets.slice(0, i).filter((s) => warm(s) === warm(sets[i])).length;
+  return prev.filter((s) => warm(s) === warm(sets[i]))[k];
+}
+
 function setLabel(sets: SetEntry[], i: number): string {
   const type = sets[i].type;
   // Short set-type marks: W(arm-up), D(rop), F(ailure) — translated (É, D, É in French).
@@ -174,6 +186,20 @@ function ExerciseCard({
   const [flash, setFlash] = useState<string | null>(null);
   const showCheck = mode === 'live';
   const timed = kind === 'duration' || kind === 'cardio';
+  const progressionOn = useFeature('progression');
+  const rpeOn = useFeature('rpe');
+  // What to aim for today (4.3), shown until the first working set is done.
+  const suggest = progressionOn && mode === 'live' && kind === 'weight' ? suggestNext(prev, we.sets, unit) : null;
+  const started = we.sets.some((s) => s.done && s.type !== 'warmup');
+  const fmtW = (kg: number) => `${fmtNum(toDisplay(kg, unit))} ${unit}`;
+  const applySuggestion = (kg: number) =>
+    onChange({ ...we, sets: we.sets.map((s) => (!s.done && s.type !== 'warmup' && s.type !== 'drop' ? { ...s, weight: kg } : s)) });
+  // Warm-ups are built from the first working weight: typed, suggested, or last time's.
+  const workWeight =
+    we.sets.find((s) => s.type !== 'warmup' && s.weight)?.weight ?? suggest?.weight ?? Math.max(0, ...prev.filter((s) => s.type !== 'warmup').map((s) => s.weight ?? 0));
+  const warmups = kind === 'weight' && workWeight ? warmupSets(workWeight, unit, uid) : [];
+  // RPE (optional): asked for the last set done.
+  const rpeSet = rpeOn && mode !== 'routine' ? [...we.sets].reverse().find((s) => s.done) : undefined;
 
   const setSet = (i: number, patch: Partial<SetEntry>) => {
     const sets = we.sets.map((s, j) => (j === i ? { ...s, ...patch } : s));
@@ -184,7 +210,7 @@ function ExerciseCard({
     const s = we.sets[i];
     if (s.done) return setSet(i, { done: false });
     // Empty fields take the values shown as placeholders (last session).
-    const p = prev[i];
+    const p = prevFor(we.sets, i, prev);
     const filled = {
       weight: s.weight ?? p?.weight ?? null,
       reps: s.reps ?? p?.reps ?? s.target?.reps ?? null,
@@ -234,7 +260,7 @@ function ExerciseCard({
     if (timed) return fmtSet(p, kind, unit);
     const w = p.weight ? fmtNum(toDisplay(p.weight, unit)) : null;
     const sign = kind === 'assisted' ? '−' : kind === 'bodyweight' ? '+' : '';
-    return `${w ? `${sign}${w} × ` : ''}${p.reps ?? '–'}`;
+    return `${w ? `${sign}${w} × ` : ''}${p.reps ?? '–'}${rpeOn && p.rpe ? ` @${p.rpe}` : ''}`;
   };
 
   const weightHeader = kind === 'bodyweight' ? `+${unit}` : kind === 'assisted' ? `−${unit}` : unit;
@@ -265,6 +291,18 @@ function ExerciseCard({
           <Icon name="timer" size={15} />{' '}{t('Rest')}{' '}{we.restSec ? fmtClock(we.restSec) : t('off')}
         </button>
       )}
+      {suggest && !started && (
+        <div className="aim" role="note">
+          <span>
+            {suggest.type === 'increase'
+              ? t('Last time {w} × {reps}: target reached. Try {next}.', { w: fmtW(suggest.last), reps: suggest.lastReps.join(', '), next: fmtW(suggest.weight) })
+              : t('Last time {w} × {reps}: aim for {aim}.', { w: fmtW(suggest.last), reps: suggest.lastReps.join(', '), aim: suggest.lastReps.map(() => suggest.aim).join(', ') })}
+          </span>
+          {suggest.type === 'increase' && (
+            <button className="btn btn-small" onClick={() => applySuggestion(suggest.weight)}>{t('Use {w}', { w: fmtW(suggest.weight) })}</button>
+          )}
+        </div>
+      )}
 
       <div className={'set-grid' + (showCheck ? ' with-check' : '') + (mode === 'routine' ? ' no-prev' : '')}>
         <div className="set-hd">{t('Set')}</div>
@@ -289,7 +327,7 @@ function ExerciseCard({
         )}
 
         {we.sets.map((s, i) => {
-          const p = prev[i];
+          const p = prevFor(we.sets, i, prev);
           const rowCls = 'set-row' + (s.done ? ' done' : '') + (flash === s.id ? ' flash' : '');
           return (
             <div className={rowCls} key={s.id} role="group" aria-label={t('Set {n}', { n: i + 1 })}>
@@ -396,6 +434,21 @@ function ExerciseCard({
           );
         })}
       </div>
+      {rpeSet && (
+        <div className="rpe-row" role="group" aria-label={t('How hard was set {n}?', { n: we.sets.indexOf(rpeSet) + 1 })}>
+          <span className="muted small">{t('Effort (RPE)')}</span>
+          {[6, 7, 8, 9, 10].map((v) => (
+            <button
+              key={v}
+              className={'rpe-btn' + (rpeSet.rpe === v ? ' on' : '')}
+              aria-pressed={rpeSet.rpe === v}
+              onClick={() => setSet(we.sets.indexOf(rpeSet), { rpe: rpeSet.rpe === v ? null : v })}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      )}
       <button className="btn btn-ghost btn-wide" onClick={addSet}>
         <Icon name="plus" size={16} />{' '}{t('Add set')}</button>
 
@@ -416,6 +469,18 @@ function ExerciseCard({
                 ))}
               </select>
             </label>
+          )}
+          {kind === 'weight' && mode !== 'edit' && (
+            <button
+              className="menu-item"
+              disabled={!warmups.length}
+              onClick={() => { onChange({ ...we, sets: withWarmups(we.sets, warmups) }); setMenu(false); }}
+            >
+              <Icon name="flame" size={18} />{' '}
+              {warmups.length
+                ? t('Add warm-up sets ({list})', { list: warmups.map((s) => fmtNum(toDisplay(s.weight!, unit))).join(' · ') })
+                : t('Add warm-up sets (enter a working weight first)')}
+            </button>
           )}
           <button className="menu-item" onClick={() => { setNoteOpen(true); setMenu(false); }}>
             <Icon name="note" size={18} /> {we.note ? t('Edit note') : t('Add note')}

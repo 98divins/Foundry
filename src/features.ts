@@ -7,7 +7,7 @@ import { useStore } from './store';
 import type { Settings } from './types';
 import { tk } from './i18n';
 
-export type FeatureId = 'gear' | 'levels' | 'challenges' | 'recaps' | 'comments' | 'smartFoodOrder';
+export type FeatureId = 'gear' | 'levels' | 'challenges' | 'recaps' | 'comments' | 'smartFoodOrder' | 'progression' | 'rpe';
 
 export interface Feature {
   id: FeatureId;
@@ -24,6 +24,8 @@ export const FEATURES: Feature[] = [
   { id: 'gear', label: tk('My gear'), text: tk('Show what you train with on your profile.'), default: false, inTest: true },
   { id: 'recaps', label: tk('My recaps'), text: tk('Your week, month or year in a story, with an image to share.'), default: false, inTest: true },
   { id: 'comments', label: tk('Comments in the feed'), text: tk('Write and read comments on friends’ posts.'), default: false, inTest: true },
+  { id: 'rpe', label: tk('Effort per set (RPE)'), text: tk('Note how hard each set felt, from 6 (easy) to 10 (nothing left).'), default: false, inTest: true },
+  { id: 'progression', label: tk('What to aim for'), text: tk('Suggests the weight or reps to aim for, from your last workout.'), default: true, inTest: false },
   { id: 'smartFoodOrder', label: tk('Foods you eat first'), text: tk('Foods you often log at this meal come first in the search.'), default: true, inTest: false },
 ];
 

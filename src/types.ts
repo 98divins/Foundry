@@ -72,6 +72,8 @@ export interface SetEntry {
   repsMax?: number | null;
   /** The routine's target, kept on a live set to show as a hint. */
   target?: { reps: number | null; repsMax: number | null } | null;
+  /** Rate of perceived exertion, 6–10 (optional, Settings → Features in test). */
+  rpe?: number | null;
   done: boolean;
 }
 

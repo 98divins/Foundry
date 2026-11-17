@@ -4643,3 +4643,45 @@ a.btn.disabled {
   color: var(--accent);
   flex: none;
 }
+
+/* Workout parity (4.3): what to aim for, effort per set. */
+.aim {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-size: 14px;
+}
+.aim > span {
+  flex: 1;
+}
+.aim .btn {
+  flex: none;
+}
+.rpe-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+.rpe-row > span {
+  flex: 1;
+}
+.rpe-btn {
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+}
+.rpe-btn.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
