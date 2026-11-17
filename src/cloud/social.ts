@@ -334,7 +334,7 @@ export const profileLink = (username: string) => `${location.origin}${location.p
 /* ---------- Activity feed (supabase/activity.sql) ---------- */
 
 export type ActivityData =
-  | { kind: 'workout'; name: string; at: number; minutes: number; sets: number; volume: number; records: number; exercises: string[] }
+  | { kind: 'workout'; name: string; at: number; minutes: number; sets: number; volume: number; records: number; exercises: string[]; /** Same order as exercises: true for the member's own custom exercises. */ custom?: boolean[] }
   | { kind: 'level'; level: number }
   | { kind: 'badge'; badge: string };
 

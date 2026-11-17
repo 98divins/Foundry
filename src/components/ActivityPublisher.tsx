@@ -61,6 +61,7 @@ export function ActivityPublisher() {
               volume: Math.round(workoutVolume(w)),
               records,
               exercises: w.exercises.slice(0, 5).map((we) => exerciseName(exMap, we.exerciseId)),
+              custom: w.exercises.slice(0, 5).map((we) => !!exMap.get(we.exerciseId)?.custom),
             },
             w.endedAt ?? w.startedAt,
           );

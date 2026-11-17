@@ -5,6 +5,7 @@ import {
   addFriend,
   findProfile,
   inviteLink,
+  profileLink,
   loadFriends,
   myProfile,
   removeFriend,
@@ -171,8 +172,8 @@ async function share(url: string, setMsg: (s: string) => void) {
   setMsg(t('Link copied. Send it to your friends.'));
 }
 
-export function FriendsHome({ initialView }: { initialView?: 'feed' | 'challenges' | 'board' } = {}) {
-  const { state, update } = useStore();
+export function FriendsHome({ initialView, manage }: { initialView?: 'feed' | 'challenges' | 'board'; manage?: boolean } = {}) {
+  const { state } = useStore();
   const unit = state.settings.unit;
   const { uid, me: meServer, setMe, friends, reload, error, notReady } = useSocial();
   const me = meServer && state.profile?.avatar !== undefined ? { ...meServer, avatar: state.profile?.avatar ?? null } : meServer;
@@ -182,7 +183,6 @@ export function FriendsHome({ initialView }: { initialView?: 'feed' | 'challenge
   const [msg, setMsg] = useState('');
   const [editing, setEditing] = useState(false);
   const mine = useMemo(() => buildPublicStats(state), [state]);
-  const sharing = state.settings.shareStats !== false;
   const [view, setView] = useState<'feed' | 'challenges' | 'board'>(initialView ?? 'feed');
 
   const accepted = friends.filter((f) => f.status === 'accepted');
@@ -214,12 +214,20 @@ export function FriendsHome({ initialView }: { initialView?: 'feed' | 'challenge
   return (
     <>
       <Header
-        title={t('Friends')}
+        title={manage ? t('My friends') : t('Friends')}
+        onBack={manage ? () => back('friends') : undefined}
         right={
           me ? (
-            <button className="icon-btn" aria-label={t('Invite friends')} onClick={() => share(inviteLink(me.username), setMsg)}>
-              <Icon name="share" />
-            </button>
+            manage ? (
+              <button className="icon-btn" aria-label={t('Invite friends')} onClick={() => share(inviteLink(me.username), setMsg)}>
+                <Icon name="share" />
+              </button>
+            ) : (
+              <button className="btn btn-small friends-manage" aria-label={t('My friends')} onClick={() => go('friends/list')}>
+                <Icon name="users" size={18} /> {t('My friends')}
+                {incoming.length > 0 && <span className="tab-badge">{incoming.length}</span>}
+              </button>
+            )
           ) : undefined
         }
       />
@@ -252,6 +260,80 @@ export function FriendsHome({ initialView }: { initialView?: 'feed' | 'challenge
           <>
             {error && <p className="field-error">{error}</p>}
 
+            {manage ? (
+              <>
+            <section className="panel form">
+              <h2 className="panel-title">{t('Add a friend')}</h2>
+              <div className="inline-form">
+                <input id="friend-search" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder={t('Their username')} value={search} onChange={(e) => setSearch(e.target.value.trim().toLowerCase())} onKeyDown={(e) => e.key === 'Enter' && search && addByName()} />
+                <button className="btn" disabled={search.length < 3} onClick={addByName}>
+                  {t('Add')}
+                </button>
+              </div>
+              {msg && <p className="ok-line small">{msg}</p>}
+            </section>
+
+            {incoming.length > 0 && (
+              <section className="panel">
+                <h2 className="panel-title">{tp(incoming.length, '{n} friend request', '{n} friend requests')}</h2>
+                <ul className="friend-list">
+                  {incoming.map((f) => (
+                    <li key={f.profile.user_id} className="friend-row">
+                      <Avatar p={f.profile} />
+                      <span className="friend-name">
+                        <strong>{nameOf(f.profile)}</strong>
+                        <span className="muted small">@{f.profile.username}</span>
+                      </span>
+                      <button className="btn btn-small btn-primary" onClick={async () => { await acceptFriend(uid!, f.profile.user_id).catch(() => {}); reload(); }}>
+                        {t('Accept')}
+                      </button>
+                      <button className="icon-btn" aria-label={t('Decline')} onClick={async () => { await removeFriend(uid!, f.profile.user_id).catch(() => {}); reload(); }}>
+                        <Icon name="close" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {(accepted.length > 0 || outgoing.length > 0) && (
+              <section className="panel">
+                <h2 className="panel-title">{tp(accepted.length, '{n} friend', '{n} friends')}</h2>
+                <ul className="friend-list">
+                  {accepted.map((f) => (
+                    <li key={f.profile.user_id}>
+                      <button className="friend-row" onClick={() => (f.status !== 'accepted' || requirePro('compare')) && go('friends/' + f.profile.user_id)}>
+                        <Avatar p={f.profile} />
+                        <span className="friend-name">
+                          <strong>{nameOf(f.profile)}</strong>
+                          <span className="muted small">
+                            {f.stats?.lastWorkoutAt ? t('Last workout {date}', { date: new Date(f.stats.lastWorkoutAt).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) }) : '@' + f.profile.username}
+                          </span>
+                        </span>
+                        <span className="muted small">{t('Compare')}</span>
+                        <Icon name="chevron" size={18} />
+                      </button>
+                    </li>
+                  ))}
+                  {outgoing.map((f) => (
+                    <li key={f.profile.user_id} className="friend-row">
+                      <Avatar p={f.profile} />
+                      <span className="friend-name">
+                        <strong>{nameOf(f.profile)}</strong>
+                        <span className="muted small">{t('Request sent')}</span>
+                      </span>
+                      <button className="link-btn small" onClick={async () => { await removeFriend(uid!, f.profile.user_id).catch(() => {}); reload(); }}>
+                        {t('Cancel')}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+              </>
+            ) : (
+              <>
             {incoming.length > 0 && (
               <section className="panel">
                 <h2 className="panel-title">{tp(incoming.length, '{n} friend request', '{n} friend requests')}</h2>
@@ -333,72 +415,8 @@ export function FriendsHome({ initialView }: { initialView?: 'feed' | 'challenge
             </section>
             )}
 
-            <section className="panel form">
-              <h2 className="panel-title">{t('Add a friend')}</h2>
-              <div className="inline-form">
-                <input id="friend-search" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder={t('Their username')} value={search} onChange={(e) => setSearch(e.target.value.trim().toLowerCase())} onKeyDown={(e) => e.key === 'Enter' && search && addByName()} />
-                <button className="btn" disabled={search.length < 3} onClick={addByName}>
-                  {t('Add')}
-                </button>
-              </div>
-              {msg && <p className="ok-line small">{msg}</p>}
-            </section>
-
-            {(accepted.length > 0 || outgoing.length > 0) && (
-              <section className="panel">
-                <h2 className="panel-title">{tp(accepted.length, '{n} friend', '{n} friends')}</h2>
-                <ul className="friend-list">
-                  {accepted.map((f) => (
-                    <li key={f.profile.user_id}>
-                      <button className="friend-row" onClick={() => (f.status !== 'accepted' || requirePro('compare')) && go('friends/' + f.profile.user_id)}>
-                        <Avatar p={f.profile} />
-                        <span className="friend-name">
-                          <strong>{nameOf(f.profile)}</strong>
-                          <span className="muted small">
-                            {f.stats?.lastWorkoutAt ? t('Last workout {date}', { date: new Date(f.stats.lastWorkoutAt).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) }) : '@' + f.profile.username}
-                          </span>
-                        </span>
-                        <span className="muted small">{t('Compare')}</span>
-                        <Icon name="chevron" size={18} />
-                      </button>
-                    </li>
-                  ))}
-                  {outgoing.map((f) => (
-                    <li key={f.profile.user_id} className="friend-row">
-                      <Avatar p={f.profile} />
-                      <span className="friend-name">
-                        <strong>{nameOf(f.profile)}</strong>
-                        <span className="muted small">{t('Request sent')}</span>
-                      </span>
-                      <button className="link-btn small" onClick={async () => { await removeFriend(uid!, f.profile.user_id).catch(() => {}); reload(); }}>
-                        {t('Cancel')}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              </>
             )}
-
-            <section className="panel">
-              <div className="friend-row">
-                <Avatar p={me} />
-                <span className="friend-name">
-                  <strong>{nameOf(me)}</strong>
-                  <span className="muted small">@{me.username}</span>
-                </span>
-                <button className="link-btn small" onClick={() => setEditing(true)}>
-                  {t('Edit')}
-                </button>
-              </div>
-              <label className="setting">
-                <span>
-                  {t('Share my stats with friends')}
-                  <br />
-                  <span className="muted small">{t('Training summary only: days, sets, volume, streak, records and lifts. Never your workouts in detail or your nutrition.')}</span>
-                </span>
-                <input type="checkbox" className="switch" checked={sharing} onChange={(e) => update((s) => ({ ...s, settings: { ...s.settings, shareStats: e.target.checked } }))} />
-              </label>
-            </section>
           </>
         )}
       </main>
@@ -723,5 +741,87 @@ export function UsernameStep({ uid, onDone }: { uid: string; onDone: () => void 
       </div>
       <ProfileSetup uid={uid} onSaved={saved} bare />
     </main>
+  );
+}
+
+/** Settings → Friends: invite, share your profile, your public name, what friends see. */
+export function FriendsSettings() {
+  const { state, update } = useStore();
+  const { uid, me, setMe, notReady } = useSocial();
+  const [msg, setMsg] = useState('');
+  const [editing, setEditing] = useState(false);
+  const sharing = state.settings.shareStats !== false;
+  const isPublic = !!state.profile?.isPublic;
+  return (
+    <>
+      <Header title={t('Friends')} onBack={() => back('settings')} />
+      <main className="page">
+        {notReady ? (
+          <NotReady />
+        ) : me === undefined ? (
+          <p className="muted">{t('Loading…')}</p>
+        ) : !me || editing ? (
+          uid && <ProfileSetup uid={uid} initial={me} onSaved={(p) => { setMe(p); setEditing(false); }} />
+        ) : (
+          <>
+            <ul className="settings-list">
+              <li>
+                <button className="settings-row" onClick={() => share(inviteLink(me.username), setMsg)}>
+                  <Icon name="plus" />
+                  <span className="settings-label">
+                    {t('Invite a friend')}
+                    <span className="muted small">{t('Send your invitation link: they join and become your friend in one tap.')}</span>
+                  </span>
+                  <Icon name="share" size={18} />
+                </button>
+              </li>
+              <li>
+                <button className="settings-row" onClick={() => share(profileLink(me.username), setMsg)}>
+                  <Icon name="user" />
+                  <span className="settings-label">
+                    {t('Share my profile')}
+                    <span className="muted small">{isPublic ? t('Your page: gear, level and shared stats.') : t('Your page is visible to your friends only.')}</span>
+                  </span>
+                  <Icon name="share" size={18} />
+                </button>
+              </li>
+            </ul>
+            {msg && <p className="ok-line small">{msg}</p>}
+
+            <h2 className="settings-group">{t('My public profile')}</h2>
+            <section className="panel">
+              <div className="friend-row">
+                <Avatar p={{ ...me, avatar: state.profile?.avatar ?? me.avatar }} />
+                <span className="friend-name">
+                  <strong>{nameOf(me)}</strong>
+                  <span className="muted small">@{me.username}</span>
+                </span>
+                <button className="link-btn small" onClick={() => setEditing(true)}>{t('Edit')}</button>
+              </div>
+              <label className="setting">
+                <span>
+                  {t('Public profile')}
+                  <br />
+                  <span className="muted small">{isPublic ? t('Any member with your link sees your name, picture, gear and shared training stats. Never your workouts, nutrition or weight.') : t('Only your friends see your profile and gear.')}</span>
+                </span>
+                <input id="settings-public" type="checkbox" className="switch" checked={isPublic} onChange={(e) => update((s) => ({ ...s, profile: { name: '', bio: '', ...s.profile, isPublic: e.target.checked } }))} />
+              </label>
+            </section>
+
+            <h2 className="settings-group">{t('What friends see')}</h2>
+            <section className="panel">
+              <label className="setting">
+                <span>
+                  {t('Share my stats with friends')}
+                  <br />
+                  <span className="muted small">{t('Training summary only: days, sets, volume, streak, records and lifts. Never your workouts in detail or your nutrition.')}</span>
+                </span>
+                <input type="checkbox" className="switch" checked={sharing} onChange={(e) => update((s) => ({ ...s, settings: { ...s.settings, shareStats: e.target.checked } }))} />
+              </label>
+            </section>
+          </>
+        )}
+      </main>
+    </>
   );
 }

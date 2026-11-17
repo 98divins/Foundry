@@ -6,7 +6,8 @@ import { Header, Icon, Segmented, Stat } from '../components/ui';
 import { muscleLabel, MUSCLES } from '../exercises';
 import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
-import { hasPro } from '../pro';
+import { hasPro, requirePro } from '../pro';
+import { DietTraining } from './Progress';
 import { exerciseName, useStore } from '../store';
 import type { Muscle } from '../types';
 import { fmtDuration, fmtVolume, weekStart } from '../utils';
@@ -21,18 +22,25 @@ export const GROUP_LABEL: Record<MuscleGroup, string> = {
   legs: tk('Lower body'),
 };
 
-export type StatsPageId = 'distribution' | 'muscles' | 'exercises' | 'month';
+export type StatsPageId = 'diet' | 'distribution' | 'muscles' | 'exercises' | 'month';
 
 /** Entries of the "Advanced statistics" list on the Progress tab. */
 export const STATS_PAGES: { id: StatsPageId; icon: 'chart' | 'dumbbell' | 'list' | 'history'; title: string; text: string; pro?: boolean }[] = [
+  { id: 'diet', icon: 'chart', title: tk('Diet × training'), text: tk('How calories, protein and weight line up with your strength, week by week.') },
   { id: 'distribution', icon: 'chart', title: tk('Muscle balance'), text: tk('Sets per muscle group, this period against the one before.'), pro: true },
   { id: 'muscles', icon: 'dumbbell', title: tk('Muscles week by week'), text: tk('Working sets per muscle for any week.') },
   { id: 'exercises', icon: 'list', title: tk('Main exercises'), text: tk('The exercises you do most often.') },
   { id: 'month', icon: 'history', title: tk('Monthly report'), text: tk('Your month in numbers, training days and streak.'), pro: true },
 ];
 
-export function StatsPage({ page }: { page: StatsPageId }) {
+export function StatsPage({ page }: { page?: StatsPageId }) {
   switch (page) {
+    case 'diet':
+      return (
+        <Sub title={t('Diet × training')}>
+          <DietTraining />
+        </Sub>
+      );
     case 'distribution':
       return <Distribution />;
     case 'muscles':
@@ -42,8 +50,36 @@ export function StatsPage({ page }: { page: StatsPageId }) {
     case 'month':
       return <MonthReport />;
     default:
-      return null;
+      return <StatsHub />;
   }
+}
+
+/** The list of detailed statistics pages. */
+function StatsHub() {
+  return (
+    <>
+      <Header title={t('Detailed statistics')} onBack={() => back('profile')} />
+      <main className="page">
+        <ul className="settings-list">
+          {STATS_PAGES.map((p) => (
+            <li key={p.id}>
+              <button className="settings-row" onClick={() => (!p.pro || requirePro('advancedStats')) && go('stats/' + p.id)}>
+                <Icon name={p.icon} />
+                <span className="settings-label">
+                  <span>
+                    {t(p.title)}
+                    {p.pro && <span className="pro-badge">Pro</span>}
+                  </span>
+                  <span className="muted small">{t(p.text)}</span>
+                </span>
+                <Icon name="chevron" size={18} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </main>
+    </>
+  );
 }
 
 function Sub({ title, children }: { title: string; children: React.ReactNode }) {

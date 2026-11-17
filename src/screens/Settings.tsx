@@ -12,8 +12,9 @@ import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
 import { hasPro, PLANS, PRO_FREE_DURING_BETA, previewingFree, requirePro, setPreviewFree, type PlanId } from '../pro';
 import { LogoutButton } from '../components/LogoutButton';
+import { FriendsSettings } from './Friends';
 
-type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'privacy' | 'terms' | 'contact';
+type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'friends' | 'privacy' | 'terms' | 'contact';
 
 function Row({ icon, label, value, onClick }: { icon: IconName; label: string; value?: string; onClick: () => void }) {
   return (
@@ -49,6 +50,10 @@ export function SettingsHub() {
           <Row icon="user" label={t('Profile')} value={state.profile?.name || undefined} onClick={() => open('profile')} />
           <Row icon="lock" label={t('Account')} value={c.user?.email ?? undefined} onClick={() => open('account')} />
           <Row icon="trophy" label={t('Subscription')} value={hasPro() ? (PRO_FREE_DURING_BETA ? t('Pro · beta') : t('Pro')) : t('Free')} onClick={() => open('subscription')} />
+        </ul>
+        <h2 className="settings-group">{t('Friends')}</h2>
+        <ul className="settings-list">
+          <Row icon="users" label={t('Invite, share my profile, privacy')} onClick={() => open('friends')} />
         </ul>
         <h2 className="settings-group">{t('Preferences')}</h2>
         <ul className="settings-list">
@@ -107,6 +112,8 @@ export function SettingsPage({ page }: { page?: string }) {
       return <AboutPage />;
     case 'subscription':
       return <SubscriptionPage />;
+    case 'friends':
+      return <FriendsSettings />;
     case 'privacy':
       return (
         <Sub title={t('Privacy policy')}>

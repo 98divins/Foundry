@@ -11,11 +11,10 @@ import {
   weekStarts,
   weekStreak,
 } from '../analytics';
-import { STATS_PAGES } from './Stats';
 import { GoalsCard } from './Goals';
 import { BarChart, LineChart, Sparkline } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
-import { Header, Icon, Segmented, Stat } from '../components/ui';
+import { Header, Icon, Segmented } from '../components/ui';
 import { Avatar } from './Settings';
 import { muscleLabel } from '../exercises';
 import { go } from '../hooks';
@@ -23,9 +22,9 @@ import { exerciseName, useStore } from '../store';
 import type { Muscle, PRKind } from '../types';
 import { computePRs, exerciseKind, fmtDate, fmtEstimate, fmtSet, fmtVolume, toDisplay, weekStart } from '../utils';
 import { locale, t, tk } from '../i18n';
-import { requirePro } from '../pro';
 import { gearCount } from '../gear';
-import { LevelCard } from './Levels';
+import { useProgression } from './Levels';
+import { BADGES } from '../levels';
 import { YearReviewCard } from './YearReview';
 import { ChallengesPanel } from './Challenges';
 
@@ -43,7 +42,7 @@ type WeekMetric = 'days' | 'workouts' | 'sets' | 'volume';
 
 export function Progress() {
   const { state, exMap } = useStore();
-  const { workouts, settings, nutrition } = state;
+  const { workouts, settings } = state;
   const unit = settings.unit;
   const lang = settings.exerciseLang;
   const [metric, setMetric] = useState<WeekMetric>('sets');
@@ -54,9 +53,6 @@ export function Progress() {
   const index = useMemo(() => strengthIndexByWeek(workouts, starts), [workouts, starts]);
   const lifts = useMemo(() => liftTrends(workouts), [workouts]);
   const prs = useMemo(() => recentPRs(workouts, computePRs(workouts), 30), [workouts]);
-  const diet = useMemo(() => weeklyDiet(nutrition, starts), [nutrition, starts]);
-  const proteinGoal = nutrition.proteinPerKg;
-  const insights = useMemo(() => crossInsights(index, diet, proteinGoal), [index, diet, proteinGoal]);
 
   const done = workouts.filter((w) => w.endedAt);
   const thisWeek = training[training.length - 1];
@@ -85,25 +81,19 @@ export function Progress() {
   const indexPoints = starts
     .map((t, i) => ({ x: t, y: index[i] }))
     .filter((p): p is { x: number; y: number } => p.y != null);
-  const hasDiet = diet.some((d) => d.loggedDays > 0);
-  const dietRows = starts
-    .map((t, i) => ({ t, d: diet[i], idx: index[i], tr: training[i] }))
-    .slice(-8)
-    .reverse();
-
   if (!done.length) {
     return (
       <>
         <ProgressHeader />
         <main className="page">
-          <ProfileCard workouts={0} records={0} />
-          <LevelCard />
-          <GearCard />
+          <ProfileHeader workouts={0} records={0} streak={0} />
+          <h2 className="settings-group">{t('This week')}</h2>
           <GoalsCard />
           <div className="empty-card">
             <Icon name="chart" size={28} />
             <p>{t('Your progress shows here after your first finished workout: strength trends, weekly volume, records and how your diet affects them.')}</p>
           </div>
+          <MySpace />
         </main>
       </>
     );
@@ -113,22 +103,15 @@ export function Progress() {
     <>
       <ProgressHeader />
       <main className="page">
-        <ProfileCard workouts={done.length} records={prs.length} />
+        <ProfileHeader workouts={done.length} records={prs.length} streak={streak} />
         <YearReviewCard />
-        <LevelCard />
-        <ChallengesPanel compact />
-        <RecapRow />
-        <GearCard />
+
+        <h2 className="settings-group">{t('This week')}</h2>
         <GoalsCard />
+        <ChallengesPanel compact />
+        <p className="muted small center">{t('{d} training days and {s} sets so far this week.', { d: thisWeek.days, s: thisWeek.sets })}</p>
 
-        <div className="stats-row">
-          <Stat label={t('Training days this week')} value={thisWeek.days} />
-          <Stat label={t('Week streak')} value={<span className="streak-value"><Icon name="flame" size={22} />{streak}</span>} />
-          <Stat label={t('Sets this week')} value={thisWeek.sets} />
-          <Stat label={t('Workouts')} value={done.length} />
-        </div>
-
-        <AdvancedStats />
+        <h2 className="settings-group">{t('Progress')}</h2>
 
         <section className="panel">
           <h2 className="panel-title">{t('Strength')}</h2>
@@ -231,6 +214,103 @@ export function Progress() {
           </ul>
         </section>
 
+        <p className="muted small center">
+          {t('{0} lifted in the last 12 weeks', { 0: fmtVolume(training.reduce((t, w) => t + w.volume, 0), unit) })}</p>
+
+        <MySpace />
+      </main>
+    </>
+  );
+}
+
+/** Who you are and where you stand: picture, name, level, three numbers. */
+function ProfileHeader({ workouts, records, streak }: { workouts: number; records: number; streak: number }) {
+  const { state } = useStore();
+  const p = useProgression();
+  const pct = p.level >= 50 ? 100 : Math.round((p.intoLevel / p.levelSize) * 100);
+  return (
+    <section className="panel profile-head">
+      <button className="profile-head-id" onClick={() => go('settings/profile')}>
+        <Avatar size={64} />
+        <span className="profile-card-text">
+          <strong>{state.profile?.name || t('Add your name')}</strong>
+          <span className="muted small">{state.profile?.bio || t('Edit profile')}</span>
+        </span>
+      </button>
+      <button className="profile-head-level" onClick={() => go('levels')} aria-label={t('Level and badges')}>
+        <span className="level-num" style={{ '--rank': p.rank.color } as React.CSSProperties}>{p.level}</span>
+        <span className="profile-head-xp">
+          <span className="small"><strong>{t(p.rank.name)}</strong> · {t('{a} / {b} badges', { a: p.badges.length, b: BADGES.length })}</span>
+          <span className="xp-bar" style={{ '--rank': p.rank.color } as React.CSSProperties}><span style={{ width: pct + '%' }} /></span>
+        </span>
+        <Icon name="chevron" size={18} />
+      </button>
+      <span className="profile-card-stats">
+        <span>
+          <strong>{workouts}</strong>
+          <span className="muted small">{t('Workouts')}</span>
+        </span>
+        <span>
+          <strong className="streak-value"><Icon name="flame" size={18} />{streak}</strong>
+          <span className="muted small">{t('Week streak')}</span>
+        </span>
+        <span>
+          <strong>{records}</strong>
+          <span className="muted small">{t('Records (30 d)')}</span>
+        </span>
+      </span>
+    </section>
+  );
+}
+
+/** Short list of the personal pages. */
+function MySpace() {
+  const { state } = useStore();
+  const n = gearCount(state.profile?.gear);
+  const rows: { icon: 'chart' | 'share' | 'trophy' | 'dumbbell'; label: string; text: string; to: string }[] = [
+    { icon: 'chart', label: t('Detailed statistics'), text: t('Diet × training, muscle balance, main exercises, monthly report.'), to: 'stats' },
+    { icon: 'share', label: t('My recaps'), text: t('Your week, month or year in a story, with an image to share.'), to: 'recap' },
+    { icon: 'trophy', label: t('Level and badges'), text: t('How you earn XP, ranks and every badge.'), to: 'levels' },
+    { icon: 'dumbbell', label: t('My gear'), text: n ? t('{0} / 13 slots', { 0: n }) : t('Belt, gloves, shoes, shaker… show what you train with.'), to: 'gear' },
+  ];
+  return (
+    <>
+      <h2 className="settings-group">{t('My space')}</h2>
+      <ul className="settings-list">
+        {rows.map((r) => (
+          <li key={r.to}>
+            <button className="settings-row" onClick={() => go(r.to)}>
+              <Icon name={r.icon} />
+              <span className="settings-label">
+                {r.label}
+                <span className="muted small">{r.text}</span>
+              </span>
+              <Icon name="chevron" size={18} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+/** Diet × training: how calories, protein and weight line up with strength, week by week. */
+export function DietTraining() {
+  const { state } = useStore();
+  const { workouts, settings, nutrition } = state;
+  const unit = settings.unit;
+  const starts = useMemo(() => weekStarts(12), []);
+  const training = useMemo(() => weeklyTraining(workouts, starts), [workouts, starts]);
+  const index = useMemo(() => strengthIndexByWeek(workouts, starts), [workouts, starts]);
+  const diet = useMemo(() => weeklyDiet(nutrition, starts), [nutrition, starts]);
+  const insights = useMemo(() => crossInsights(index, diet, nutrition.proteinPerKg), [index, diet, nutrition.proteinPerKg]);
+  const weekLabel = (t: number) => new Date(t).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' });
+  const hasDiet = diet.some((d) => d.loggedDays > 0);
+  const dietRows = starts
+    .map((t, i) => ({ t, d: diet[i], idx: index[i], tr: training[i] }))
+    .slice(-8)
+    .reverse();
+  return (
         <section className="panel">
           <h2 className="panel-title">{t('Diet × training')}</h2>
           {!hasDiet ? (
@@ -283,95 +363,6 @@ export function Progress() {
             </>
           )}
         </section>
-
-        <p className="muted small center">
-          {t('{0} lifted in the last 12 weeks', { 0: fmtVolume(training.reduce((t, w) => t + w.volume, 0), unit) })}</p>
-      </main>
-    </>
-  );
-}
-
-function ProfileCard({ workouts, records }: { workouts: number; records: number }) {
-  const { state } = useStore();
-  return (
-    <button className="profile-card" onClick={() => go('settings/profile')}>
-      <Avatar size={64} />
-      <span className="profile-card-text">
-        <strong>{state.profile?.name || t('Add your name')}</strong>
-        <span className="muted small">{state.profile?.bio || t('Edit profile')}</span>
-      </span>
-      <span className="profile-card-stats">
-        <span>
-          <strong>{workouts}</strong>
-          <span className="muted small">{t('Workouts')}</span>
-        </span>
-        <span>
-          <strong>{records}</strong>
-          <span className="muted small">{t('Records (30 d)')}</span>
-        </span>
-      </span>
-    </button>
-  );
-}
-
-function RecapRow() {
-  return (
-    <ul className="settings-list">
-      <li>
-        <button className="settings-row" onClick={() => go('recap')}>
-          <Icon name="share" />
-          <span className="settings-label">
-            {t('My recaps')}
-            <span className="muted small">{t('Your week, month or year in a story, with an image to share.')}</span>
-          </span>
-          <Icon name="chevron" size={18} />
-        </button>
-      </li>
-    </ul>
-  );
-}
-
-function GearCard() {
-  const { state } = useStore();
-  const n = gearCount(state.profile?.gear);
-  return (
-    <ul className="settings-list">
-      <li>
-        <button className="settings-row" onClick={() => go('gear')}>
-          <Icon name="dumbbell" />
-          <span className="settings-label">
-            {t('My gear')}
-            <span className="muted small">{n ? t('{0} / 13 slots', { 0: n }) : t('Belt, gloves, shoes, shaker… show what you train with.')}</span>
-          </span>
-          <Icon name="chevron" size={18} />
-        </button>
-      </li>
-    </ul>
-  );
-}
-
-function AdvancedStats() {
-  return (
-    <section>
-      <h2 className="settings-group">{t('Advanced statistics')}</h2>
-      <ul className="settings-list">
-        {STATS_PAGES.map((p) => (
-          <li key={p.id}>
-            <button className="settings-row" onClick={() => (!p.pro || requirePro('advancedStats')) && go('stats/' + p.id)}>
-              <Icon name={p.icon} />
-              <span className="settings-label">
-                <span>
-                  {t(p.title)}
-                  {p.pro && <span className="pro-badge">Pro</span>}
-                </span>
-                <span className="muted small">{t(p.text)}</span>
-              </span>
-              <Icon name="chevron" size={18} />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 

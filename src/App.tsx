@@ -123,7 +123,7 @@ export function App() {
       screen = <GoalsPage />;
       break;
     case 'stats':
-      screen = <StatsPage key={param} page={param as StatsPageId} />;
+      screen = <StatsPage key={param ?? 'hub'} page={param as StatsPageId | undefined} />;
       break;
     case 'settings':
       screen = <SettingsPage key={param ?? 'hub'} page={param} />;
@@ -147,7 +147,8 @@ export function App() {
       screen = <ImportRoutines key={param} code={param ?? ''} />;
       break;
     case 'friends':
-      screen = param === 'challenges' ? <FriendsHome key="ch" initialView="challenges" /> : param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
+      screen =
+        param === 'challenges' ? <FriendsHome key="ch" initialView="challenges" /> : param === 'list' ? <FriendsHome key="list" manage /> : param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
       break;
     case 'recap':
       screen = param && extra ? <RecapPage key={param + extra} kind={param as 'week' | 'month' | 'year'} start={parseKey(extra)} /> : <RecapHub />;

@@ -121,7 +121,17 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
                     {d.volume > 0 && <span>{fmtVolume(d.volume, unit)}</span>}
                     {d.records > 0 && <span className="feed-pr"><Icon name="trophy" size={14} /> {tp(d.records, '{n} record', '{n} records')}</span>}
                   </span>
-                  {!!d.exercises.length && <span className="muted small">{d.exercises.join(' · ')}</span>}
+                  {!!d.exercises.length && (
+                    <span className="muted small feed-exercises">
+                      {d.exercises.map((x, k) => (
+                        <span key={k}>
+                          {k > 0 && ' · '}
+                          {x}
+                          {d.custom?.[k] && <span className="tag custom-tag">{t('Custom')}</span>}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </div>
               )}
               {d.kind === 'level' && (
