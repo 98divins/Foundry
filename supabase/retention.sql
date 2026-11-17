@@ -19,7 +19,7 @@ begin
   get diagnostics n = row_count;
   what := 'reports older than 12 months'; deleted := n; return next;
   if to_regclass('public.user_items') is not null then
-    delete from public.user_items where deleted and updated_at < now() - interval '180 days';
+    delete from public.user_items i where i.deleted and i.updated_at < now() - interval '180 days';
     get diagnostics n = row_count;
     what := 'sync deletion markers older than 180 days'; deleted := n; return next;
   end if;

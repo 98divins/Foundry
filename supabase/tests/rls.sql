@@ -250,9 +250,13 @@ select t.ok((select count(*) from admin.reports) >= 1, 'admin views: the owner s
 select t.ok(not exists (select 1 from information_schema.columns where table_schema = 'admin' and column_name in ('email', 'name', 'kg', 'kcal')), 'admin views: no email, name, weight or calories');
 select t.ok((select username from admin.account_for_email('BOB@test.invalid')) = 'bob', 'admin views: support can find an account by email');
 insert into public.feedback (user_id, email, kind, message, created_at) values (:bob, 'bob@test.invalid', 'idea', 'old', now() - interval '13 months');
+alter table public.user_items disable trigger stamp;
+update public.user_items set deleted = true, data = null, updated_at = now() - interval '200 days' where user_id = :bob and id = 'w1';
+alter table public.user_items enable trigger stamp;
 select t.ok((select deleted from admin.purge_expired() where what like 'contact%') = 1, 'retention: contact messages older than 12 months are purged');
 update auth.users set last_sign_in_at = now() - interval '25 months', created_at = now() - interval '30 months' where id = :carol;
 update public.user_state set updated_at = now() - interval '25 months' where user_id = :carol;
 select t.ok((select count(*) from admin.inactive_accounts where username = 'carol') = 1, 'retention: accounts inactive for 24 months are listed');
+select t.ok(not exists (select 1 from public.user_items where id = 'w1') and exists (select 1 from public.user_items where id = 'w2'), 'retention: only deletion markers older than 180 days are purged');
 
 \echo 'All access-rule checks passed.'
