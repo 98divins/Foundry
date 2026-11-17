@@ -25,6 +25,7 @@ import { MoveSheet } from './MoveSheet';
 import { PlanSheet } from './PlanSheet';
 import { locale, t, tp } from '../../i18n';
 import { canAdd, requirePro } from '../../pro';
+import { bmi, MIN_BMI } from '../../safeguards';
 
 export function fmtDay(key: string): string {
   const today = dayKey();
@@ -124,6 +125,24 @@ export function NutritionHome({ date }: { date: string }) {
             <span>{tp(planned.length, '{n} planned food to confirm ({kcal} kcal)', '{n} planned foods to confirm ({kcal} kcal)', { kcal: plannedKcal })}</span>
             <button className="btn btn-small btn-primary" onClick={() => confirm(planned.map((e) => e.id))}>
               {t('Confirm all')}
+            </button>
+          </div>
+        )}
+
+        {n.rateKgPerWeek < 0 && n.profile && trend != null && (bmi(trend, n.profile.heightCm) ?? 99) < MIN_BMI && (
+          <div className="plan-banner small">
+            <span>{t('Your weight is now low for your height. Switching to maintenance is recommended; talk to a doctor if you are worried.')}</span>
+            <button
+              className="btn btn-small btn-primary"
+              onClick={() =>
+                setN((x) => {
+                  const next = { ...x, rateKgPerWeek: 0 };
+                  const ci = makeCheckIn(next, dayKey());
+                  return ci ? { ...next, checkIns: [...next.checkIns.filter((c) => c.date !== ci.date), ci] } : next;
+                })
+              }
+            >
+              {t('Maintain my weight')}
             </button>
           </div>
         )}

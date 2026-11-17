@@ -1,3 +1,4 @@
+import { safeRate } from './safeguards';
 import { tk } from './i18n';
 /**
  * Nutrition engine: food log totals, weight trend, an adaptive estimate of energy
@@ -318,7 +319,8 @@ export function computeTargets(
   n: Pick<NutritionState, 'rateKgPerWeek' | 'proteinPerKg' | 'fatShare' | 'profile'>,
 ): Macros {
   const floor = n.profile?.sex === 'female' ? 1200 : 1500;
-  const kcal = Math.max(floor, Math.round((expenditure + (n.rateKgPerWeek * KCAL_PER_KG) / 7) / 10) * 10);
+  const rate = safeRate(n.rateKgPerWeek, n.profile, trendKg);
+  const kcal = Math.max(floor, Math.round((expenditure + (rate * KCAL_PER_KG) / 7) / 10) * 10);
   const protein = Math.round(n.proteinPerKg * trendKg);
   const fat = Math.round(Math.max((n.fatShare * kcal) / 9, 0.5 * trendKg));
   const carbs = Math.max(0, Math.round((kcal - 4 * protein - 9 * fat) / 4));

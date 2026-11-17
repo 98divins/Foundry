@@ -24,6 +24,7 @@ import { fmtNum, fromDisplay, toDisplay } from '../../utils';
 import { locale, t, tk } from '../../i18n';
 import { requirePro } from '../../pro';
 import { CUSTOM_PLAN, MACRO_PLANS, planFor } from '../../macroPlans';
+import { lossBlocked, MAX_LOSS_SHARE, safeRate } from '../../safeguards';
 import { PRO_FREE_DURING_BETA } from '../../pro';
 
 const ts = (key: string) => parseDay(key).getTime();
@@ -213,7 +214,7 @@ export function PlanPage({ setup }: { setup?: boolean }) {
       let next: NutritionState = {
         ...x,
         profile,
-        rateKgPerWeek: draft.rateKgPerWeek,
+        rateKgPerWeek: rateShown,
         proteinPerKg: draft.proteinPerKg,
         fatShare: draft.fatShare,
         macroPlan: plan,
@@ -248,11 +249,16 @@ export function PlanPage({ setup }: { setup?: boolean }) {
     return { p, f, c: Math.max(0, 100 - p - f) };
   };
   const valid = profile.heightCm > 100 && profile.birthYear > 1920 && (!needsWeight || !!weight);
+  const kgNow = latest ?? (weight ? fromDisplay(weight, unit) : null);
+  const blocked = lossBlocked(profile, kgNow);
+  const rates = RATES.filter((r) => r >= 0 || (!blocked && (!kgNow || -r <= MAX_LOSS_SHARE * kgNow + 1e-9)));
+  const rateShown = rates.includes(draft.rateKgPerWeek) ? draft.rateKgPerWeek : safeRate(draft.rateKgPerWeek, profile, kgNow) < 0 ? Math.min(...rates.filter((r) => r < 0)) : 0;
 
   return (
     <>
       <Header title={setup ? t('Set up my plan') : t('Plan')} onBack={() => back('n')} />
       <main className="page">
+        <p className="muted small">{t('Foundry computes estimates for healthy adults. They are not medical advice: ask a health professional before a big change, especially if you are pregnant, ill or have had an eating disorder.')}</p>
         <section className="panel form">
           <h2 className="panel-title">{t('About you')}</h2>
           <div className="field-row field-row-3">
@@ -303,16 +309,24 @@ export function PlanPage({ setup }: { setup?: boolean }) {
             <span>{t('Weight change per week')}</span>
             <select
               id="p-rate"
-              value={draft.rateKgPerWeek}
+              value={rateShown}
               onChange={(e) => setDraft({ ...draft, rateKgPerWeek: Number(e.target.value) })}
             >
-              {RATES.map((r) => (
+              {rates.map((r) => (
                 <option key={r} value={r}>
                   {r === 0 ? t('Maintain') : r > 0 ? t('Gain {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit }) : t('Lose {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit })}
                 </option>
               ))}
             </select>
           </label>
+          {blocked && (
+            <p className="muted small">
+              {blocked === 'minor'
+                ? t('Weight-loss goals are for people aged 18 and over. You can maintain or gain.')
+                : t('Your weight is already low for your height, so Foundry does not offer a weight-loss goal. If you are worried about your weight or your eating, talk to a doctor.')}
+            </p>
+          )}
+          {!blocked && <p className="muted small">{t('Weight loss is capped at 1% of your body weight per week.')}</p>}
           <div className="field">
             <span>{t('Macro plan')}</span>
             <ul className="plan-choices">
