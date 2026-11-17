@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # Same order as the files are meant to be run in Supabase.
-FILES=(schema social realtime gear activity feedback shared_meals community_foods security guards stats_bounds community_limits shared_meals_author admin adoption)
+FILES=(schema social realtime gear activity feedback shared_meals community_foods security guards stats_bounds community_limits shared_meals_author admin adoption admin_reports)
 
 cleanup() { :; }
 trap 'cleanup' EXIT

@@ -205,6 +205,7 @@ set role authenticated;
 select t.login(:alice);
 select t.fails('select * from admin.users', 'admin views: members cannot read them');
 select t.fails('select * from admin.adoption', 'admin views: members cannot read the adoption numbers');
+select t.fails('select * from admin.reports', 'admin views: members cannot read the reports');
 
 /* ---------- account deletion ---------- */
 select t.login(:alice);
@@ -214,5 +215,7 @@ select t.ok((select count(*) from public.user_state where user_id = :alice) = 0,
 select t.ok((select count(*) from public.feedback where email like 'aaaaaaaa%') = 0, 'delete account: contact messages are gone');
 select t.ok((select count(*) from public.friendships where :alice in (requester, addressee)) = 0, 'delete account: friendships are gone');
 select t.ok((select user_id from public.community_foods where id = 'f-alice') is null, 'delete account: shared foods stay, without a link to the person');
+
+select t.ok((select count(*) from admin.reports) >= 1, 'admin views: the owner sees the reports');
 
 \echo 'All access-rule checks passed.'

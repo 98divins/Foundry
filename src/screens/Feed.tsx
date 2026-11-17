@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { addComment, deleteComment, giveRespect, loadFeed, SocialNotReady, type FeedItem, type PublicProfile } from '../cloud/social';
 import { BadgeMedal, LevelChip } from '../components/Level';
+import { ReportSheet, useHidden, type ReportTarget } from '../components/ReportSheet';
 import { Icon } from '../components/ui';
 import { go } from '../hooks';
 import { locale, t, tp } from '../i18n';
@@ -38,6 +39,8 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
   const [open, setOpen] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [err, setErr] = useState('');
+  const hidden = useHidden();
+  const [reporting, setReporting] = useState<ReportTarget | null>(null);
 
   const reload = useCallback(async () => {
     try {
@@ -151,12 +154,17 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
               )}
               {open === a.id && (
                 <div className="feed-comments">
-                  {a.comments.map((c) => (
+                  {a.comments.filter((c) => !hidden('comment', c.id)).map((c) => (
                     <p key={c.id} className="small feed-comment">
                       <strong>{name(c.user_id)}</strong> {c.body}
                       {(c.user_id === uid || mine) && (
                         <button className="link-btn" onClick={() => remove(a, c.id)} aria-label={t('Delete')}>
                           <Icon name="x" size={14} />
+                        </button>
+                      )}
+                      {c.user_id !== uid && (
+                        <button className="link-btn" onClick={() => setReporting({ kind: 'comment', target: c.id, label: c.body.slice(0, 30) })} aria-label={t('Report')}>
+                          <Icon name="flag" size={14} />
                         </button>
                       )}
                     </p>
@@ -175,6 +183,7 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
         <button className="btn btn-wide" onClick={() => setLimit(limit + 20)}>{t('Show more')}</button>
       )}
       <p className="muted small">{t('Only your friends see your posts. Turn off sharing in this tab to stop posting.')}</p>
+      <ReportSheet item={reporting} onClose={() => setReporting(null)} />
     </section>
   );
 }

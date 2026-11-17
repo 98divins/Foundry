@@ -117,6 +117,8 @@ export interface RoutineFolder {
 }
 
 export interface Settings {
+  /** Shared content this person reported, hidden from their screens (see reports.ts). */
+  hidden?: string[];
   unit: Unit;
   defaultRest: number;
   sound: boolean;

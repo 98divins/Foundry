@@ -11,6 +11,7 @@ import { fmtNum, uid } from '../../utils';
 import { AmountSheet, SearchFoods, toggleFavorite } from './AddFood';
 import { t, tk, tp } from '../../i18n';
 import { canAdd, requirePro } from '../../pro';
+import { ReportSheet, useHidden } from '../../components/ReportSheet';
 
 const SERVINGS = [0.5, 1, 1.5, 2];
 
@@ -498,8 +499,10 @@ function CommunityMeals({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: 
       setMeals([]);
     });
   }, [cloud.user]);
+  const hidden = useHidden();
+  const [reporting, setReporting] = useState<SharedMeal | null>(null);
   const query = q.trim().toLowerCase();
-  const shown = (meals ?? []).filter((m) => !query || m.name.toLowerCase().includes(query) || m.items.some((i) => i.name.toLowerCase().includes(query)));
+  const shown = (meals ?? []).filter((m) => !hidden('meal', m.user_id + '/' + m.meal_id)).filter((m) => !query || m.name.toLowerCase().includes(query) || m.items.some((i) => i.name.toLowerCase().includes(query)));
   return (
     <>
       <p className="muted small">{t('Meals shared by other members. Share yours from its edit page.')}</p>
@@ -532,11 +535,13 @@ function CommunityMeals({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: 
                     {t('Plan it')}
                   </button>
                 </div>
+                <button className="link-btn small report-link" onClick={() => setReporting(m)}>{t('Report')}</button>
               </div>
             </li>
           );
         })}
       </ul>
+      <ReportSheet item={reporting ? { kind: 'meal', target: reporting.user_id + '/' + reporting.meal_id, label: reporting.name } : null} onClose={() => setReporting(null)} />
     </>
   );
 }

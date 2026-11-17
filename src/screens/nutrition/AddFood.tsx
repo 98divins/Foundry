@@ -19,6 +19,7 @@ import {
 import { SavedMealsList } from './SavedMeals';
 import { useCloud } from '../../cloud/cloud';
 import { communityFoodByBarcode, publishFood, searchCommunityFoods } from '../../cloud/social';
+import { ReportSheet, useHidden } from '../../components/ReportSheet';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { fmtDay } from './NutritionHome';
@@ -192,7 +193,8 @@ export function SearchFoods({
     }, 350);
     return () => clearTimeout(id);
   }, [query, local]);
-  const communityShown = community && community.q === query.trim() ? community.foods : [];
+  const hidden = useHidden();
+  const communityShown = (community && community.q === query.trim() ? community.foods : []).filter((f) => !hidden('food', f.id));
 
   const loadMore = async () => {
     setBusy('generic');
@@ -326,6 +328,7 @@ export function SearchFoods({
 }
 
 function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food) => void; onCreate: () => void }) {
+  const hidden = useHidden();
   const [camera, setCamera] = useState(true);
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<{ text: string; error?: boolean; notFound?: boolean } | null>(null);
@@ -348,7 +351,7 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
         } catch (e) {
           offError = e;
         }
-        food ??= await communityFoodByBarcode(c).catch(() => null);
+        food ??= await communityFoodByBarcode(c).then((f) => (f && hidden('food', f.id) ? null : f), () => null);
         if (!food && offError) throw offError;
         if (food) {
           setStatus(null);
@@ -546,6 +549,7 @@ export function AmountSheet({
 }) {
   const [grams, setGrams] = useState<number | null>(null);
   const [lastId, setLastId] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
   if (food && food.id !== lastId) {
     setLastId(food.id);
     setGrams(food.serving?.grams ?? 100);
@@ -600,7 +604,13 @@ export function AmountSheet({
             {addLabel}
           </button>
         </div>
+        {food.source === 'community' && (
+          <button type="button" className="link-btn small report-link" onClick={() => setReporting(true)}>
+            {t('Report this food')}
+          </button>
+        )}
       </form>
+      <ReportSheet item={reporting ? { kind: 'food', target: food.id, label: food.name } : null} onClose={() => { setReporting(false); onClose(); }} />
     </Sheet>
   );
 }

@@ -10,6 +10,7 @@ import { exerciseName, useStore } from '../store';
 import { fmtNum } from '../utils';
 import { Avatar } from './Settings';
 import { BadgeMedal, LevelChip } from '../components/Level';
+import { ReportSheet, useHidden } from '../components/ReportSheet';
 import { BADGES, progression } from '../levels';
 
 /** The plain silhouette, for someone without a picture (never the viewer's own photo). */
@@ -200,6 +201,9 @@ export function MemberProfile({ username }: { username: string }) {
   const { state, exMap } = useStore();
   const [p, setP] = useState<ProfilePage | null | undefined>(undefined);
   const [err, setErr] = useState('');
+  const hidden = useHidden();
+  const [reporting, setReporting] = useState(false);
+  const self = useCloud().user?.id;
   useEffect(() => {
     loadProfilePage(username).then(setP, (e) => {
       setErr(e instanceof SocialNotReady ? t('Profiles are not switched on on the server yet.') : (e as Error).message);
@@ -219,7 +223,12 @@ export function MemberProfile({ username }: { username: string }) {
             <p>{err || t('This profile does not exist or is private.')}</p>
           </div>
         )}
-        {p && (
+        {p && hidden('profile', p.username) && (
+          <div className="empty-card">
+            <p>{t('You reported this profile, so it is hidden.')}</p>
+          </div>
+        )}
+        {p && !hidden('profile', p.username) && (
           <>
             <GearBoard
               gear={p.gear}
@@ -270,6 +279,10 @@ export function MemberProfile({ username }: { username: string }) {
                 </ul>
               </section>
             )}
+            {p.user_id !== self && (
+              <button className="link-btn small report-link" onClick={() => setReporting(true)}>{t('Report this profile')}</button>
+            )}
+            <ReportSheet item={reporting ? { kind: 'profile', target: p.username, label: '@' + p.username } : null} onClose={() => setReporting(false)} />
           </>
         )}
       </main>

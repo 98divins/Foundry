@@ -412,3 +412,12 @@ export async function deleteComment(id: string) {
   const { error } = await (await sb()).from('activity_comments').delete().eq('id', id);
   check(error);
 }
+
+/* ---------- Reports (supabase/security.sql) ---------- */
+
+/** Report shared content. Reporting the same thing twice counts once. */
+export async function reportContent(kind: import('../reports').ReportKind, target: string, reason: import('../reports').ReportReason, details: string) {
+  const { error } = await (await sb()).from('content_reports').insert({ kind, target: target.slice(0, 200), reason, details: details.trim().slice(0, 1000) || null });
+  if (error?.code === '23505') return;
+  check(error);
+}
