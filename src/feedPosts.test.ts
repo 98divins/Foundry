@@ -8,7 +8,14 @@ const w = (id: string, at: number, extra: Partial<Workout> = {}): Workout => ({
   name: id,
   startedAt: at,
   endedAt: at + H,
-  exercises: [{ id: 'e' + id, exerciseId: 'bench_bb', restSec: 90, sets: Array.from({ length: 6 }, (_, k) => ({ id: id + k, type: 'normal' as const, weight: 50, reps: 5, done: true })) }],
+  exercises: [
+    {
+      id: 'e' + id,
+      exerciseId: 'bench_bb',
+      restSec: 90,
+      sets: Array.from({ length: 6 }, (_, k) => ({ id: id + k, type: 'normal' as const, weight: 50, reps: 5, done: true })),
+    },
+  ],
   ...extra,
 });
 

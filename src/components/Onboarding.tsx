@@ -41,8 +41,12 @@ export function Welcome() {
           ))}
         </ul>
         <div className="welcome-actions">
-          <button className="btn btn-primary btn-wide welcome-cta" onClick={() => setScreen('signup')}>{t('Create my account')}</button>
-          <button className="btn btn-ghost btn-wide" onClick={() => setScreen('login')}>{t('I already have an account')}</button>
+          <button className="btn btn-primary btn-wide welcome-cta" onClick={() => setScreen('signup')}>
+            {t('Create my account')}
+          </button>
+          <button className="btn btn-ghost btn-wide" onClick={() => setScreen('login')}>
+            {t('I already have an account')}
+          </button>
         </div>
       </main>
     );
@@ -59,13 +63,7 @@ export function Welcome() {
         <Logo size={44} />
         <h1>{screen === 'signup' ? t('Create your account') : screen === 'login' ? t('Welcome back') : t('Reset your password')}</h1>
       </div>
-      <AuthForm
-        mode={screen}
-        email={email}
-        onEmail={setEmail}
-        onMode={setScreen}
-        onCheckEmail={() => setScreen('check')}
-      />
+      <AuthForm mode={screen} email={email} onEmail={setEmail} onMode={setScreen} onCheckEmail={() => setScreen('check')} />
     </main>
   );
 }
@@ -136,12 +134,18 @@ function AuthForm({
       </button>
       <div className="account-links">
         {mode === 'signup' && (
-          <button type="button" className="link-btn" onClick={() => onMode('login')}>{t('I already have an account')}</button>
+          <button type="button" className="link-btn" onClick={() => onMode('login')}>
+            {t('I already have an account')}
+          </button>
         )}
         {mode === 'login' && (
           <>
-            <button type="button" className="link-btn" onClick={() => onMode('reset')}>{t('Forgot password?')}</button>
-            <button type="button" className="link-btn" onClick={() => onMode('signup')}>{t('Create an account')}</button>
+            <button type="button" className="link-btn" onClick={() => onMode('reset')}>
+              {t('Forgot password?')}
+            </button>
+            <button type="button" className="link-btn" onClick={() => onMode('signup')}>
+              {t('Create an account')}
+            </button>
           </>
         )}
       </div>
@@ -174,7 +178,9 @@ function CheckEmail({ email, onBack }: { email: string; onBack: () => void }) {
         <li>{t('Come back here and log in.')}</li>
       </ol>
       {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
-      <button className="btn btn-primary btn-wide" onClick={onBack}>{t('I confirmed, log in')}</button>
+      <button className="btn btn-primary btn-wide" onClick={onBack}>
+        {t('I confirmed, log in')}
+      </button>
       <button
         className="btn btn-ghost btn-wide"
         disabled={wait > 0}
@@ -212,7 +218,9 @@ export function QuickStart() {
             <Segmented<string>
               label={t('Training days per week you aim for')}
               value={String(state.goals?.trainingDays ?? 3)}
-              onChange={(v) => update((s) => ({ ...s, goals: { trainingDays: Number(v), dietDays: s.goals?.dietDays ?? null, setAt: s.goals?.setAt ?? Date.now() } }))}
+              onChange={(v) =>
+                update((s) => ({ ...s, goals: { trainingDays: Number(v), dietDays: s.goals?.dietDays ?? null, setAt: s.goals?.setAt ?? Date.now() } }))
+              }
               options={[2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: String(n) }))}
             />
             <span className="muted small">{t('Your weekly goal. You can add a diet goal later in Progress.')}</span>
@@ -268,7 +276,9 @@ export function QuickStart() {
             />
           </div>
         </div>
-        <button className="btn btn-primary btn-wide" onClick={() => setStep(2)}>{t('Continue')}</button>
+        <button className="btn btn-primary btn-wide" onClick={() => setStep(2)}>
+          {t('Continue')}
+        </button>
       </main>
     );
   }
@@ -300,7 +310,9 @@ export function QuickStart() {
           </li>
         ))}
       </ul>
-      <button className="btn btn-ghost btn-wide" onClick={() => done('')}>{t('Skip, take me to the app')}</button>
+      <button className="btn btn-ghost btn-wide" onClick={() => done('')}>
+        {t('Skip, take me to the app')}
+      </button>
     </main>
   );
 }

@@ -58,7 +58,11 @@ export function ChallengesPanel({ friends, compact }: { friends?: ChallengeFrien
           <section key={c.def.id} className={'panel challenge' + (c.done ? ' done' : '')}>
             <div className="challenge-head">
               <strong>{t(c.def.name)}</strong>
-              {c.done && <span className="tag challenge-done"><Icon name="check" size={14} /> {t('Challenge completed')}</span>}
+              {c.done && (
+                <span className="tag challenge-done">
+                  <Icon name="check" size={14} /> {t('Challenge completed')}
+                </span>
+              )}
             </div>
             <p className="muted small">{t(c.def.goal, { target: c.def.target })}</p>
             <Bar value={c.value} target={c.def.target} unit={c.def.unit} />

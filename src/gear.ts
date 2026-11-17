@@ -1,10 +1,7 @@
 /** The user's equipment ("gear"): one item per slot, shown around their silhouette on the profile. */
 import { tk } from './i18n';
 
-export const GEAR_SLOTS = [
-  'belt', 'gloves', 'straps', 'wraps', 'knees', 'elbows',
-  'shoes', 'top', 'bottoms', 'shaker', 'bag', 'headphones', 'watch',
-] as const;
+export const GEAR_SLOTS = ['belt', 'gloves', 'straps', 'wraps', 'knees', 'elbows', 'shoes', 'top', 'bottoms', 'shaker', 'bag', 'headphones', 'watch'] as const;
 export type GearSlot = (typeof GEAR_SLOTS)[number];
 
 export interface GearItem {
@@ -64,9 +61,15 @@ export function cleanGear(g: unknown): Gear {
   for (const s of GEAR_SLOTS) {
     const v = (g as Record<string, unknown>)[s] as Partial<GearItem> | undefined;
     if (!v || typeof v !== 'object') continue;
-    const brand = String(v.brand ?? '').trim().slice(0, 40);
-    const model = String(v.model ?? '').trim().slice(0, 60);
-    const note = String(v.note ?? '').trim().slice(0, 120);
+    const brand = String(v.brand ?? '')
+      .trim()
+      .slice(0, 40);
+    const model = String(v.model ?? '')
+      .trim()
+      .slice(0, 60);
+    const note = String(v.note ?? '')
+      .trim()
+      .slice(0, 120);
     if (brand || model) out[s] = { brand, model, ...(note ? { note } : {}) };
   }
   return out;

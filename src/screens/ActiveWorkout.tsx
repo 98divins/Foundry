@@ -37,7 +37,9 @@ export function ActiveWorkout() {
         <main className="page">
           <div className="empty-card">
             <p>{t('No workout in progress.')}</p>
-            <button className="btn btn-primary" onClick={() => go('', { replace: true })}>{t('Go to start')}</button>
+            <button className="btn btn-primary" onClick={() => go('', { replace: true })}>
+              {t('Go to start')}
+            </button>
           </div>
         </main>
       </>
@@ -67,9 +69,7 @@ export function ActiveWorkout() {
         exercises: s.active.exercises
           .map((we) => ({
             ...we,
-            sets: we.sets
-              .filter((x) => x.done || (includeFilled && isFilled(we, x)))
-              .map((x) => ({ ...x, done: true })),
+            sets: we.sets.filter((x) => x.done || (includeFilled && isFilled(we, x))).map((x) => ({ ...x, done: true })),
           }))
           .filter((we) => we.sets.length),
       };
@@ -87,11 +87,7 @@ export function ActiveWorkout() {
   const restLeft = rest ? Math.max(0, Math.ceil((restPaused ? rest.pausedLeft! : rest.endsAt - now) / 1000)) : 0;
   const paused = w.pausedAt != null;
   const togglePause = () =>
-    setW((x) =>
-      x.pausedAt != null
-        ? { ...x, pausedMs: (x.pausedMs ?? 0) + (Date.now() - x.pausedAt), pausedAt: null }
-        : { ...x, pausedAt: Date.now() },
-    );
+    setW((x) => (x.pausedAt != null ? { ...x, pausedMs: (x.pausedMs ?? 0) + (Date.now() - x.pausedAt), pausedAt: null } : { ...x, pausedAt: Date.now() }));
   const toggleRestPause = () =>
     update((s) => {
       if (!s.rest) return s;
@@ -121,12 +117,18 @@ export function ActiveWorkout() {
               else if (doneCount < sets.length) setConfirm('finish');
               else finish(false);
             }}
-          >{t('Finish')}</button>
+          >
+            {t('Finish')}
+          </button>
         }
       />
       <main className={'page' + (rest || missedAt ? ' has-rest' : '')}>
         <div className="stats-row">
-          <button className={'stat stat-btn' + (paused ? ' paused' : '')} onClick={togglePause} aria-label={paused ? t('Resume the workout timer') : t('Pause the workout timer')}>
+          <button
+            className={'stat stat-btn' + (paused ? ' paused' : '')}
+            onClick={togglePause}
+            aria-label={paused ? t('Resume the workout timer') : t('Pause the workout timer')}
+          >
             <span className="stat-label">{paused ? t('Paused') : t('Duration')}</span>
             <span className="stat-value">
               <Icon name={paused ? 'play' : 'pause'} size={16} /> {fmtClock(workoutElapsed(w, now) / 1000)}
@@ -146,7 +148,9 @@ export function ActiveWorkout() {
             if (we.restSec > 0) update((s) => ({ ...s, rest: { endsAt: Date.now() + we.restSec * 1000, total: we.restSec } }));
           }}
         />
-        <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirm('discard')}>{t('Discard workout')}</button>
+        <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirm('discard')}>
+          {t('Discard workout')}
+        </button>
       </main>
 
       {!rest && missedAt && (
@@ -155,7 +159,9 @@ export function ActiveWorkout() {
             <span className="eyebrow">{t('Rest is over')}</span>
             <span className="rest-clock">{t('{0} ago', { 0: fmtClock((now - missedAt) / 1000) })}</span>
           </div>
-          <button className="btn btn-small btn-primary" onClick={() => setMissedAt(null)}>{t('Got it')}</button>
+          <button className="btn btn-small btn-primary" onClick={() => setMissedAt(null)}>
+            {t('Got it')}
+          </button>
         </div>
       )}
       {rest && (
@@ -163,7 +169,15 @@ export function ActiveWorkout() {
           <div className="rest-progress" style={{ transform: `scaleX(${restLeft / rest.total})` }} />
           <button
             className="btn btn-small"
-            onClick={() => update((s) => (s.rest ? (s.rest.pausedLeft != null ? { ...s, rest: { ...s.rest, pausedLeft: Math.max(0, s.rest.pausedLeft - 15000) } } : { ...s, rest: { ...s.rest, endsAt: s.rest.endsAt - 15000 } }) : s))}
+            onClick={() =>
+              update((s) =>
+                s.rest
+                  ? s.rest.pausedLeft != null
+                    ? { ...s, rest: { ...s.rest, pausedLeft: Math.max(0, s.rest.pausedLeft - 15000) } }
+                    : { ...s, rest: { ...s.rest, endsAt: s.rest.endsAt - 15000 } }
+                  : s,
+              )
+            }
           >
             −15s
           </button>
@@ -176,12 +190,20 @@ export function ActiveWorkout() {
           <button
             className="btn btn-small"
             onClick={() =>
-              update((s) => (s.rest ? (s.rest.pausedLeft != null ? { ...s, rest: { ...s.rest, pausedLeft: s.rest.pausedLeft + 15000, total: s.rest.total + 15 } } : { ...s, rest: { ...s.rest, endsAt: s.rest.endsAt + 15000, total: s.rest.total + 15 } }) : s))
+              update((s) =>
+                s.rest
+                  ? s.rest.pausedLeft != null
+                    ? { ...s, rest: { ...s.rest, pausedLeft: s.rest.pausedLeft + 15000, total: s.rest.total + 15 } }
+                    : { ...s, rest: { ...s.rest, endsAt: s.rest.endsAt + 15000, total: s.rest.total + 15 } }
+                  : s,
+              )
             }
           >
             +15s
           </button>
-          <button className="btn btn-small btn-primary" onClick={() => update((s) => ({ ...s, rest: null }))}>{t('Skip')}</button>
+          <button className="btn btn-small btn-primary" onClick={() => update((s) => ({ ...s, rest: null }))}>
+            {t('Skip')}
+          </button>
         </div>
       )}
 
@@ -193,7 +215,12 @@ export function ActiveWorkout() {
           </p>
           {emptyCount > 0 && (
             <p className="muted small">
-              {tp(emptyCount, '{n} empty set will be left out, along with exercises you did not start. Nothing you logged is lost.', '{n} empty sets will be left out, along with exercises you did not start. Nothing you logged is lost.')}</p>
+              {tp(
+                emptyCount,
+                '{n} empty set will be left out, along with exercises you did not start. Nothing you logged is lost.',
+                '{n} empty sets will be left out, along with exercises you did not start. Nothing you logged is lost.',
+              )}
+            </p>
           )}
         </div>
         <div className="menu">
@@ -204,7 +231,9 @@ export function ActiveWorkout() {
                 setConfirm(null);
                 finish(true);
               }}
-            >{tp(filledCount, 'Finish and save the {n} filled set too', 'Finish and save the {n} filled sets too')}</button>
+            >
+              {tp(filledCount, 'Finish and save the {n} filled set too', 'Finish and save the {n} filled sets too')}
+            </button>
           )}
           {doneCount > 0 && (
             <button
@@ -217,7 +246,9 @@ export function ActiveWorkout() {
               {filledCount > 0 ? t('Finish with ticked sets only') : t('Finish workout')}
             </button>
           )}
-          <button className="btn btn-ghost btn-wide" onClick={() => setConfirm(null)}>{t('Keep training')}</button>
+          <button className="btn btn-ghost btn-wide" onClick={() => setConfirm(null)}>
+            {t('Keep training')}
+          </button>
         </div>
       </Sheet>
       <Confirm

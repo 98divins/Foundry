@@ -41,7 +41,18 @@ describe('automatic merge', () => {
   });
 
   it('merges food logs and weigh-ins from both devices', () => {
-    const entry = (id: string) => ({ id, date: '2026-11-15', meal: 'lunch' as const, name: id, grams: 100, kcal: 100, protein: 1, carbs: 1, fat: 1, createdAt: 1 });
+    const entry = (id: string) => ({
+      id,
+      date: '2026-11-15',
+      meal: 'lunch' as const,
+      name: id,
+      grams: 100,
+      kcal: 100,
+      protein: 1,
+      carbs: 1,
+      fat: 1,
+      createdAt: 1,
+    });
     const phone = { ...base(), nutrition: { ...base().nutrition, log: [entry('x')], weights: [{ date: '2026-11-14', kg: 80 }] } };
     const cloud = { ...base(), nutrition: { ...base().nutrition, log: [entry('y')], weights: [{ date: '2026-11-15', kg: 79.8 }] } };
     const m = mergeStates(phone, cloud, true);

@@ -28,9 +28,15 @@ export function LogoutButton({ className }: { className: string }) {
         <div className="form">
           <p>{t('Some changes on this phone are not on your account yet (no connection, or the sync failed). Logging out now erases them from this phone.')}</p>
           <div className="menu">
-            <button className="btn btn-primary btn-wide" disabled={busy} onClick={() => run(false)}>{t('Try again')}</button>
-            <button className="btn btn-ghost-danger btn-wide" disabled={busy} onClick={() => run(true)}>{t('Log out anyway and lose these changes')}</button>
-            <button className="btn btn-wide" onClick={() => setUnsaved(false)}>{t('Stay signed in')}</button>
+            <button className="btn btn-primary btn-wide" disabled={busy} onClick={() => run(false)}>
+              {t('Try again')}
+            </button>
+            <button className="btn btn-ghost-danger btn-wide" disabled={busy} onClick={() => run(true)}>
+              {t('Log out anyway and lose these changes')}
+            </button>
+            <button className="btn btn-wide" onClick={() => setUnsaved(false)}>
+              {t('Stay signed in')}
+            </button>
           </div>
         </div>
       </Sheet>

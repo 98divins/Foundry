@@ -38,8 +38,23 @@ describe('friends stats', () => {
 
   it('ranks highest first, shares ranks on ties, puts no data last', () => {
     const s = (weekDays: number) => ({ ...buildPublicStats(state, now), weekDays });
-    const rows = rankBoard([{ person: 'a', stats: s(2) }, { person: 'b', stats: s(4) }, { person: 'c', stats: null }, { person: 'd', stats: s(2) }], 'days', 'week', now);
-    expect(rows.map((r) => [r.person, r.rank])).toEqual([['b', 1], ['a', 2], ['d', 2], ['c', 4]]);
+    const rows = rankBoard(
+      [
+        { person: 'a', stats: s(2) },
+        { person: 'b', stats: s(4) },
+        { person: 'c', stats: null },
+        { person: 'd', stats: s(2) },
+      ],
+      'days',
+      'week',
+      now,
+    );
+    expect(rows.map((r) => [r.person, r.rank])).toEqual([
+      ['b', 1],
+      ['a', 2],
+      ['d', 2],
+      ['c', 4],
+    ]);
   });
 
   it('also ranks over a month, six months and a year', () => {
@@ -59,9 +74,17 @@ describe('cardio in the leaderboard', () => {
     const H = 3600000;
     const t0 = Date.now() - H;
     const w = {
-      id: 'c', name: 'Run', startedAt: t0, endedAt: t0 + H,
+      id: 'c',
+      name: 'Run',
+      startedAt: t0,
+      endedAt: t0 + H,
       exercises: [
-        { id: 'a', exerciseId: 'run', restSec: 0, sets: [{ id: 's1', type: 'normal' as const, weight: null, reps: null, duration: 1800, distance: 5, done: true }] },
+        {
+          id: 'a',
+          exerciseId: 'run',
+          restSec: 0,
+          sets: [{ id: 's1', type: 'normal' as const, weight: null, reps: null, duration: 1800, distance: 5, done: true }],
+        },
         { id: 'b', exerciseId: 'bench_bb', restSec: 90, sets: [{ id: 's2', type: 'normal' as const, weight: 80, reps: 5, duration: 600, done: true }] },
       ],
     };
@@ -76,7 +99,13 @@ describe('comparisons over any dates', () => {
     const H = 3600000;
     const set = (i: number) => ({ id: 'r' + i, type: 'normal' as const, weight: 100, reps: 5, done: true });
     const at = (d: number) => new Date(2026, 10, d, 10).getTime();
-    const w = (d: number) => ({ id: 'w' + d, name: 'W', startedAt: at(d), endedAt: at(d) + H, exercises: [{ id: 'e' + d, exerciseId: 'bench_bb', restSec: 90, sets: [set(d * 10), set(d * 10 + 1)] }] });
+    const w = (d: number) => ({
+      id: 'w' + d,
+      name: 'W',
+      startedAt: at(d),
+      endedAt: at(d) + H,
+      exercises: [{ id: 'e' + d, exerciseId: 'bench_bb', restSec: 90, sets: [set(d * 10), set(d * 10 + 1)] }],
+    });
     const s = { ...defaultState(), workouts: [w(2), w(5), w(9)] };
     const enc = encodeDays(s, at(10));
     const r = rangeTotals(enc, at(4), at(9));
@@ -93,7 +122,13 @@ describe('head-to-head periods', () => {
     const start = weekStart(now);
     let k = 0;
     const set = (weight: number, reps: number) => ({ id: 'h' + k++, type: 'normal' as const, weight, reps, done: true });
-    const w = (at: number, weight: number) => ({ id: 'w' + k++, name: 'W', startedAt: at, endedAt: at + H, exercises: [{ id: 'e' + k++, exerciseId: 'bench_bb', restSec: 90, sets: [set(weight, 5)] }] });
+    const w = (at: number, weight: number) => ({
+      id: 'w' + k++,
+      name: 'W',
+      startedAt: at,
+      endedAt: at + H,
+      exercises: [{ id: 'e' + k++, exerciseId: 'bench_bb', restSec: 90, sets: [set(weight, 5)] }],
+    });
     // Last week: 60 then a record at 100. This week: 80 (not a record) and one session.
     const s = buildPublicStats({ ...defaultState(), workouts: [w(start - 6 * 24 * H, 60), w(start - 2 * 24 * H, 100), w(start + 10 * H, 80)] } as State, now);
     expect(metricValue(s, 'days', 'week', now)).toBe(1);
@@ -103,7 +138,23 @@ describe('head-to-head periods', () => {
   });
   it('averages training days per week over the chosen period', async () => {
     const { daysPerWeek } = await import('./socialStats');
-    const s = { v: 1, week: 0, weekDays: 0, weekWorkouts: 0, weekSets: 0, weekVolume: 0, weekMinutes: 0, avgDays4w: 0, streak: 0, prs30: 0, strength4w: null, totalWorkouts: 0, lastWorkoutAt: null, lifts: {}, periods: { '30': { days: 12, sets: 0, volume: 0, prs: 0, strength: null, goals: null } } } as const;
+    const s = {
+      v: 1,
+      week: 0,
+      weekDays: 0,
+      weekWorkouts: 0,
+      weekSets: 0,
+      weekVolume: 0,
+      weekMinutes: 0,
+      avgDays4w: 0,
+      streak: 0,
+      prs30: 0,
+      strength4w: null,
+      totalWorkouts: 0,
+      lastWorkoutAt: null,
+      lifts: {},
+      periods: { '30': { days: 12, sets: 0, volume: 0, prs: 0, strength: null, goals: null } },
+    } as const;
     expect(daysPerWeek(s as never, '30')).toBe(2.8);
     expect(daysPerWeek(null, '30')).toBeNull();
   });
@@ -112,17 +163,45 @@ describe('head-to-head periods', () => {
 describe('comparisons over dates', () => {
   it('ranks by any value, ties share a rank, missing last', async () => {
     const { rankBy } = await import('./socialStats');
-    const rows = rankBy([{ person: 'a', stats: null }, { person: 'b', stats: null }, { person: 'c', stats: null }, { person: 'd', stats: null }], () => null);
+    const rows = rankBy(
+      [
+        { person: 'a', stats: null },
+        { person: 'b', stats: null },
+        { person: 'c', stats: null },
+        { person: 'd', stats: null },
+      ],
+      () => null,
+    );
     expect(rows.every((r) => r.value == null)).toBe(true);
     const v: Record<string, number | null> = { a: 3, b: 5, c: 3, d: null };
     const people = Object.keys(v).map((k) => ({ person: k, stats: { k } as never }));
     const ranked = rankBy(people, (s) => v[(s as unknown as { k: string }).k]);
-    expect(ranked.map((r) => [r.person, r.rank])).toEqual([['b', 1], ['a', 2], ['c', 2], ['d', 4]]);
+    expect(ranked.map((r) => [r.person, r.rank])).toEqual([
+      ['b', 1],
+      ['a', 2],
+      ['c', 2],
+      ['d', 4],
+    ]);
   });
   it('the score counts figures won, not ties or missing ones', async () => {
     const { compareScore } = await import('./socialStats');
-    expect(compareScore([[1, 1], [20, 33], [0, 0], [15, 20], [6127, 5449], [1, 0], [70, 54]])).toEqual([3, 2]);
-    expect(compareScore([[5, null], [null, 3]])).toEqual([0, 0]);
+    expect(
+      compareScore([
+        [1, 1],
+        [20, 33],
+        [0, 0],
+        [15, 20],
+        [6127, 5449],
+        [1, 0],
+        [70, 54],
+      ]),
+    ).toEqual([3, 2]);
+    expect(
+      compareScore([
+        [5, null],
+        [null, 3],
+      ]),
+    ).toEqual([0, 0]);
   });
   it('picks the shortest period reaching back to a date', async () => {
     const { coveringPeriod } = await import('./socialStats');

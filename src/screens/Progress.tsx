@@ -82,9 +82,7 @@ export function Progress() {
     label: weekLabel(w.start),
     value: metric === 'days' ? w.days : metric === 'workouts' ? w.workouts : metric === 'sets' ? w.sets : Math.round(toDisplay(w.volume, unit) / 1000),
   }));
-  const indexPoints = starts
-    .map((t, i) => ({ x: t, y: index[i] }))
-    .filter((p): p is { x: number; y: number } => p.y != null);
+  const indexPoints = starts.map((t, i) => ({ x: t, y: index[i] })).filter((p): p is { x: number; y: number } => p.y != null);
   if (!done.length) {
     return (
       <>
@@ -123,7 +121,9 @@ export function Progress() {
           {indexPoints.length >= 2 ? (
             <>
               <LineChart points={indexPoints} format={(v) => String(Math.round(v))} />
-              <p className="muted small">{t('Strength index: each lift’s best estimated 1RM of the week as a % of your first session with it, averaged. 100 = where you started.')}</p>
+              <p className="muted small">
+                {t('Strength index: each lift’s best estimated 1RM of the week as a % of your first session with it, averaged. 100 = where you started.')}
+              </p>
             </>
           ) : (
             <p className="muted small">{t('Train for two weeks to see your strength index.')}</p>
@@ -135,8 +135,7 @@ export function Progress() {
                   <ExerciseImage ex={exMap.get(l.exerciseId)} label={exerciseName(exMap, l.exerciseId)} />
                   <span className="lift-text">
                     <span className="entry-name">{exerciseName(exMap, l.exerciseId)}</span>
-                    <span className="muted small">
-                      {t('Est. 1RM {0} · {1} sessions', { 0: fmtEstimate(l.current, unit), 1: l.sessions })}</span>
+                    <span className="muted small">{t('Est. 1RM {0} · {1} sessions', { 0: fmtEstimate(l.current, unit), 1: l.sessions })}</span>
                   </span>
                   <Sparkline values={l.points.slice(-12).map((p) => p.e1rm)} width={56} height={28} />
                   {l.changePct != null && (
@@ -195,7 +194,9 @@ export function Progress() {
               );
             })}
           </ul>
-          <p className="muted small">{t('The two marks show 10 and 20 hard sets a week, a common range for muscle growth: green inside, grey below, orange above. Primary muscle only.')}</p>
+          <p className="muted small">
+            {t('The two marks show 10 and 20 hard sets a week, a common range for muscle growth: green inside, grey below, orange above. Primary muscle only.')}
+          </p>
         </section>
 
         <section className="panel">
@@ -220,7 +221,13 @@ export function Progress() {
         </section>
 
         <p className="muted small center">
-          {t('{0} lifted in the last 12 weeks', { 0: fmtVolume(training.reduce((t, w) => t + w.volume, 0), unit) })}</p>
+          {t('{0} lifted in the last 12 weeks', {
+            0: fmtVolume(
+              training.reduce((t, w) => t + w.volume, 0),
+              unit,
+            ),
+          })}
+        </p>
 
         <MySpace />
       </main>
@@ -244,14 +251,20 @@ function ProfileHeader({ workouts, records, streak }: { workouts: number; record
         </span>
       </button>
       {levelsOn && (
-      <button className="profile-head-level" onClick={() => go('levels')} aria-label={t('Level and badges')}>
-        <span className="level-num" style={{ '--rank': p.rank.color } as React.CSSProperties}>{p.level}</span>
-        <span className="profile-head-xp">
-          <span className="small"><strong>{t(p.rank.name)}</strong> · {t('{a} / {b} badges', { a: p.badges.length, b: BADGES.length })}</span>
-          <span className="xp-bar" style={{ '--rank': p.rank.color } as React.CSSProperties}><span style={{ width: pct + '%' }} /></span>
-        </span>
-        <Icon name="chevron" size={18} />
-      </button>
+        <button className="profile-head-level" onClick={() => go('levels')} aria-label={t('Level and badges')}>
+          <span className="level-num" style={{ '--rank': p.rank.color } as React.CSSProperties}>
+            {p.level}
+          </span>
+          <span className="profile-head-xp">
+            <span className="small">
+              <strong>{t(p.rank.name)}</strong> · {t('{a} / {b} badges', { a: p.badges.length, b: BADGES.length })}
+            </span>
+            <span className="xp-bar" style={{ '--rank': p.rank.color } as React.CSSProperties}>
+              <span style={{ width: pct + '%' }} />
+            </span>
+          </span>
+          <Icon name="chevron" size={18} />
+        </button>
       )}
       <span className="profile-card-stats">
         <span>
@@ -259,7 +272,10 @@ function ProfileHeader({ workouts, records, streak }: { workouts: number; record
           <span className="muted small">{t('Workouts')}</span>
         </span>
         <span>
-          <strong className="streak-value"><Icon name="flame" size={18} />{streak}</strong>
+          <strong className="streak-value">
+            <Icon name="flame" size={18} />
+            {streak}
+          </strong>
           <span className="muted small">{t('Week streak')}</span>
         </span>
         <span>
@@ -277,12 +293,19 @@ function MySpace() {
   const n = gearCount(state.profile?.gear);
   const on: Record<string, boolean> = { recap: useFeature('recaps'), levels: useFeature('levels'), gear: useFeature('gear') };
   type R = { icon: 'chart' | 'share' | 'trophy' | 'dumbbell'; label: string; text: string; to: string };
-  const rows = ([
-    { icon: 'chart', label: t('Detailed statistics'), text: t('Diet × training, muscle balance, main exercises, monthly report.'), to: 'stats' },
-    { icon: 'share', label: t('My recaps'), text: t('Your week, month or year in a story, with an image to share.'), to: 'recap' },
-    { icon: 'trophy', label: t('Level and badges'), text: t('How you earn XP, ranks and every badge.'), to: 'levels' },
-    { icon: 'dumbbell', label: t('My gear'), text: n ? t('{0} / 13 slots', { 0: n }) : t('Belt, gloves, shoes, shaker… show what you train with.'), to: 'gear' },
-  ] as R[]).filter((r) => on[r.to] !== false);
+  const rows = (
+    [
+      { icon: 'chart', label: t('Detailed statistics'), text: t('Diet × training, muscle balance, main exercises, monthly report.'), to: 'stats' },
+      { icon: 'share', label: t('My recaps'), text: t('Your week, month or year in a story, with an image to share.'), to: 'recap' },
+      { icon: 'trophy', label: t('Level and badges'), text: t('How you earn XP, ranks and every badge.'), to: 'levels' },
+      {
+        icon: 'dumbbell',
+        label: t('My gear'),
+        text: n ? t('{0} / 13 slots', { 0: n }) : t('Belt, gloves, shoes, shaker… show what you train with.'),
+        to: 'gear',
+      },
+    ] as R[]
+  ).filter((r) => on[r.to] !== false);
   return (
     <>
       <h2 className="settings-group">{t('My space')}</h2>
@@ -322,59 +345,63 @@ export function DietTraining() {
     .reverse();
   return (
     <>
-        <section className="panel">
-          <h2 className="panel-title">{t('Diet × training')}</h2>
-          {!hasDiet ? (
-            <>
-              <p className="muted small">{t('Log your meals and weight in the Nutrition tab to see how calories, protein and weight change line up with your strength.')}</p>
-              <button className="btn" onClick={() => go('n')}>{t('Open Nutrition')}</button>
-            </>
-          ) : (
-            <>
-              {insights.map((i) => (
-                <div key={i.title} className="insight">
-                  <strong>{i.title}</strong>
-                  <span className="small">{i.detail}</span>
-                </div>
-              ))}
-              {!insights.length && (
-                <p className="muted small">{t('Insights appear after about 5 weeks with both workouts and at least 4 logged days a week. Until then, compare the weeks below.')}</p>
-              )}
-              <div className="table-scroll">
-                <table className="diet-table">
-                  <thead>
-                    <tr>
-                      <th>{t('Week of')}</th>
-                      <th>{t('kcal/day')}</th>
-                      <th>{t('Protein')}</th>
-                      <th>{t('Weight')}</th>
-                      <th>{t('Sets')}</th>
-                      <th>{t('Strength')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dietRows.map(({ t, d, idx, tr }) => (
-                      <tr key={t}>
-                        <td>{weekLabel(t)}</td>
-                        <td>{d.avgKcal ?? '–'}</td>
-                        <td>{d.proteinPerKg != null ? `${d.proteinPerKg} g/kg` : '–'}</td>
-                        <td>
-                          {d.weightChange != null
-                            ? `${d.weightChange > 0 ? '+' : ''}${Math.round(toDisplay(d.weightChange, unit) * 10) / 10} ${unit}`
-                            : '–'}
-                        </td>
-                        <td>{tr.sets || '–'}</td>
-                        <td>{idx ?? '–'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      <section className="panel">
+        <h2 className="panel-title">{t('Diet × training')}</h2>
+        {!hasDiet ? (
+          <>
+            <p className="muted small">
+              {t('Log your meals and weight in the Nutrition tab to see how calories, protein and weight change line up with your strength.')}
+            </p>
+            <button className="btn" onClick={() => go('n')}>
+              {t('Open Nutrition')}
+            </button>
+          </>
+        ) : (
+          <>
+            {insights.map((i) => (
+              <div key={i.title} className="insight">
+                <strong>{i.title}</strong>
+                <span className="small">{i.detail}</span>
               </div>
-              <p className="muted small">{t('Averages use fully logged days only. These are patterns in your own data, not proof of cause.')}</p>
-            </>
-          )}
-        </section>
-        <Phases />
+            ))}
+            {!insights.length && (
+              <p className="muted small">
+                {t('Insights appear after about 5 weeks with both workouts and at least 4 logged days a week. Until then, compare the weeks below.')}
+              </p>
+            )}
+            <div className="table-scroll">
+              <table className="diet-table">
+                <thead>
+                  <tr>
+                    <th>{t('Week of')}</th>
+                    <th>{t('kcal/day')}</th>
+                    <th>{t('Protein')}</th>
+                    <th>{t('Weight')}</th>
+                    <th>{t('Sets')}</th>
+                    <th>{t('Strength')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dietRows.map(({ t, d, idx, tr }) => (
+                    <tr key={t}>
+                      <td>{weekLabel(t)}</td>
+                      <td>{d.avgKcal ?? '–'}</td>
+                      <td>{d.proteinPerKg != null ? `${d.proteinPerKg} g/kg` : '–'}</td>
+                      <td>
+                        {d.weightChange != null ? `${d.weightChange > 0 ? '+' : ''}${Math.round(toDisplay(d.weightChange, unit) * 10) / 10} ${unit}` : '–'}
+                      </td>
+                      <td>{tr.sets || '–'}</td>
+                      <td>{idx ?? '–'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="muted small">{t('Averages use fully logged days only. These are patterns in your own data, not proof of cause.')}</p>
+          </>
+        )}
+      </section>
+      <Phases />
     </>
   );
 }

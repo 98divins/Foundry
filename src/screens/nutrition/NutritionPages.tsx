@@ -72,7 +72,9 @@ export function WeightPage() {
             format={(v) => fmtNum(v)}
             emptyText={t('Weigh in on at least two days to see your trend.')}
           />
-          <p className="muted small">{t('Dots are your scale readings; the line is the trend, which smooths out day-to-day water changes. Judge progress by the line.')}</p>
+          <p className="muted small">
+            {t('Dots are your scale readings; the line is the trend, which smooths out day-to-day water changes. Judge progress by the line.')}
+          </p>
         </section>
 
         <form
@@ -96,7 +98,9 @@ export function WeightPage() {
               <NumInput id="w-value" label={t('Weight in {unit}', { unit })} value={value} onChange={setValue} />
             </label>
           </div>
-          <button className="btn btn-primary" type="submit" disabled={!value || !date}>{t('Save')}</button>
+          <button className="btn btn-primary" type="submit" disabled={!value || !date}>
+            {t('Save')}
+          </button>
         </form>
 
         <ul className="weigh-list">
@@ -151,7 +155,9 @@ export function InsightsPage() {
           <p className="muted small">
             {adapted
               ? t('Each day the estimate moves toward what your intake and weight trend of the last 3 weeks imply.')
-              : t('This is still the starting estimate from your profile ({n} kcal). It starts adapting after 7 fully logged days with at least 4 weigh-ins.', { n: seed ?? '–' })}
+              : t('This is still the starting estimate from your profile ({n} kcal). It starts adapting after 7 fully logged days with at least 4 weigh-ins.', {
+                  n: seed ?? '–',
+                })}
           </p>
         </section>
         <section className="panel">
@@ -159,7 +165,9 @@ export function InsightsPage() {
           <ol className="how">
             <li>{t('The starting point comes from your age, height, weight, sex and activity (Mifflin-St Jeor).')}</li>
             <li>{t('Every day, it compares what you ate over the last 3 weeks with how your weight moved.')}</li>
-            <li>{t('Losing 1 kg of body mass frees about 7 700 kcal. If you ate 2 100 kcal a day and lost 0.5 kg a week, you burned about 2 650 kcal a day.')}</li>
+            <li>
+              {t('Losing 1 kg of body mass frees about 7 700 kcal. If you ate 2 100 kcal a day and lost 0.5 kg a week, you burned about 2 650 kcal a day.')}
+            </li>
             <li>{t('Days you mark as not fully logged are left out, so a forgotten snack does not skew the result.')}</li>
             <li>{t('At the weekly check-in, your targets are recalculated from this estimate and your goal.')}</li>
           </ol>
@@ -168,14 +176,18 @@ export function InsightsPage() {
           <section className="panel">
             <h2 className="panel-title">{t('Check-ins')}</h2>
             <ul className="weigh-list">
-              {[...n.checkIns].reverse().slice(0, 12).map((c) => (
-                <li key={c.date}>
-                  <span>{parseDay(c.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}</span>
-                  <span className="small">
-                    {t('{0} kcal · P {1} · C {2} · F {3}', { 0: c.targets.kcal, 1: c.targets.protein, 2: c.targets.carbs, 3: c.targets.fat })}</span>
-                  <span className="muted small">{c.expenditure}</span>
-                </li>
-              ))}
+              {[...n.checkIns]
+                .reverse()
+                .slice(0, 12)
+                .map((c) => (
+                  <li key={c.date}>
+                    <span>{parseDay(c.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}</span>
+                    <span className="small">
+                      {t('{0} kcal · P {1} · C {2} · F {3}', { 0: c.targets.kcal, 1: c.targets.protein, 2: c.targets.carbs, 3: c.targets.fat })}
+                    </span>
+                    <span className="muted small">{c.expenditure}</span>
+                  </li>
+                ))}
             </ul>
           </section>
         )}
@@ -252,13 +264,21 @@ export function PlanPage({ setup }: { setup?: boolean }) {
   const kgNow = latest ?? (weight ? fromDisplay(weight, unit) : null);
   const blocked = lossBlocked(profile, kgNow);
   const rates = RATES.filter((r) => r >= 0 || (!blocked && (!kgNow || -r <= MAX_LOSS_SHARE * kgNow + 1e-9)));
-  const rateShown = rates.includes(draft.rateKgPerWeek) ? draft.rateKgPerWeek : safeRate(draft.rateKgPerWeek, profile, kgNow) < 0 ? Math.min(...rates.filter((r) => r < 0)) : 0;
+  const rateShown = rates.includes(draft.rateKgPerWeek)
+    ? draft.rateKgPerWeek
+    : safeRate(draft.rateKgPerWeek, profile, kgNow) < 0
+      ? Math.min(...rates.filter((r) => r < 0))
+      : 0;
 
   return (
     <>
       <Header title={setup ? t('Set up my plan') : t('Plan')} onBack={() => back('n')} />
       <main className="page">
-        <p className="muted small">{t('Foundry computes estimates for healthy adults. They are not medical advice: ask a health professional before a big change, especially if you are pregnant, ill or have had an eating disorder.')}</p>
+        <p className="muted small">
+          {t(
+            'Foundry computes estimates for healthy adults. They are not medical advice: ask a health professional before a big change, especially if you are pregnant, ill or have had an eating disorder.',
+          )}
+        </p>
         <section className="panel form">
           <h2 className="panel-title">{t('About you')}</h2>
           <div className="field-row field-row-3">
@@ -307,14 +327,14 @@ export function PlanPage({ setup }: { setup?: boolean }) {
           <h2 className="panel-title">{t('Goal')}</h2>
           <label className="field">
             <span>{t('Weight change per week')}</span>
-            <select
-              id="p-rate"
-              value={rateShown}
-              onChange={(e) => setDraft({ ...draft, rateKgPerWeek: Number(e.target.value) })}
-            >
+            <select id="p-rate" value={rateShown} onChange={(e) => setDraft({ ...draft, rateKgPerWeek: Number(e.target.value) })}>
               {rates.map((r) => (
                 <option key={r} value={r}>
-                  {r === 0 ? t('Maintain') : r > 0 ? t('Gain {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit }) : t('Lose {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit })}
+                  {r === 0
+                    ? t('Maintain')
+                    : r > 0
+                      ? t('Gain {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit })
+                      : t('Lose {v} {unit} / week', { v: fmtNum(Math.abs(toDisplay(r, unit))), unit })}
                 </option>
               ))}
             </select>
@@ -323,7 +343,9 @@ export function PlanPage({ setup }: { setup?: boolean }) {
             <p className="muted small">
               {blocked === 'minor'
                 ? t('Weight-loss goals are for people aged 18 and over. You can maintain or gain.')
-                : t('Your weight is already low for your height, so Foundry does not offer a weight-loss goal. If you are worried about your weight or your eating, talk to a doctor.')}
+                : t(
+                    'Your weight is already low for your height, so Foundry does not offer a weight-loss goal. If you are worried about your weight or your eating, talk to a doctor.',
+                  )}
             </p>
           )}
           {!blocked && <p className="muted small">{t('Weight loss is capped at 1% of your body weight per week.')}</p>}
@@ -340,7 +362,10 @@ export function PlanPage({ setup }: { setup?: boolean }) {
                       type="button"
                       className="plan-choice"
                       aria-pressed={on}
-                      onClick={() => (m || requirePro('customMacros')) && setDraft({ ...draft, macroPlan: id, ...(m ? { proteinPerKg: m.proteinPerKg, fatShare: m.fatShare } : {}) })}
+                      onClick={() =>
+                        (m || requirePro('customMacros')) &&
+                        setDraft({ ...draft, macroPlan: id, ...(m ? { proteinPerKg: m.proteinPerKg, fatShare: m.fatShare } : {}) })
+                      }
                     >
                       <span className="plan-choice-text">
                         <strong>
@@ -359,31 +384,32 @@ export function PlanPage({ setup }: { setup?: boolean }) {
           {plan === CUSTOM_PLAN && (
             <>
               {PRO_FREE_DURING_BETA && <p className="muted small">{t('Pro feature, included for free during the beta.')}</p>}
-          <div className="field-row">
-              <label className="field">
-                <span>{t('Protein (g per kg)')}</span>
-                <select
-                  id="p-protein"
-                  value={draft.proteinPerKg}
-                  onChange={(e) => setDraft({ ...draft, proteinPerKg: Number(e.target.value) })}
-                >
-                  {[...new Set([1.6, 1.8, 2, 2.2, 2.3, 2.4, 2.6, draft.proteinPerKg])].sort((x, y) => x - y).map((p) => (
-                    <option key={p} value={p}>
-                      {t('{0} g/kg', { 0: fmtNum(p) })}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>{t('Fat (share of calories)')}</span>
-                <select id="p-fat" value={draft.fatShare} onChange={(e) => setDraft({ ...draft, fatShare: Number(e.target.value) })}>
-                  {[...new Set([0.2, 0.25, 0.28, 0.3, 0.35, 0.4, draft.fatShare])].sort((x, y) => x - y).map((f) => (
-                    <option key={f} value={f}>
-                      {Math.round(f * 100)} %
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+              <div className="field-row">
+                <label className="field">
+                  <span>{t('Protein (g per kg)')}</span>
+                  <select id="p-protein" value={draft.proteinPerKg} onChange={(e) => setDraft({ ...draft, proteinPerKg: Number(e.target.value) })}>
+                    {[...new Set([1.6, 1.8, 2, 2.2, 2.3, 2.4, 2.6, draft.proteinPerKg])]
+                      .sort((x, y) => x - y)
+                      .map((p) => (
+                        <option key={p} value={p}>
+                          {t('{0} g/kg', { 0: fmtNum(p) })}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <span>{t('Fat (share of calories)')}</span>
+                  <select id="p-fat" value={draft.fatShare} onChange={(e) => setDraft({ ...draft, fatShare: Number(e.target.value) })}>
+                    {[...new Set([0.2, 0.25, 0.28, 0.3, 0.35, 0.4, draft.fatShare])]
+                      .sort((x, y) => x - y)
+                      .map((f) => (
+                        <option key={f} value={f}>
+                          {Math.round(f * 100)} %
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              </div>
             </>
           )}
           <label className="field">
@@ -401,7 +427,9 @@ export function PlanPage({ setup }: { setup?: boolean }) {
         {preview?.ci && (
           <section className="panel">
             <h2 className="panel-title">{t('Your targets')}</h2>
-            <p className="small muted">{t('Based on an expenditure of {n} kcal/day', { n: preview.exp })}{current ? t('; currently {n} kcal', { n: current.kcal }) : ''}.
+            <p className="small muted">
+              {t('Based on an expenditure of {n} kcal/day', { n: preview.exp })}
+              {current ? t('; currently {n} kcal', { n: current.kcal }) : ''}.
             </p>
             <div className="summary-stats">
               <Stat label={t('Calories')} value={preview.ci.targets.kcal} />
@@ -415,7 +443,9 @@ export function PlanPage({ setup }: { setup?: boolean }) {
         <button className="btn btn-primary btn-wide" disabled={!valid} onClick={save}>
           {setup ? t('Start my plan') : t('Save plan')}
         </button>
-        <p className="muted small">{t('This is an estimate for healthy adults, not medical advice. The app never sets calories below 1 200 (women) or 1 500 (men) kcal a day.')}</p>
+        <p className="muted small">
+          {t('This is an estimate for healthy adults, not medical advice. The app never sets calories below 1 200 (women) or 1 500 (men) kcal a day.')}
+        </p>
       </main>
     </>
   );

@@ -20,13 +20,20 @@ export function StatsPublisher() {
     if (!uid || !c.initialSynced) return;
     const id = setTimeout(() => {
       if (!sharing) {
-        if (last.current !== 'off') unpublishStats(uid).then(() => (last.current = 'off'), () => {});
+        if (last.current !== 'off')
+          unpublishStats(uid).then(
+            () => (last.current = 'off'),
+            () => {},
+          );
         return;
       }
       const stats = buildPublicStats(state);
       const json = JSON.stringify(stats);
       if (json === last.current) return;
-      publishStats(uid, stats).then(() => (last.current = json), () => {});
+      publishStats(uid, stats).then(
+        () => (last.current = json),
+        () => {},
+      );
     }, 4000);
     return () => clearTimeout(id);
     // Workouts and the sharing choice are what change the summary.

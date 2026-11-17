@@ -24,11 +24,18 @@ export function GoalsPage() {
     <>
       <Header title={t('My goals')} onBack={() => back('profile')} />
       <main className="page">
-        <p className="muted">{t('Set what you aim for each week. Progress shows how often you hit it, and friends can compare how well each of you keeps their own goals.')}</p>
+        <p className="muted">
+          {t('Set what you aim for each week. Progress shows how often you hit it, and friends can compare how well each of you keeps their own goals.')}
+        </p>
         <section className="panel form">
           <h2 className="panel-title">{t('Training')}</h2>
           <span>{t('Training days per week')}</span>
-          <Segmented<string> label={t('Training days per week')} value={String(training)} onChange={(v) => setTraining(Number(v))} options={[1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: String(n), label: String(n) }))} />
+          <Segmented<string>
+            label={t('Training days per week')}
+            value={String(training)}
+            onChange={(v) => setTraining(Number(v))}
+            options={[1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: String(n), label: String(n) }))}
+          />
           <p className="muted small">{t('A day counts once, however many workouts you do that day.')}</p>
         </section>
         <section className="panel form">
@@ -40,7 +47,9 @@ export function GoalsPage() {
             onChange={(v) => (v === 'off' || requirePro('dietGoal')) && setDiet(v === 'off' ? null : Number(v))}
             options={[{ value: 'off', label: t('Off') }, ...[3, 4, 5, 6, 7].map((n) => ({ value: String(n), label: String(n) }))]}
           />
-          <p className="muted small">{t('A day is within target when it is fully logged, calories are within 10 % of your target and protein reaches 90 % of it.')}</p>
+          <p className="muted small">
+            {t('A day is within target when it is fully logged, calories are within 10 % of your target and protein reaches 90 % of it.')}
+          </p>
           {diet != null && !hasPlan && (
             <p className="field-error small">
               {t('Set up your nutrition plan first, so there are targets to measure against.')}{' '}

@@ -13,11 +13,18 @@ export function ExplorePrograms() {
     <>
       <Header title={t('Explore programs')} onBack={() => back()} />
       <main className="page">
-        <p className="muted">{t('Ready-made programs to start from. Adding one copies its workouts into a folder in My workouts, where you can change anything.')}</p>
+        <p className="muted">
+          {t('Ready-made programs to start from. Adding one copies its workouts into a folder in My workouts, where you can change anything.')}
+        </p>
         <ul className="routine-list">
           {PROGRAMS.map((p) => {
             const sets = p.routines.reduce(
-              (t, r) => t + routineSummary(r.exercises.map((we) => ({ ...we, id: '' })), exMap).sets,
+              (t, r) =>
+                t +
+                routineSummary(
+                  r.exercises.map((we) => ({ ...we, id: '' })),
+                  exMap,
+                ).sets,
               0,
             );
             return (
@@ -25,13 +32,11 @@ export function ExplorePrograms() {
                 <button className="program-card" onClick={() => go('explore/' + p.id)}>
                   <span className="program-tags small">
                     <span className="tag">{t(p.level)}</span>
-                    <span className="muted">
-                      {t('{0} days / week · {1}', { 0: p.daysPerWeek, 1: t(p.goal) })}</span>
+                    <span className="muted">{t('{0} days / week · {1}', { 0: p.daysPerWeek, 1: t(p.goal) })}</span>
                   </span>
                   <span className="program-name">{t(p.name)}</span>
                   <span className="muted small">{t(p.description)}</span>
-                  <span className="small">
-                    {t('{0} — {1} sets in total', { 0: p.routines.map((r) => t(r.name)).join(' · '), 1: sets })}</span>
+                  <span className="small">{t('{0} — {1} sets in total', { 0: p.routines.map((r) => t(r.name)).join(' · '), 1: sets })}</span>
                 </button>
               </li>
             );
@@ -83,20 +88,24 @@ export function ProgramDetail({ id }: { id: string }) {
       <main className="page">
         <p className="program-tags small">
           <span className="tag">{t(p.level)}</span>
-          <span className="muted">
-            {t('{0} days / week · {1}', { 0: p.daysPerWeek, 1: t(p.goal) })}</span>
+          <span className="muted">{t('{0} days / week · {1}', { 0: p.daysPerWeek, 1: t(p.goal) })}</span>
         </p>
         <p>{t(p.description)}</p>
         <button className="btn btn-primary btn-wide" onClick={add}>
-          <Icon name="plus" size={18} />{' '}{t('Add to my workouts')}</button>
+          <Icon name="plus" size={18} /> {t('Add to my workouts')}
+        </button>
         {p.routines.map((r) => {
-          const sum = routineSummary(r.exercises.map((we) => ({ ...we, id: '' })), exMap);
+          const sum = routineSummary(
+            r.exercises.map((we) => ({ ...we, id: '' })),
+            exMap,
+          );
           return (
             <section key={r.name} className="routine-plan">
               <div className="program-routine-head">
                 <h2>{t(r.name)}</h2>
                 <span className="muted small">
-                  {t('{0} exercises · {1} sets · about {2} min', { 0: sum.exercises, 1: sum.sets, 2: Math.round(sum.seconds / 60) })}</span>
+                  {t('{0} exercises · {1} sets · about {2} min', { 0: sum.exercises, 1: sum.sets, 2: Math.round(sum.seconds / 60) })}
+                </span>
               </div>
               {r.exercises.map((we, i) => {
                 const ex = exMap.get(we.exerciseId);
@@ -107,7 +116,8 @@ export function ProgramDetail({ id }: { id: string }) {
                     <span className="plan-text">
                       <span className="plan-name">{exerciseName(exMap, we.exerciseId)}</span>
                       <span className="plan-meta">
-                        {we.sets.length}{' '}{t('sets')}{range && <> {t('· {0} reps', { 0: range })}</>}
+                        {we.sets.length} {t('sets')}
+                        {range && <> {t('· {0} reps', { 0: range })}</>}
                         <span className="plan-rest">
                           <Icon name="timer" size={14} /> {fmtClock(we.restSec)}
                         </span>

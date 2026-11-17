@@ -3,7 +3,15 @@ import { dietTips, endPhase, phaseReview, startPhase, weeklyCard, type WeekSumma
 import { addDays, defaultNutrition, type NutritionState } from './nutrition';
 import type { Workout } from './types';
 
-const wk = (o: Partial<WeekSummary>): WeekSummary => ({ start: 0, loggedDays: 7, kcalGap: -400, proteinPerKg: 1.4, weightChange: -0.5, strengthDelta: -1, ...o });
+const wk = (o: Partial<WeekSummary>): WeekSummary => ({
+  start: 0,
+  loggedDays: 7,
+  kcalGap: -400,
+  proteinPerKg: 1.4,
+  weightChange: -0.5,
+  strengthDelta: -1,
+  ...o,
+});
 const NOW_WEEK = wk({ loggedDays: 2, kcalGap: null, strengthDelta: null }); // week in progress, always last
 const ids = (ws: WeekSummary[], kg = 80) => dietTips([...ws, NOW_WEEK], kg).map((t) => t.id);
 
@@ -41,7 +49,9 @@ describe('rule-based tips (4.5)', () => {
     expect(ids([g(0), g(0)])).toEqual([]); // only two weeks
   });
   it('low protein on its own', () => {
-    expect(ids([wk({ kcalGap: 0, weightChange: 0, proteinPerKg: 1, strengthDelta: 1 }), wk({ kcalGap: 0, weightChange: 0, proteinPerKg: 1.1, strengthDelta: 1 })])).toEqual(['low-protein']);
+    expect(
+      ids([wk({ kcalGap: 0, weightChange: 0, proteinPerKg: 1, strengthDelta: 1 }), wk({ kcalGap: 0, weightChange: 0, proteinPerKg: 1.1, strengthDelta: 1 })]),
+    ).toEqual(['low-protein']);
   });
 });
 
@@ -49,7 +59,10 @@ describe('phases (4.5)', () => {
   it('starting a phase ends the running one the day before; later ones are replaced', () => {
     let ph = startPhase(undefined, 'bulk', '2026-01-01', 'a');
     ph = startPhase(ph, 'cut', '2026-06-01', 'b');
-    expect(ph).toEqual([{ id: 'a', kind: 'bulk', start: '2026-01-01', end: '2026-05-31' }, { id: 'b', kind: 'cut', start: '2026-06-01' }]);
+    expect(ph).toEqual([
+      { id: 'a', kind: 'bulk', start: '2026-01-01', end: '2026-05-31' },
+      { id: 'b', kind: 'cut', start: '2026-06-01' },
+    ]);
     expect(startPhase(ph, 'maintain', '2026-06-01', 'c').map((p) => p.id)).toEqual(['a', 'c']);
     expect(endPhase(ph, '2026-07-01')[1].end).toBe('2026-07-01');
   });
@@ -64,7 +77,10 @@ describe('phases (4.5)', () => {
     }
     const t0 = new Date(start + 'T18:00').getTime();
     const bench = (day: number, kg: number): Workout => ({
-      id: 'w' + day, name: 'W', startedAt: t0 + day * 86400000, endedAt: t0 + day * 86400000 + 3600000,
+      id: 'w' + day,
+      name: 'W',
+      startedAt: t0 + day * 86400000,
+      endedAt: t0 + day * 86400000 + 3600000,
       exercises: [{ id: 'e' + day, exerciseId: 'bench_bb', restSec: 90, sets: [{ id: 's' + day, type: 'normal', weight: kg, reps: 5, done: true }] }],
     });
     const r = phaseReview({ id: 'p', kind: 'cut', start, end: addDays(start, 55) }, [bench(2, 100), bench(50, 95)], n);

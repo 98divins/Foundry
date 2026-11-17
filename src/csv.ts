@@ -37,7 +37,18 @@ export function parseCSV(text: string, sep = ','): string[][] {
 }
 
 const MONTHS: Record<string, number> = {
-  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  jan: 0,
+  feb: 1,
+  mar: 2,
+  apr: 3,
+  may: 4,
+  jun: 5,
+  jul: 6,
+  aug: 7,
+  sep: 8,
+  oct: 9,
+  nov: 10,
+  dec: 11,
 };
 
 /** Accepts "14 Nov 2026, 10:30" (Hevy export) or anything Date.parse understands. */
@@ -123,7 +134,9 @@ export function strongToHevy(rows: string[][], unit: Unit): string[][] {
     const d = new Date(ts);
     return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
   };
-  const out: string[][] = [['title', 'start_time', 'end_time', 'description', 'exercise_title', 'exercise_notes', 'set_type', 'weight_kg', 'reps', 'distance_km', 'duration_seconds']];
+  const out: string[][] = [
+    ['title', 'start_time', 'end_time', 'description', 'exercise_title', 'exercise_notes', 'set_type', 'weight_kg', 'reps', 'distance_km', 'duration_seconds'],
+  ];
   // A workout's notes may sit on any of its rows.
   const notes = new Map<string, string>();
   for (const r of rows.slice(1)) {
@@ -316,10 +329,23 @@ export function exportWorkoutCsv(workouts: Workout[], exercises: Map<string, Exe
         .forEach((s, i) => {
           lines.push(
             [
-              w.name, fmtCsvDate(w.startedAt), fmtCsvDate(w.endedAt!), w.note ?? '', name, '', we.note ?? '',
-              i, typeOut[s.type], s.weight == null ? '' : Math.round(s.weight * 1000) / 1000, s.reps ?? '',
-              s.distance ?? '', s.duration ?? '', '',
-            ].map(esc).join(','),
+              w.name,
+              fmtCsvDate(w.startedAt),
+              fmtCsvDate(w.endedAt!),
+              w.note ?? '',
+              name,
+              '',
+              we.note ?? '',
+              i,
+              typeOut[s.type],
+              s.weight == null ? '' : Math.round(s.weight * 1000) / 1000,
+              s.reps ?? '',
+              s.distance ?? '',
+              s.duration ?? '',
+              '',
+            ]
+              .map(esc)
+              .join(','),
           );
         });
     }

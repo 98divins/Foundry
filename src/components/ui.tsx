@@ -33,7 +33,8 @@ const paths = {
   flag: 'M5 21V4M5 4h11l-2 4 2 4H5',
   play: 'M7 4l13 8-13 8V4z',
   pause: 'M8 5v14M16 5v14',
-  apple: 'M12 7c-1.5-1.2-4-1.4-5.6.2C4.7 8.9 4.6 12 5.7 15c1 2.8 2.8 5 4.5 5 .8 0 1.2-.5 1.8-.5s1 .5 1.8.5c1.7 0 3.5-2.2 4.5-5 1.1-3 1-6.1-.7-7.8C16 5.6 13.5 5.8 12 7zM12 7c0-2 1-3.5 3-4',
+  apple:
+    'M12 7c-1.5-1.2-4-1.4-5.6.2C4.7 8.9 4.6 12 5.7 15c1 2.8 2.8 5 4.5 5 .8 0 1.2-.5 1.8-.5s1 .5 1.8.5c1.7 0 3.5-2.2 4.5-5 1.1-3 1-6.1-.7-7.8C16 5.6 13.5 5.8 12 7zM12 7c0-2 1-3.5 3-4',
   swap: 'M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7',
   chart: 'M4 20V10M10 20V4M16 20v-8M22 20H2',
   gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
@@ -189,13 +190,7 @@ export function Sheet({
   if (!open) return null;
   return (
     <div className="sheet-backdrop" onClick={noClose ? undefined : onClose}>
-      <div
-        className={'sheet' + (tall ? ' sheet-tall' : '')}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={'sheet' + (tall ? ' sheet-tall' : '')} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-grip" />
         {title && (
           <div className="sheet-head">
@@ -234,7 +229,9 @@ export function Confirm({
     <Sheet open={open} onClose={onClose} title={title}>
       <p className="muted sheet-text">{message}</p>
       <div className="sheet-actions">
-        <button className="btn" onClick={onClose}>{t('Cancel')}</button>
+        <button className="btn" onClick={onClose}>
+          {t('Cancel')}
+        </button>
         <button
           className={'btn ' + (danger ? 'btn-danger' : 'btn-primary')}
           onClick={() => {
@@ -249,15 +246,7 @@ export function Confirm({
   );
 }
 
-export function Header({
-  title,
-  onBack,
-  right,
-}: {
-  title: ReactNode;
-  onBack?: () => void;
-  right?: ReactNode;
-}) {
+export function Header({ title, onBack, right }: { title: ReactNode; onBack?: () => void; right?: ReactNode }) {
   return (
     <header className="top">
       <div className="top-inner">

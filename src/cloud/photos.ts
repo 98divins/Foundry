@@ -40,7 +40,13 @@ async function client() {
 }
 
 const explain = (e: { message: string }) =>
-  new Error(/failed to fetch|network/i.test(e.message) ? t('No connection. Check your internet and try again.') : /bucket not found|not found/i.test(e.message) ? t('Photos are not switched on on the server yet.') : e.message);
+  new Error(
+    /failed to fetch|network/i.test(e.message)
+      ? t('No connection. Check your internet and try again.')
+      : /bucket not found|not found/i.test(e.message)
+        ? t('Photos are not switched on on the server yet.')
+        : e.message,
+  );
 
 /** Uploads (or replaces) the photo of an item and returns its reference. */
 export async function uploadPhoto(uid: string, kind: PhotoKind, id: string, file: Blob): Promise<PhotoRef> {

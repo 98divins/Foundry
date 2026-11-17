@@ -28,7 +28,9 @@ export function MoveSheet({ entries, title, onClose }: { entries: FoodEntry[] | 
   return (
     <Sheet open onClose={onClose} title={title ?? t('Move')}>
       <div className="form">
-        <p className="muted small">{entries.length > 1 ? t('Move these {n} foods to another meal or day.', { n: entries.length }) : t('Move this food to another meal or day.')}</p>
+        <p className="muted small">
+          {entries.length > 1 ? t('Move these {n} foods to another meal or day.', { n: entries.length }) : t('Move this food to another meal or day.')}
+        </p>
         <div className="chips wrap" role="radiogroup" aria-label={t('Meal')}>
           {MEALS.map((m) => (
             <button key={m} type="button" role="radio" aria-checked={meal === m} className={'chip' + (meal === m ? ' on' : '')} onClick={() => setMeal(m)}>
@@ -41,8 +43,12 @@ export function MoveSheet({ entries, title, onClose }: { entries: FoodEntry[] | 
           <input id="move-date" type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
         </label>
         <div className="sheet-actions">
-          <button className="btn" onClick={onClose}>{t('Cancel')}</button>
-          <button className="btn btn-primary" onClick={move} disabled={same}>{t('Move')}</button>
+          <button className="btn" onClick={onClose}>
+            {t('Cancel')}
+          </button>
+          <button className="btn btn-primary" onClick={move} disabled={same}>
+            {t('Move')}
+          </button>
         </div>
       </div>
     </Sheet>

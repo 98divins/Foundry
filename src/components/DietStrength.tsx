@@ -81,7 +81,9 @@ export function Phases() {
           <span>{t('From')}</span>
           <input id="phase-start" type="date" value={start} max={dayKey()} onChange={(e) => e.target.value && setStart(e.target.value)} />
         </label>
-        <button className="btn btn-primary" onClick={() => setPhases((p) => startPhase(p, kind, start, uid()))}>{t('Start this phase')}</button>
+        <button className="btn btn-primary" onClick={() => setPhases((p) => startPhase(p, kind, start, uid()))}>
+          {t('Start this phase')}
+        </button>
       </div>
       {running && (
         <button className="btn btn-wide" onClick={() => setPhases((p) => endPhase(p, dayKey()))}>
@@ -102,12 +104,22 @@ export function Phases() {
                 </button>
               </div>
               <div className="phase-stats small">
-                <span>{t('Weight')} <strong>{r.weightChange != null ? `${sign(Math.round(toDisplay(r.weightChange, unit) * 10) / 10)} ${unit}` : '–'}</strong></span>
-                <span>{t('Strength')} <strong>{r.strengthChange != null ? `${sign(r.strengthChange)} %` : '–'}</strong></span>
-                <span>{t('Calories')} <strong>{r.avgKcal ?? '–'}</strong></span>
-                <span>{t('Protein')} <strong>{r.proteinPerKg != null ? `${r.proteinPerKg.toLocaleString(locale())} g/kg` : '–'}</strong></span>
+                <span>
+                  {t('Weight')} <strong>{r.weightChange != null ? `${sign(Math.round(toDisplay(r.weightChange, unit) * 10) / 10)} ${unit}` : '–'}</strong>
+                </span>
+                <span>
+                  {t('Strength')} <strong>{r.strengthChange != null ? `${sign(r.strengthChange)} %` : '–'}</strong>
+                </span>
+                <span>
+                  {t('Calories')} <strong>{r.avgKcal ?? '–'}</strong>
+                </span>
+                <span>
+                  {t('Protein')} <strong>{r.proteinPerKg != null ? `${r.proteinPerKg.toLocaleString(locale())} g/kg` : '–'}</strong>
+                </span>
               </div>
-              {r.strengthChange == null && <p className="muted small">{t('Strength is compared after 3 weeks, on lifts done in both the first and last two weeks.')}</p>}
+              {r.strengthChange == null && (
+                <p className="muted small">{t('Strength is compared after 3 weeks, on lifts done in both the first and last two weeks.')}</p>
+              )}
             </li>
           ))}
         </ul>

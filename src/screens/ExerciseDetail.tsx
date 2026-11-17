@@ -79,8 +79,7 @@ export function ExerciseDetail({ id }: { id: string }) {
   const isTime = metric === 'duration' || metric === 'time';
   const toChart = (v: number) => (isLoad ? toDisplay(v, unit) : isTime ? v / 60 : metric === 'distance' ? kmToDisplay(v) : v);
   const points = sessions.map((s) => ({ x: s.date, y: toChart(pick[metric](s)) }));
-  const fmtAxis = (v: number) =>
-    isTime ? fmtClock(v * 60) : v >= 10000 ? `${fmtNum(v / 1000)}k` : fmtNum(v);
+  const fmtAxis = (v: number) => (isTime ? fmtClock(v * 60) : v >= 10000 ? `${fmtNum(v / 1000)}k` : fmtNum(v));
   const recent = [...sessions].reverse().slice(0, 12);
   const otherName = lang === 'fr' ? ex.name : ex.nameFr;
 
@@ -112,9 +111,7 @@ export function ExerciseDetail({ id }: { id: string }) {
         <div className="stats-row">
           {kind === 'weight' && <Stat label={t('Heaviest')} value={fmtWeight(best('weight') || null, unit)} />}
           {kind === 'weight' && <Stat label={t('Best est. 1RM')} value={fmtEstimate(best('1rm'), unit)} />}
-          {(kind === 'weight' || kind === 'bodyweight' || kind === 'assisted') && (
-            <Stat label={t('Most reps')} value={best('reps') || '–'} />
-          )}
+          {(kind === 'weight' || kind === 'bodyweight' || kind === 'assisted') && <Stat label={t('Most reps')} value={best('reps') || '–'} />}
           {kind === 'bodyweight' && <Stat label={t('Most added')} value={best('weight') ? fmtWeight(best('weight'), unit) : '–'} />}
           {kind === 'duration' && <Stat label={t('Longest')} value={best('duration') ? fmtClock(best('duration')) : '–'} />}
           {kind === 'cardio' && <Stat label={t('Longest distance')} value={best('distance') ? fmtKm(best('distance')) : '–'} />}
@@ -158,11 +155,15 @@ export function ExerciseDetail({ id }: { id: string }) {
         </ul>
 
         {ex.image && (
-          <p className="muted small credit">{t('Photos: Free Exercise DB (public domain). They show the movement and may differ slightly from your variation.')}</p>
+          <p className="muted small credit">
+            {t('Photos: Free Exercise DB (public domain). They show the movement and may differ slightly from your variation.')}
+          </p>
         )}
 
         {ex.custom && (
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete custom exercise')}</button>
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>
+            {t('Delete custom exercise')}
+          </button>
         )}
       </main>
       <Confirm
@@ -170,7 +171,12 @@ export function ExerciseDetail({ id }: { id: string }) {
         title={t('Delete exercise?')}
         message={
           sessions.length
-            ? tp(sessions.length, '“{name}” appears in {n} workout. Those sets stay in your history but will show as “Deleted exercise”.', '“{name}” appears in {n} workouts. Those sets stay in your history but will show as “Deleted exercise”.', { name: label })
+            ? tp(
+                sessions.length,
+                '“{name}” appears in {n} workout. Those sets stay in your history but will show as “Deleted exercise”.',
+                '“{name}” appears in {n} workouts. Those sets stay in your history but will show as “Deleted exercise”.',
+                { name: label },
+              )
             : t('“{name}” will be removed from your library.', { name: label })
         }
         confirmLabel={t('Delete')}

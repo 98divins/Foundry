@@ -258,7 +258,12 @@ export function crossInsights(index: (number | null)[], diet: DietWeek[], protei
     const [h, l] = [mean(hi.map((r) => r.delta)), mean(lo.map((r) => r.delta))];
     out.push({
       title: h > l ? t('Your strength moves more in high-protein weeks') : t('Protein does not explain your strength changes yet'),
-      detail: t('Weeks near your protein goal ({a}): strength index {b} per week. Weeks below it ({c}): {d}.', { a: hi.length, b: fmt(h), c: lo.length, d: fmt(l) }),
+      detail: t('Weeks near your protein goal ({a}): strength index {b} per week. Weeks below it ({c}): {d}.', {
+        a: hi.length,
+        b: fmt(h),
+        c: lo.length,
+        d: fmt(l),
+      }),
     });
   }
 
@@ -316,11 +321,22 @@ export type MuscleGroup = 'chest' | 'back' | 'shoulders' | 'arms' | 'core' | 'le
 export const MUSCLE_GROUPS: MuscleGroup[] = ['chest', 'back', 'core', 'shoulders', 'arms', 'legs'];
 const GROUP_OF: Partial<Record<Muscle, MuscleGroup>> = {
   chest: 'chest',
-  upper_back: 'back', lats: 'back', lower_back: 'back', traps: 'back', back: 'back',
+  upper_back: 'back',
+  lats: 'back',
+  lower_back: 'back',
+  traps: 'back',
+  back: 'back',
   shoulders: 'shoulders',
-  biceps: 'arms', triceps: 'arms', forearms: 'arms',
+  biceps: 'arms',
+  triceps: 'arms',
+  forearms: 'arms',
   abs: 'core',
-  quads: 'legs', hamstrings: 'legs', glutes: 'legs', calves: 'legs', adductors: 'legs', abductors: 'legs',
+  quads: 'legs',
+  hamstrings: 'legs',
+  glutes: 'legs',
+  calves: 'legs',
+  adductors: 'legs',
+  abductors: 'legs',
 };
 
 /** Working sets per muscle group between two times (full-body moves and cardio left out). */

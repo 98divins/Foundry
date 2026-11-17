@@ -51,25 +51,36 @@ export function DataPage() {
       <main className="page">
         <section className="panel">
           <h2 className="panel-title">{t('Your data')}</h2>
-          <p className="muted small">{t('Your data is saved to your account. A backup file is an extra copy you keep yourself (Files, iCloud Drive, Google Drive). Last backup:')}{' '}<strong>{fmtBackupAge(state)}</strong>.
+          <p className="muted small">
+            {t('Your data is saved to your account. A backup file is an extra copy you keep yourself (Files, iCloud Drive, Google Drive). Last backup:')}{' '}
+            <strong>{fmtBackupAge(state)}</strong>.
           </p>
           <div className="btn-grid">
-            <button
-              className="btn"
-              onClick={() => saveBackup(state, update)}
-            >{t('Export backup')}</button>
-            <button className="btn" onClick={() => jsonInput.current?.click()}>{t('Restore backup')}</button>
-            <button className="btn" onClick={() => csvInput.current?.click()}>{t('Import from Hevy or Strong (CSV)')}</button>
+            <button className="btn" onClick={() => saveBackup(state, update)}>
+              {t('Export backup')}
+            </button>
+            <button className="btn" onClick={() => jsonInput.current?.click()}>
+              {t('Restore backup')}
+            </button>
+            <button className="btn" onClick={() => csvInput.current?.click()}>
+              {t('Import from Hevy or Strong (CSV)')}
+            </button>
             <button
               className="btn"
               disabled={!done.length}
               onClick={() => download(`foundry-workouts-${stamp}.csv`, exportWorkoutCsv(workouts, exMap), 'text/csv')}
-            >{t('Export CSV')}</button>
+            >
+              {t('Export CSV')}
+            </button>
           </div>
           <button className="btn btn-primary btn-wide" onClick={() => requirePro('excel') && downloadWorkbook(state, exMap)}>
             <Icon name="download" size={18} /> {t('Export to Excel (report and all data)')}
           </button>
-          <p className="muted small">{t('One workbook: weekly report, workouts, every set, weigh-ins, daily nutrition, food log and check-ins. Opens in Excel, Numbers or Google Sheets.')}</p>
+          <p className="muted small">
+            {t(
+              'One workbook: weekly report, workouts, every set, weigh-ins, daily nutrition, food log and check-ins. Opens in Excel, Numbers or Google Sheets.',
+            )}
+          </p>
           {cloud.user && (
             <button
               className="btn btn-wide"
@@ -85,10 +96,19 @@ export function DataPage() {
               <Icon name="download" size={18} /> {t('Export my social data (profile, posts, comments, shared meals)')}
             </button>
           )}
-          <p className="muted small">{t('To bring your history over from Hevy: in Hevy, open Settings → Export & Import Data → Export workouts, then import that CSV file here. Exercises with unknown names become custom exercises.')}{' '}
-            {t('From Strong: in Strong, open Settings → Export Strong Data, then import that CSV file here. Weights in files without a unit are read in your unit ({unit}).', { unit: state.settings.unit })}</p>
+          <p className="muted small">
+            {t(
+              'To bring your history over from Hevy: in Hevy, open Settings → Export & Import Data → Export workouts, then import that CSV file here. Exercises with unknown names become custom exercises.',
+            )}{' '}
+            {t(
+              'From Strong: in Strong, open Settings → Export Strong Data, then import that CSV file here. Weights in files without a unit are read in your unit ({unit}).',
+              { unit: state.settings.unit },
+            )}
+          </p>
           {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmReset(true)}>{t('Erase all data')}</button>
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmReset(true)}>
+            {t('Erase all data')}
+          </button>
           <input
             ref={csvInput}
             id="csv-file"
@@ -136,7 +156,9 @@ export function DataPage() {
       <Confirm
         open={confirmReset}
         title={t('Erase all data?')}
-        message={t('All your workouts (saved and done), foods, weigh-ins and settings are deleted, on this phone and in your account. Export a backup first if you may need them.')}
+        message={t(
+          'All your workouts (saved and done), foods, weigh-ins and settings are deleted, on this phone and in your account. Export a backup first if you may need them.',
+        )}
         confirmLabel={t('Erase everything')}
         danger
         onConfirm={() => {

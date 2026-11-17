@@ -13,8 +13,7 @@ export function saveBackup(state: State, update: (fn: (s: State) => State) => vo
 }
 
 /** A reminder is due when there was never a backup, or the last one is over a week old. */
-export const backupDue = (state: State, now = Date.now()) =>
-  !state.settings.lastBackupAt || now - state.settings.lastBackupAt > 7 * DAY;
+export const backupDue = (state: State, now = Date.now()) => !state.settings.lastBackupAt || now - state.settings.lastBackupAt > 7 * DAY;
 
 export function fmtBackupAge(state: State, now = Date.now()): string {
   const last = state.settings.lastBackupAt;

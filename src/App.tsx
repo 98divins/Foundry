@@ -44,7 +44,7 @@ import { NutritionHome } from './screens/nutrition/NutritionHome';
 import { AddFood } from './screens/nutrition/AddFood';
 import { MealEditor, MealsPage } from './screens/nutrition/SavedMeals';
 import { InsightsPage, PlanPage, WeightPage } from './screens/nutrition/NutritionPages';
-import { fmtClock , workoutElapsed } from './utils';
+import { fmtClock, workoutElapsed } from './utils';
 import { t, tk } from './i18n';
 
 const TABS: { path: string; label: string; icon: IconName }[] = [
@@ -97,8 +97,7 @@ export function App() {
     // returning user on a new phone is not asked again).
     // A username is required: right after sign-up, and once for older accounts without one.
     if (cloud.initialSynced && needsUsername) return <UsernameStep uid={cloud.user.id} onDone={usernameDone} />;
-    if (cloud.initialSynced && !state.settings.onboarded && !hasData(state))
-      return <QuickStart />;
+    if (cloud.initialSynced && !state.settings.onboarded && !hasData(state)) return <QuickStart />;
   }
 
   let screen;
@@ -153,10 +152,24 @@ export function App() {
       break;
     case 'friends':
       screen =
-        param === 'challenges' ? <FriendsHome key="ch" initialView="challenges" /> : param === 'list' ? <FriendsHome key="list" manage /> : param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
+        param === 'challenges' ? (
+          <FriendsHome key="ch" initialView="challenges" />
+        ) : param === 'list' ? (
+          <FriendsHome key="list" manage />
+        ) : param ? (
+          <FriendCompare key={param} id={param} />
+        ) : (
+          <FriendsHome />
+        );
       break;
     case 'recap':
-      screen = !featureOn(state.settings, 'recaps') ? <FeatureOff /> : param && extra ? <RecapPage key={param + extra} kind={param as 'week' | 'month' | 'year'} start={parseKey(extra)} /> : <RecapHub />;
+      screen = !featureOn(state.settings, 'recaps') ? (
+        <FeatureOff />
+      ) : param && extra ? (
+        <RecapPage key={param + extra} kind={param as 'week' | 'month' | 'year'} start={parseKey(extra)} />
+      ) : (
+        <RecapHub />
+      );
       break;
     case 'year':
       screen = !featureOn(state.settings, 'recaps') ? <FeatureOff /> : <YearReviewPage key={param} year={Number(param) || new Date().getFullYear()} />;
@@ -189,7 +202,9 @@ export function App() {
   return (
     <div key={state.settings.appLang ?? 'auto'} className={'app' + (isTab ? ' with-tabs' : '') + (state.active && section !== 'active' ? ' with-mini' : '')}>
       {saveError && (
-        <div className="banner" role="alert">{t('This browser refused to save your data. Export a backup (Progress → Settings) so nothing is lost.')}</div>
+        <div className="banner" role="alert">
+          {t('This browser refused to save your data. Export a backup (Progress → Settings) so nothing is lost.')}
+        </div>
       )}
       {screen}
       <CloudDialogs />
@@ -222,7 +237,11 @@ export function App() {
               >
                 <Icon name={tab.icon} />
                 <span>{t(tab.label)}</span>
-                {tab.path === 'friends' && requests > 0 && <span className="tab-badge" aria-label={t('{n} friend requests', { n: requests })}>{requests}</span>}
+                {tab.path === 'friends' && requests > 0 && (
+                  <span className="tab-badge" aria-label={t('{n} friend requests', { n: requests })}>
+                    {requests}
+                  </span>
+                )}
               </button>
             );
           })}

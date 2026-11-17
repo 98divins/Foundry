@@ -193,14 +193,22 @@ export function progression(state: State, now = Date.now()): Progression {
   if (bw) {
     const best = (id: string) => {
       let m = 0;
-      for (const w of done) for (const we of w.exercises) if (we.exerciseId === id) for (const s of we.sets) if (countsForStats(s) && s.weight && s.reps) m = Math.max(m, epley(s.weight, s.reps));
+      for (const w of done)
+        for (const we of w.exercises)
+          if (we.exerciseId === id) for (const s of we.sets) if (countsForStats(s) && s.weight && s.reps) m = Math.max(m, epley(s.weight, s.reps));
       return m;
     };
     if (best('bench_bb') >= bw) b.push('bench1');
     if (best('squat_bb') >= bw * 1.5) b.push('squat15');
     if (best('deadlift_bb') >= bw * 2) b.push('dead2');
   }
-  for (const [w, id] of [[4, 's4'], [12, 's12'], [26, 's26'], [52, 's52']] as const) if (bestStreak >= w) b.push(id);
+  for (const [w, id] of [
+    [4, 's4'],
+    [12, 's12'],
+    [26, 's26'],
+    [52, 's52'],
+  ] as const)
+    if (bestStreak >= w) b.push(id);
   if (dietDays >= 7) b.push('d7');
   if (dietDays >= 30) b.push('d30');
   const ch = completedChallenges(state, now);

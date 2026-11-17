@@ -25,7 +25,9 @@ export function CloudDialogs() {
             <input id="new-password" type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
           {msg && <p className="field-error">{msg}</p>}
-          <button className="btn btn-primary btn-wide" type="submit" disabled={password.length < 8}>{t('Save password')}</button>
+          <button className="btn btn-primary btn-wide" type="submit" disabled={password.length < 8}>
+            {t('Save password')}
+          </button>
         </form>
       </Sheet>
     </>

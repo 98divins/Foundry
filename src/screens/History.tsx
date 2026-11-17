@@ -34,21 +34,32 @@ export function History() {
         onBack={() => back('')}
         right={
           <button className="btn btn-small" onClick={() => go('edit/new')}>
-            <Icon name="plus" size={16} />{' '}{t('Log past')}</button>
+            <Icon name="plus" size={16} /> {t('Log past')}
+          </button>
         }
       />
       <main className="page">
         {state.workouts.some((w) => w.endedAt) && (
           <div className="search">
             <Icon name="search" size={18} />
-            <input id="history-search" type="search" placeholder={t('Search a workout or an exercise')} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <input
+              id="history-search"
+              type="search"
+              placeholder={t('Search a workout or an exercise')}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
           </div>
         )}
         {!list.length && q && <p className="muted">{t('No workout matches.')}</p>}
         {!list.length && !q && (
           <div className="empty-card">
             <Icon name="history" size={28} />
-            <p>{t('Finished workouts appear here. Start one from the Workout tab, log a past session, or import your Hevy history in Settings → Export & import data.')}</p>
+            <p>
+              {t(
+                'Finished workouts appear here. Start one from the Workout tab, log a past session, or import your Hevy history in Settings → Export & import data.',
+              )}
+            </p>
           </div>
         )}
         {groups.map((g) => (

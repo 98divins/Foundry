@@ -47,8 +47,16 @@ export function LevelUpToast() {
   }, [p.level, p.badges.join()]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!msg || !on) return null;
   return (
-    <button className="streak-toast lit level-toast" onClick={() => { setMsg(null); go('levels'); }}>
-      <span className="level-num" style={{ '--rank': p.rank.color, width: 28, height: 28, fontSize: 13 } as React.CSSProperties}>{p.level}</span>
+    <button
+      className="streak-toast lit level-toast"
+      onClick={() => {
+        setMsg(null);
+        go('levels');
+      }}
+    >
+      <span className="level-num" style={{ '--rank': p.rank.color, width: 28, height: 28, fontSize: 13 } as React.CSSProperties}>
+        {p.level}
+      </span>
       <span>{msg}</span>
     </button>
   );

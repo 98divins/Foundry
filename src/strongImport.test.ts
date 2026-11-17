@@ -23,7 +23,11 @@ describe('Strong import (4.3)', () => {
     expect(push.note).toBe('Good day');
     const bench = push.exercises[0];
     expect(bench.exerciseId).toBe(LIBRARY.find((e) => e.name === 'Bench Press (Barbell)')!.id);
-    expect(bench.sets.map((s) => [s.type, s.weight, s.reps])).toEqual([['warmup', 40, 10], ['normal', 80, 8], ['normal', 80, 7]]);
+    expect(bench.sets.map((s) => [s.type, s.weight, s.reps])).toEqual([
+      ['warmup', 40, 10],
+      ['normal', 80, 8],
+      ['normal', 80, 7],
+    ]);
     const row = push.exercises[1].sets[0];
     expect(row.distance).toBe(2);
     expect(row.duration).toBe(600);

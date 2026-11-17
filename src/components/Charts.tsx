@@ -24,11 +24,7 @@ export function LineChart({
 }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   if (points.length < 2) {
-    return (
-      <div className="chart-empty muted">
-        {emptyText}
-      </div>
-    );
+    return <div className="chart-empty muted">{emptyText}</div>;
   }
   const w = Math.max(width, 200);
   const ys = [...points, ...scatter].map((p) => p.y);
@@ -64,13 +60,7 @@ export function LineChart({
             </g>
           ))}
           {xLabels.map((x, i) => (
-            <text
-              key={i}
-              x={sx(x)}
-              y={H - 6}
-              textAnchor={i === 0 ? 'start' : i === xLabels.length - 1 ? 'end' : 'middle'}
-              className="chart-label"
-            >
+            <text key={i} x={sx(x)} y={H - 6} textAnchor={i === 0 ? 'start' : i === xLabels.length - 1 ? 'end' : 'middle'} className="chart-label">
               {fmtD(x)}
             </text>
           ))}
@@ -79,8 +69,7 @@ export function LineChart({
             <circle key={'s' + i} cx={sx(p.x)} cy={sy(p.y)} r="3" fill="var(--muted)" opacity="0.55" />
           ))}
           <path d={line} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinejoin="round" />
-          {points.length <= 40 && !scatter.length &&
-            points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r="2.5" fill="var(--accent)" />)}
+          {points.length <= 40 && !scatter.length && points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r="2.5" fill="var(--accent)" />)}
           <circle cx={sx(last.x)} cy={sy(last.y)} r="5.5" fill="var(--bg)" stroke="var(--accent)" strokeWidth="3" />
         </svg>
       )}
@@ -108,14 +97,7 @@ export function BarChart({ bars, highlightLast = true }: { bars: { label: string
             const on = highlightLast && i === bars.length - 1;
             return (
               <g key={i}>
-                <rect
-                  x={x}
-                  y={h - bottom - bh}
-                  width={bw}
-                  height={Math.max(bh, b.value ? 2 : 0)}
-                  rx="3"
-                  fill={on ? 'var(--accent)' : 'var(--bar)'}
-                />
+                <rect x={x} y={h - bottom - bh} width={bw} height={Math.max(bh, b.value ? 2 : 0)} rx="3" fill={on ? 'var(--accent)' : 'var(--bar)'} />
                 {b.value > 0 && (
                   <text x={x + bw / 2} y={h - bottom - bh - 5} textAnchor="middle" className="chart-label strong">
                     {b.value}
@@ -182,7 +164,14 @@ export function RadarChart({ labels, current, previous }: { labels: string[]; cu
         const x = cx + Math.cos(a) * (r + 14);
         const y = cy + Math.sin(a) * (r + 16);
         return (
-          <text key={l} className="radar-label" x={x} y={y} textAnchor={Math.abs(Math.cos(a)) < 0.2 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end'} dominantBaseline="middle">
+          <text
+            key={l}
+            className="radar-label"
+            x={x}
+            y={y}
+            textAnchor={Math.abs(Math.cos(a)) < 0.2 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end'}
+            dominantBaseline="middle"
+          >
             {l}
           </text>
         );

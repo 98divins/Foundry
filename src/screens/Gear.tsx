@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFeature } from '../features';
 import { useCloud } from '../cloud/cloud';
-import { loadProfilePage, myProfile, profileLink, publishAvatar, publishGear, smallAvatar, SocialNotReady, type ProfilePage, type PublicProfile } from '../cloud/social';
+import {
+  loadProfilePage,
+  myProfile,
+  profileLink,
+  publishAvatar,
+  publishGear,
+  smallAvatar,
+  SocialNotReady,
+  type ProfilePage,
+  type PublicProfile,
+} from '../cloud/social';
 import { Header, Icon, Sheet } from '../components/ui';
 import { cleanGear, GEAR_ICON, GEAR_LABEL, GEAR_LAYOUT, gearCount, type Gear, type GearItem, type GearSlot } from '../gear';
 import { back, go } from '../hooks';
@@ -26,7 +36,17 @@ function AnonAvatar({ size }: { size: number }) {
 
 function SlotIcon({ slot, size = 26 }: { slot: GearSlot; size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d={GEAR_ICON[slot]} />
     </svg>
   );
@@ -36,7 +56,9 @@ function Slot({ slot, item, onClick }: { slot: GearSlot; item?: GearItem; onClic
   const filled = !!(item?.brand || item?.model);
   const body = (
     <>
-      <span className="gear-icon"><SlotIcon slot={slot} /></span>
+      <span className="gear-icon">
+        <SlotIcon slot={slot} />
+      </span>
       <span className="gear-text">
         <span className="gear-slot-name">{t(GEAR_LABEL[slot])}</span>
         {filled ? (
@@ -90,8 +112,7 @@ export function GearPage() {
     if (c.user) myProfile(c.user.id).then(setMe, () => setMe(null));
   }, [c.user]);
 
-  const setProfile = (patch: Partial<NonNullable<typeof state.profile>>) =>
-    update((s) => ({ ...s, profile: { name: '', bio: '', ...s.profile, ...patch } }));
+  const setProfile = (patch: Partial<NonNullable<typeof state.profile>>) => update((s) => ({ ...s, profile: { name: '', bio: '', ...s.profile, ...patch } }));
   const open = (slot: GearSlot) => {
     setDraft(gear[slot] ?? { brand: '', model: '' });
     setEditing(slot);
@@ -123,7 +144,11 @@ export function GearPage() {
       <Header title={t('My gear')} onBack={() => back('profile')} />
       <main className="page">
         <p className="muted small">{t('Show what you train with. Tap a slot to add the brand and model.')}</p>
-        <GearBoard gear={gear} onSlot={open} center={<CenterCard avatar={<Avatar size={84} />} name={state.profile?.name || t('You')} count={gearCount(gear)} level={progression(state).level} />} />
+        <GearBoard
+          gear={gear}
+          onSlot={open}
+          center={<CenterCard avatar={<Avatar size={84} />} name={state.profile?.name || t('You')} count={gearCount(gear)} level={progression(state).level} />}
+        />
 
         <section className="panel">
           <h2 className="panel-title">{t('Who sees my profile')}</h2>
@@ -151,7 +176,9 @@ export function GearPage() {
           ) : me === null ? (
             <p className="muted small">
               {t('Choose a username in the Friends tab to get a profile link.')}{' '}
-              <button className="link-btn" onClick={() => go('friends')}>{t('Go to Friends')}</button>
+              <button className="link-btn" onClick={() => go('friends')}>
+                {t('Go to Friends')}
+              </button>
             </p>
           ) : null}
         </section>
@@ -159,7 +186,13 @@ export function GearPage() {
 
       <Sheet open={!!editing} onClose={() => setEditing(null)} title={editing ? t(GEAR_LABEL[editing]) : ''}>
         {editing && (
-          <form className="form" onSubmit={(e) => { e.preventDefault(); save(draft.brand.trim() || draft.model.trim() ? draft : null); }}>
+          <form
+            className="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              save(draft.brand.trim() || draft.model.trim() ? draft : null);
+            }}
+          >
             <label className="field">
               <span>{t('Brand')}</span>
               <input id="gear-brand" value={draft.brand} maxLength={40} autoFocus onChange={(e) => setDraft({ ...draft, brand: e.target.value })} />
@@ -170,9 +203,17 @@ export function GearPage() {
             </label>
             <label className="field">
               <span>{t('Note (optional)')}</span>
-              <input id="gear-note" value={draft.note ?? ''} maxLength={120} placeholder={t('Size, colour, why you like it…')} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
+              <input
+                id="gear-note"
+                value={draft.note ?? ''}
+                maxLength={120}
+                placeholder={t('Size, colour, why you like it…')}
+                onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+              />
             </label>
-            <button className="btn btn-primary btn-wide" type="submit">{t('Save')}</button>
+            <button className="btn btn-primary btn-wide" type="submit">
+              {t('Save')}
+            </button>
             {gear[editing] && (
               <button className="btn btn-ghost-danger btn-wide" type="button" onClick={() => save(null)}>
                 {t('Remove')}
@@ -266,10 +307,22 @@ export function MemberProfile({ username }: { username: string }) {
                 <p className="muted small">{t('{name} does not share training stats.', { name })}</p>
               ) : (
                 <ul className="stat-grid">
-                  <li><strong>{metricValue(s, 'streak') ?? 0}</strong><span className="muted small">{t('Week streak')}</span></li>
-                  <li><strong>{s.totalWorkouts}</strong><span className="muted small">{t('Workouts in total')}</span></li>
-                  <li><strong>{fmtNum(s.avgDays4w)}</strong><span className="muted small">{t('Days per week (4 weeks)')}</span></li>
-                  <li><strong>{s.prs30}</strong><span className="muted small">{t('Records (30 d)')}</span></li>
+                  <li>
+                    <strong>{metricValue(s, 'streak') ?? 0}</strong>
+                    <span className="muted small">{t('Week streak')}</span>
+                  </li>
+                  <li>
+                    <strong>{s.totalWorkouts}</strong>
+                    <span className="muted small">{t('Workouts in total')}</span>
+                  </li>
+                  <li>
+                    <strong>{fmtNum(s.avgDays4w)}</strong>
+                    <span className="muted small">{t('Days per week (4 weeks)')}</span>
+                  </li>
+                  <li>
+                    <strong>{s.prs30}</strong>
+                    <span className="muted small">{t('Records (30 d)')}</span>
+                  </li>
                 </ul>
               )}
             </section>
@@ -278,13 +331,20 @@ export function MemberProfile({ username }: { username: string }) {
                 <h2 className="panel-title">{t('Big lifts (est. 1RM, 90 days)')}</h2>
                 <ul className="lift-list">
                   {Object.entries(s.lifts).map(([id, kg]) => (
-                    <li key={id} className="lift-row"><span>{exerciseName(exMap, id)}</span><strong>{fmtNum(Math.round(unit === 'lb' ? kg! * 2.20462 : kg!))} {unit}</strong></li>
+                    <li key={id} className="lift-row">
+                      <span>{exerciseName(exMap, id)}</span>
+                      <strong>
+                        {fmtNum(Math.round(unit === 'lb' ? kg! * 2.20462 : kg!))} {unit}
+                      </strong>
+                    </li>
                   ))}
                 </ul>
               </section>
             )}
             {p.user_id !== self && (
-              <button className="link-btn small report-link" onClick={() => setReporting(true)}>{t('Report this profile')}</button>
+              <button className="link-btn small report-link" onClick={() => setReporting(true)}>
+                {t('Report this profile')}
+              </button>
             )}
             <ReportSheet item={reporting ? { kind: 'profile', target: p.username, label: '@' + p.username } : null} onClose={() => setReporting(false)} />
           </>
@@ -306,7 +366,14 @@ export function GearPublisher() {
     const gear = pr?.gear ?? {};
     const json = JSON.stringify([gear, !!pr?.isPublic, pr?.bio ?? '']);
     if (json === last.current) return;
-    const id = setTimeout(() => publishGear(uid, gear, !!pr?.isPublic, pr?.bio ?? '').then(() => (last.current = json), () => {}), 3000);
+    const id = setTimeout(
+      () =>
+        publishGear(uid, gear, !!pr?.isPublic, pr?.bio ?? '').then(
+          () => (last.current = json),
+          () => {},
+        ),
+      3000,
+    );
     return () => clearTimeout(id);
   }, [uid, c.initialSynced, pr]);
   // The picture: same idea, on its own (it is bigger and changes rarely).

@@ -31,13 +31,19 @@ function sample(): State {
     nutrition: {
       ...base.nutrition,
       rateKgPerWeek: -0.25,
-      foods: [{ id: 'c-2', name: 'B', per100: { kcal: 2, protein: 0, carbs: 0, fat: 0 }, source: 'custom' }, { id: 'c-1', name: 'A', per100: { kcal: 1, protein: 0, carbs: 0, fat: 0 }, source: 'custom' }],
+      foods: [
+        { id: 'c-2', name: 'B', per100: { kcal: 2, protein: 0, carbs: 0, fat: 0 }, source: 'custom' },
+        { id: 'c-1', name: 'A', per100: { kcal: 1, protein: 0, carbs: 0, fat: 0 }, source: 'custom' },
+      ],
       savedMeals: [{ id: 'm1', name: 'Bowl', items: [], updatedAt: 3 }],
       log: [
         { id: 'l2', date: '2026-11-02', meal: 'lunch', name: 'x', grams: 100, kcal: 100, protein: 1, carbs: 1, fat: 1, createdAt: 20 },
         { id: 'l1', date: '2026-11-01', meal: 'lunch', name: 'y', grams: 50, kcal: 50, protein: 1, carbs: 1, fat: 1, createdAt: 10 },
       ],
-      weights: [{ date: '2026-11-02', kg: 80 }, { date: '2026-11-01', kg: 80.4 }],
+      weights: [
+        { date: '2026-11-02', kg: 80 },
+        { date: '2026-11-01', kg: 80.4 },
+      ],
       checkIns: [{ date: '2026-11-01', targets: { kcal: 2400, protein: 160, carbs: 280, fat: 70 } } as never],
       favorites: ['c-2', 'c-1'],
       incompleteDays: ['2026-11-02', '2026-11-01'],

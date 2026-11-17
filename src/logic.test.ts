@@ -83,10 +83,7 @@ describe('records', () => {
   });
 
   it('flags rep records for bodyweight work', () => {
-    const prs = computePRs([
-      workout('1', 1, 'pull_up', [set('a', null, 8)]),
-      workout('2', 2, 'pull_up', [set('b', null, 10)]),
-    ]);
+    const prs = computePRs([workout('1', 1, 'pull_up', [set('a', null, 8)]), workout('2', 2, 'pull_up', [set('b', null, 10)])]);
     expect(prs.get('b')).toEqual(['reps']);
   });
 });

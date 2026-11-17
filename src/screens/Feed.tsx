@@ -96,7 +96,9 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
     <section className="panel feed">
       <h2 className="panel-title">{t('Activity')}</h2>
       {items === null && <p className="muted small">{t('Loading…')}</p>}
-      {items && !items.length && <p className="muted small">{t('Your friends’ workouts, new levels and badges show here. Finish a workout to post your first one.')}</p>}
+      {items && !items.length && (
+        <p className="muted small">{t('Your friends’ workouts, new levels and badges show here. Finish a workout to post your first one.')}</p>
+      )}
       {err && <p className="error small">{err}</p>}
       <ul className="feed-list">
         {shown.map((a) => {
@@ -123,7 +125,11 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
                     <span>{t('{n} min', { n: d.minutes })}</span>
                     <span>{tp(d.sets, '{n} set', '{n} sets')}</span>
                     {d.volume > 0 && <span>{fmtVolume(d.volume, unit)}</span>}
-                    {d.records > 0 && <span className="feed-pr"><Icon name="trophy" size={14} /> {tp(d.records, '{n} record', '{n} records')}</span>}
+                    {d.records > 0 && (
+                      <span className="feed-pr">
+                        <Icon name="trophy" size={14} /> {tp(d.records, '{n} record', '{n} records')}
+                      </span>
+                    )}
                   </span>
                   {!!d.exercises.length && (
                     <span className="muted small feed-exercises">
@@ -140,7 +146,9 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
               )}
               {d.kind === 'level' && (
                 <div className="feed-body feed-event">
-                  <span className="level-num" style={{ '--rank': rankOf(d.level).color } as React.CSSProperties}>{d.level}</span>
+                  <span className="level-num" style={{ '--rank': rankOf(d.level).color } as React.CSSProperties}>
+                    {d.level}
+                  </span>
                   <span>{t('reached level {n} · {rank}', { n: d.level, rank: t(rankOf(d.level).name) })}</span>
                 </div>
               )}
@@ -152,42 +160,76 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
               )}
               <div className="feed-actions">
                 <button className={'feed-respect' + (given ? ' on' : '')} onClick={() => respect(a)} disabled={mine} aria-pressed={given}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <path d="M7 11V7a2 2 0 0 1 4 0v3h5a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H9l-2-2v-7zM4 11h3v9H4z" />
                   </svg>
                   {t('Respect')}
                   {a.respects.length > 0 && <span className="feed-count">{a.respects.length}</span>}
                 </button>
                 {commentsOn && (
-                <button className="feed-respect" onClick={() => { setOpen(open === a.id ? null : a.id); setDraft(''); }}>
-                  <Icon name="note" size={16} />
-                  {a.comments.length ? tp(a.comments.length, '{n} comment', '{n} comments') : t('Comment')}
-                </button>
+                  <button
+                    className="feed-respect"
+                    onClick={() => {
+                      setOpen(open === a.id ? null : a.id);
+                      setDraft('');
+                    }}
+                  >
+                    <Icon name="note" size={16} />
+                    {a.comments.length ? tp(a.comments.length, '{n} comment', '{n} comments') : t('Comment')}
+                  </button>
                 )}
               </div>
-              {mine && a.respects.length > 0 && (
-                <p className="muted small">{t('Respect from {names}', { names: a.respects.map(name).join(', ') })}</p>
-              )}
+              {mine && a.respects.length > 0 && <p className="muted small">{t('Respect from {names}', { names: a.respects.map(name).join(', ') })}</p>}
               {commentsOn && open === a.id && (
                 <div className="feed-comments">
-                  {a.comments.filter((c) => !hidden('comment', c.id)).map((c) => (
-                    <p key={c.id} className="small feed-comment">
-                      <strong>{name(c.user_id)}</strong> {c.body}
-                      {(c.user_id === uid || mine) && (
-                        <button className="link-btn" onClick={() => remove(a, c.id)} aria-label={t('Delete')}>
-                          <Icon name="x" size={14} />
-                        </button>
-                      )}
-                      {c.user_id !== uid && (
-                        <button className="link-btn" onClick={() => setReporting({ kind: 'comment', target: c.id, label: c.body.slice(0, 30) })} aria-label={t('Report')}>
-                          <Icon name="flag" size={14} />
-                        </button>
-                      )}
-                    </p>
-                  ))}
-                  <form className="feed-reply" onSubmit={(e) => { e.preventDefault(); send(a); }}>
-                    <input id={'comment-' + a.id} value={draft} maxLength={280} placeholder={t('Write a comment…')} onChange={(e) => setDraft(e.target.value)} />
-                    <button className="btn btn-primary btn-small" type="submit" disabled={!draft.trim()}>{t('Send')}</button>
+                  {a.comments
+                    .filter((c) => !hidden('comment', c.id))
+                    .map((c) => (
+                      <p key={c.id} className="small feed-comment">
+                        <strong>{name(c.user_id)}</strong> {c.body}
+                        {(c.user_id === uid || mine) && (
+                          <button className="link-btn" onClick={() => remove(a, c.id)} aria-label={t('Delete')}>
+                            <Icon name="x" size={14} />
+                          </button>
+                        )}
+                        {c.user_id !== uid && (
+                          <button
+                            className="link-btn"
+                            onClick={() => setReporting({ kind: 'comment', target: c.id, label: c.body.slice(0, 30) })}
+                            aria-label={t('Report')}
+                          >
+                            <Icon name="flag" size={14} />
+                          </button>
+                        )}
+                      </p>
+                    ))}
+                  <form
+                    className="feed-reply"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      send(a);
+                    }}
+                  >
+                    <input
+                      id={'comment-' + a.id}
+                      value={draft}
+                      maxLength={280}
+                      placeholder={t('Write a comment…')}
+                      onChange={(e) => setDraft(e.target.value)}
+                    />
+                    <button className="btn btn-primary btn-small" type="submit" disabled={!draft.trim()}>
+                      {t('Send')}
+                    </button>
                   </form>
                 </div>
               )}
@@ -196,7 +238,9 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
         })}
       </ul>
       {items && items.length > limit && (
-        <button className="btn btn-wide" onClick={() => setLimit(limit + 20)}>{t('Show more')}</button>
+        <button className="btn btn-wide" onClick={() => setLimit(limit + 20)}>
+          {t('Show more')}
+        </button>
       )}
       <p className="muted small">{t('Only your friends see your posts. Turn off sharing in this tab to stop posting.')}</p>
       <ReportSheet item={reporting} onClose={() => setReporting(null)} />

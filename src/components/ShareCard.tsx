@@ -15,7 +15,12 @@ export function ShareCardSheet({ workout, open, onClose }: { workout: Workout; o
   const [blob, setBlob] = useState<Blob | null>(null);
   const [msg, setMsg] = useState('');
   const url = useMemo(() => (blob ? URL.createObjectURL(blob) : ''), [blob]);
-  useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
+  useEffect(
+    () => () => {
+      if (url) URL.revokeObjectURL(url);
+    },
+    [url],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -61,7 +66,11 @@ export function ShareCardSheet({ workout, open, onClose }: { workout: Workout; o
   return (
     <Sheet open={open} onClose={onClose} title={t('Share my workout')} tall>
       <div className="share-card">
-        {url ? <img src={url} alt={t('Workout card: {name}', { name: workout.name })} /> : <div className="share-card-wait muted">{msg || t('Preparing the image…')}</div>}
+        {url ? (
+          <img src={url} alt={t('Workout card: {name}', { name: workout.name })} />
+        ) : (
+          <div className="share-card-wait muted">{msg || t('Preparing the image…')}</div>
+        )}
         <div className="sheet-actions">
           <button className="btn" onClick={save} disabled={!blob}>
             <Icon name="download" size={18} /> {t('Save')}

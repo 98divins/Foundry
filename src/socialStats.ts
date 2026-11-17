@@ -186,7 +186,11 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
     ...(() => {
       const p = progression(state, now);
       const m = monthKey(now);
-      return { level: p.level, badges: p.badges, challenges: { month: m, progress: Object.fromEntries(monthChallenges(state, m).map((c) => [c.def.id, c.value])) } };
+      return {
+        level: p.level,
+        badges: p.badges,
+        challenges: { month: m, progress: Object.fromEntries(monthChallenges(state, m).map((c) => [c.def.id, c.value])) },
+      };
     })(),
     days: encodeDays(state, now),
     weekGoalPct: state.goals ? Math.round(weekGoal(state, state.goals, start, now).progress * 100) : null,
@@ -297,7 +301,12 @@ export interface BoardRow<P> {
 }
 
 /** Rank people by a metric, highest first; equal values share a rank; no data goes last. */
-export function rankBoard<P>(people: { person: P; stats: PublicStats | null }[], m: BoardMetric, period: BoardPeriod = 'week', now = Date.now()): BoardRow<P>[] {
+export function rankBoard<P>(
+  people: { person: P; stats: PublicStats | null }[],
+  m: BoardMetric,
+  period: BoardPeriod = 'week',
+  now = Date.now(),
+): BoardRow<P>[] {
   return rankBy(people, (st) => metricValue(st, m, period, now));
 }
 

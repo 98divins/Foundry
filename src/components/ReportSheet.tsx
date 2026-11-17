@@ -50,13 +50,22 @@ export function ReportSheet({ item, onClose }: { item: ReportTarget | null; onCl
       {item && state === 'sent' ? (
         <div className="form">
           <p>{t('Thank you. We will look at it. You will no longer see it.')}</p>
-          <button className="btn btn-primary btn-wide" onClick={close}>{t('Close')}</button>
+          <button className="btn btn-primary btn-wide" onClick={close}>
+            {t('Close')}
+          </button>
         </div>
       ) : item ? (
         <div className="form">
           <div className="menu" role="radiogroup" aria-label={t('Reason')}>
             {REASONS[item.kind].map((r) => (
-              <button key={r} type="button" role="radio" aria-checked={reason === r} className={'menu-item' + (reason === r ? ' on' : '')} onClick={() => setReason(r)}>
+              <button
+                key={r}
+                type="button"
+                role="radio"
+                aria-checked={reason === r}
+                className={'menu-item' + (reason === r ? ' on' : '')}
+                onClick={() => setReason(r)}
+              >
                 {t(REASON_LABEL[r])}
               </button>
             ))}
@@ -67,8 +76,12 @@ export function ReportSheet({ item, onClose }: { item: ReportTarget | null; onCl
           </label>
           {state === 'error' && <p className="field-error small">{error}</p>}
           <div className="sheet-actions">
-            <button className="btn" onClick={close}>{t('Cancel')}</button>
-            <button className="btn btn-primary" disabled={!reason || state === 'sending'} onClick={send}>{t('Send the report')}</button>
+            <button className="btn" onClick={close}>
+              {t('Cancel')}
+            </button>
+            <button className="btn btn-primary" disabled={!reason || state === 'sending'} onClick={send}>
+              {t('Send the report')}
+            </button>
           </div>
         </div>
       ) : null}

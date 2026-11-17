@@ -72,9 +72,7 @@ export function ConsentGate() {
   if (!c.configured || !c.user || !c.initialSynced || accepted) return null;
   return (
     <Sheet open onClose={() => {}} title={t('Before you continue')} noClose>
-      <p className="sheet-text">
-        {t('Foundry stores your training and nutrition data in your account. Please read and accept how it is used.')}
-      </p>
+      <p className="sheet-text">{t('Foundry stores your training and nutrition data in your account. Please read and accept how it is used.')}</p>
       <ConsentCheckbox checked={ok} onChange={setOk} />
       <div className="menu">
         <button

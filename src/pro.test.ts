@@ -8,7 +8,11 @@ describe('Pro gates', () => {
   });
   it('applies free limits in preview mode and asks to upgrade', () => {
     const store: Record<string, string> = {};
-    vi.stubGlobal('localStorage', { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => (store[k] = v), removeItem: (k: string) => delete store[k] });
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => (store[k] = v),
+      removeItem: (k: string) => delete store[k],
+    });
     const seen: string[] = [];
     vi.stubGlobal('dispatchEvent', (e: CustomEvent) => seen.push(e.detail));
     setPreviewFree(true);

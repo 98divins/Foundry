@@ -6,7 +6,12 @@ describe('interval plans', () => {
     const p = { prepare: 10, work: 20, rest: 10, rounds: 3, cycles: 2, cycleRest: 60, cooldown: 30, moves: ['A', 'B'] };
     const ph = phasesOf(p);
     expect(ph.map((x) => x.kind).join(',')).toBe('prepare,work,rest,work,rest,work,cycleRest,work,rest,work,rest,work,cooldown');
-    expect(ph.filter((x) => x.kind === 'work').map((x) => x.move).join('')).toBe('ABABAB');
+    expect(
+      ph
+        .filter((x) => x.kind === 'work')
+        .map((x) => x.move)
+        .join(''),
+    ).toBe('ABABAB');
     expect(totalSeconds(p)).toBe(10 + 6 * 20 + 4 * 10 + 60 + 30);
   });
   it('skips zero-length rests', () => {

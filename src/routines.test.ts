@@ -60,7 +60,12 @@ describe('supersets', () => {
     const linked = linkWithNext(linkWithNext(list, 0), 2);
     const slots = supersetSlots(linked);
     expect(slots.map((x) => x.group)).toEqual([0, 0, 1, 1]);
-    expect(slots.map((x) => [x.first, x.last])).toEqual([[true, false], [false, true], [true, false], [false, true]]);
+    expect(slots.map((x) => [x.first, x.last])).toEqual([
+      [true, false],
+      [false, true],
+      [true, false],
+      [false, true],
+    ]);
     expect(supersetSlots(unlink(linked, 1)).map((x) => x.group)).toEqual([null, null, 0, 0]);
   });
 
@@ -72,10 +77,7 @@ describe('supersets', () => {
 
 describe('summary', () => {
   it('counts sets per muscle and estimates time from rest', () => {
-    const sum = routineSummary(
-      [block('bench_bb', [s(8), s(8)], 150), block('pull_up', [s(6), { ...s(10), type: 'warmup' }], 90)],
-      exMap,
-    );
+    const sum = routineSummary([block('bench_bb', [s(8), s(8)], 150), block('pull_up', [s(6), { ...s(10), type: 'warmup' }], 90)], exMap);
     expect(sum).toMatchObject({ exercises: 2, sets: 4 });
     expect(sum.seconds).toBe(2 * (45 + 150) + 2 * (45 + 90));
     expect(sum.muscles).toEqual([

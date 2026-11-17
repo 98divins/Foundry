@@ -5,7 +5,15 @@ import { defaultState } from './store';
 
 describe('xlsx writer', () => {
   it('produces a valid zip with the workbook parts', async () => {
-    const blob = workbook([{ name: 'Test', rows: [['A', 'B'], [1, 'x & y']] }]);
+    const blob = workbook([
+      {
+        name: 'Test',
+        rows: [
+          ['A', 'B'],
+          [1, 'x & y'],
+        ],
+      },
+    ]);
     const buf = new Uint8Array(await blob.arrayBuffer());
     // Local file header signature at the start, end-of-central-directory signature at the end.
     expect([...buf.slice(0, 4)]).toEqual([0x50, 0x4b, 0x03, 0x04]);

@@ -110,7 +110,8 @@ export function WorkoutEditor({
         </div>
       )}
       <button className="btn btn-primary btn-wide" onClick={() => setPicking(true)}>
-        <Icon name="plus" size={18} />{' '}{t('Add exercise')}</button>
+        <Icon name="plus" size={18} /> {t('Add exercise')}
+      </button>
       <ExercisePicker
         open={picking}
         onClose={() => setPicking(false)}
@@ -122,7 +123,13 @@ export function WorkoutEditor({
 
 /** Enough rows to show a routine note in full on a phone (about 40 characters a line), up to 6. */
 const noteRows = (note?: string) =>
-  Math.min(6, Math.max(1, (note ?? '').split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length / 40)), 0)));
+  Math.min(
+    6,
+    Math.max(
+      1,
+      (note ?? '').split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length / 40)), 0),
+    ),
+  );
 
 export function supersetClass(slot: SupersetSlot): string {
   if (slot.group == null) return 'ss-none';
@@ -205,7 +212,9 @@ function ExerciseCard({
   const canFill = we.sets.some((s) => !s.done && s.type !== 'warmup' && s.type !== 'drop' && s.weight == null && s.reps == null);
   // Warm-ups are built from the first working weight: typed, suggested, or last time's.
   const workWeight =
-    we.sets.find((s) => s.type !== 'warmup' && s.weight)?.weight ?? best?.weight ?? Math.max(0, ...prev.filter((s) => s.type !== 'warmup').map((s) => s.weight ?? 0));
+    we.sets.find((s) => s.type !== 'warmup' && s.weight)?.weight ??
+    best?.weight ??
+    Math.max(0, ...prev.filter((s) => s.type !== 'warmup').map((s) => s.weight ?? 0));
   const warmups = kind === 'weight' && workWeight ? warmupSets(workWeight, unit, uid) : [];
   // RPE (optional): asked for the last set done.
   const rpeSet = rpeOn && mode !== 'routine' ? [...we.sets].reverse().find((s) => s.done) : undefined;
@@ -303,14 +312,16 @@ function ExerciseCard({
       )}
       {mode !== 'edit' && (
         <button className="rest-chip" onClick={() => setMenu(true)}>
-          <Icon name="timer" size={15} />{' '}{t('Rest')}{' '}{we.restSec ? fmtClock(we.restSec) : t('off')}
+          <Icon name="timer" size={15} /> {t('Rest')} {we.restSec ? fmtClock(we.restSec) : t('off')}
         </button>
       )}
       {best && !started && (
         <div className="aim" role="note">
           <span>{t('Last time, best set: {w} × {reps}', { w: `${fmtNum(toDisplay(best.weight, unit))} ${unit}`, reps: best.reps })}</span>
           {canFill && (
-            <button className="btn btn-small" onClick={() => onChange({ ...we, sets: fillWithBest(we.sets, best) })}>{t('Use it')}</button>
+            <button className="btn btn-small" onClick={() => onChange({ ...we, sets: fillWithBest(we.sets, best) })}>
+              {t('Use it')}
+            </button>
           )}
         </div>
       )}
@@ -367,9 +378,7 @@ function ExerciseCard({
                 <button
                   className="set-prev"
                   disabled={!p}
-                  onClick={() =>
-                    p && setSet(i, { weight: p.weight, reps: p.reps, duration: p.duration ?? null, distance: p.distance ?? null })
-                  }
+                  onClick={() => p && setSet(i, { weight: p.weight, reps: p.reps, duration: p.duration ?? null, distance: p.distance ?? null })}
                   aria-label={p ? t('Use previous: {value}', { value: prevText(p) }) : t('No previous set')}
                 >
                   {prevText(p)}
@@ -411,21 +420,14 @@ function ExerciseCard({
                     onChange={(v) => setSet(i, { weight: v == null ? null : fromDisplay(v, unit) })}
                   />
                   {mode === 'routine' ? (
-                    <RepRangeInput
-                      id={'r-' + s.id}
-                      reps={s.reps}
-                      repsMax={s.repsMax ?? null}
-                      onChange={(reps, repsMax) => setSet(i, { reps, repsMax })}
-                    />
+                    <RepRangeInput id={'r-' + s.id} reps={s.reps} repsMax={s.repsMax ?? null} onChange={(reps, repsMax) => setSet(i, { reps, repsMax })} />
                   ) : (
                     <NumInput
                       id={'r-' + s.id}
                       label={t('Reps')}
                       decimal={false}
                       value={s.reps}
-                      placeholder={
-                        s.target ? fmtRepRange(s.target.reps, s.target.repsMax) || '–' : p?.reps ? String(p.reps) : '–'
-                      }
+                      placeholder={s.target ? fmtRepRange(s.target.reps, s.target.repsMax) || '–' : p?.reps ? String(p.reps) : '–'}
                       onChange={(v) => setSet(i, { reps: v })}
                     />
                   )}
@@ -461,18 +463,15 @@ function ExerciseCard({
         </div>
       )}
       <button className="btn btn-ghost btn-wide" onClick={addSet}>
-        <Icon name="plus" size={16} />{' '}{t('Add set')}</button>
+        <Icon name="plus" size={16} /> {t('Add set')}
+      </button>
 
       <Sheet open={menu} onClose={() => setMenu(false)} title={ex?.label ?? ex?.name}>
         <div className="menu">
           {mode !== 'edit' && (
             <label className="field">
               <span>{t('Rest timer')}</span>
-              <select
-                id={'rest-' + we.id}
-                value={we.restSec}
-                onChange={(e) => onChange({ ...we, restSec: Number(e.target.value) })}
-              >
+              <select id={'rest-' + we.id} value={we.restSec} onChange={(e) => onChange({ ...we, restSec: Number(e.target.value) })}>
                 {REST_OPTIONS.map((r) => (
                   <option key={r} value={r}>
                     {r ? fmtClock(r) : t('Off')}
@@ -485,7 +484,10 @@ function ExerciseCard({
             <button
               className="menu-item"
               disabled={!warmups.length}
-              onClick={() => { onChange({ ...we, sets: withWarmups(we.sets, warmups) }); setMenu(false); }}
+              onClick={() => {
+                onChange({ ...we, sets: withWarmups(we.sets, warmups) });
+                setMenu(false);
+              }}
             >
               <Icon name="flame" size={18} />{' '}
               {warmups.length
@@ -494,36 +496,108 @@ function ExerciseCard({
             </button>
           )}
           {ex?.equipment === 'barbell' && (
-            <button className="menu-item" onClick={() => { setMenu(false); setPlating(true); }}>
-              <Icon name="dumbbell" size={18} />{' '}{t('Plates to load')}</button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                setMenu(false);
+                setPlating(true);
+              }}
+            >
+              <Icon name="dumbbell" size={18} /> {t('Plates to load')}
+            </button>
           )}
-          <button className="menu-item" onClick={() => { setMenu(false); setPinning(pinned); }}>
-            <Icon name="note" size={18} />{' '}{pinned ? t('Edit pinned note') : t('Pin a note to this exercise')}</button>
-          <button className="menu-item" onClick={() => { setNoteOpen(true); setMenu(false); }}>
+          <button
+            className="menu-item"
+            onClick={() => {
+              setMenu(false);
+              setPinning(pinned);
+            }}
+          >
+            <Icon name="note" size={18} /> {pinned ? t('Edit pinned note') : t('Pin a note to this exercise')}
+          </button>
+          <button
+            className="menu-item"
+            onClick={() => {
+              setNoteOpen(true);
+              setMenu(false);
+            }}
+          >
             <Icon name="note" size={18} /> {we.note ? t('Edit note') : t('Add note')}
           </button>
           {inSuperset ? (
-            <button className="menu-item" onClick={() => { onUnlink(); setMenu(false); }}>
-              <Icon name="unlink" size={18} />{' '}{t('Remove from superset')}</button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                onUnlink();
+                setMenu(false);
+              }}
+            >
+              <Icon name="unlink" size={18} /> {t('Remove from superset')}
+            </button>
           ) : (
-            <button className="menu-item" disabled={!canLink} onClick={() => { onLink(); setMenu(false); }}>
-              <Icon name="link" size={18} />{' '}{t('Superset with next exercise')}</button>
+            <button
+              className="menu-item"
+              disabled={!canLink}
+              onClick={() => {
+                onLink();
+                setMenu(false);
+              }}
+            >
+              <Icon name="link" size={18} /> {t('Superset with next exercise')}
+            </button>
           )}
-          <button className="menu-item" disabled={!canUp} onClick={() => { onMove(-1); setMenu(false); }}>
-            <Icon name="up" size={18} />{' '}{t('Move up')}</button>
-          <button className="menu-item" disabled={!canDown} onClick={() => { onMove(1); setMenu(false); }}>
-            <Icon name="down" size={18} />{' '}{t('Move down')}</button>
-          <button className="menu-item" onClick={() => { setMenu(false); setReplacing(true); }}>
-            <Icon name="swap" size={18} />{' '}{mode === 'live' ? t('Replace for this workout') : t('Replace exercise')}
+          <button
+            className="menu-item"
+            disabled={!canUp}
+            onClick={() => {
+              onMove(-1);
+              setMenu(false);
+            }}
+          >
+            <Icon name="up" size={18} /> {t('Move up')}
           </button>
-          <button className="menu-item danger" onClick={() => { setMenu(false); onChange(null); }}>
-            <Icon name="trash" size={18} />{' '}{t('Remove exercise')}</button>
+          <button
+            className="menu-item"
+            disabled={!canDown}
+            onClick={() => {
+              onMove(1);
+              setMenu(false);
+            }}
+          >
+            <Icon name="down" size={18} /> {t('Move down')}
+          </button>
+          <button
+            className="menu-item"
+            onClick={() => {
+              setMenu(false);
+              setReplacing(true);
+            }}
+          >
+            <Icon name="swap" size={18} /> {mode === 'live' ? t('Replace for this workout') : t('Replace exercise')}
+          </button>
+          <button
+            className="menu-item danger"
+            onClick={() => {
+              setMenu(false);
+              onChange(null);
+            }}
+          >
+            <Icon name="trash" size={18} /> {t('Remove exercise')}
+          </button>
         </div>
       </Sheet>
       <Sheet open={pinning != null} onClose={() => setPinning(null)} title={t('Pinned note')}>
         <p className="muted small">{t('Shown every time this exercise comes up: seat height, grip, cues…')}</p>
         <textarea id={'pin-' + we.id} className="ex-note" rows={4} value={pinning ?? ''} maxLength={500} onChange={(e) => setPinning(e.target.value)} />
-        <button className="btn btn-primary btn-wide" onClick={() => { savePin(pinning ?? ''); setPinning(null); }}>{t('Save')}</button>
+        <button
+          className="btn btn-primary btn-wide"
+          onClick={() => {
+            savePin(pinning ?? '');
+            setPinning(null);
+          }}
+        >
+          {t('Save')}
+        </button>
       </Sheet>
       {plating && (
         <PlateSheet
@@ -532,9 +606,7 @@ function ExerciseCard({
           onClose={() => setPlating(false)}
         />
       )}
-      {replacing && ex && (
-        <ExercisePicker open replacing={ex} onClose={() => setReplacing(false)} onPick={([id]) => id && onReplace(id)} />
-      )}
+      {replacing && ex && <ExercisePicker open replacing={ex} onClose={() => setReplacing(false)} onPick={([id]) => id && onReplace(id)} />}
     </section>
   );
 }
@@ -585,7 +657,9 @@ function PlateSheet({ unit, start, onClose }: { unit: 'kg' | 'lb'; start: number
         <NumInput id="plate-total" label={t('Total weight')} value={total} placeholder="–" onChange={setTotal} />
         <select id="plate-bar" aria-label={t('Bar')} value={bar} onChange={(e) => setBar(Number(e.target.value))}>
           {BARS[unit].map((b) => (
-            <option key={b} value={b}>{t('Bar {w}', { w: `${b} ${unit}` })}</option>
+            <option key={b} value={b}>
+              {t('Bar {w}', { w: `${b} ${unit}` })}
+            </option>
           ))}
         </select>
       </div>
@@ -595,7 +669,9 @@ function PlateSheet({ unit, start, onClose }: { unit: 'kg' | 'lb'; start: number
           <p className="small muted">{r.plates.length ? t('On each side:') : t('Just the bar.')}</p>
           <div className="plates" aria-label={t('On each side:') + ' ' + r.plates.join(', ')}>
             {r.plates.map((p, i) => (
-              <span key={i} className={'plate p' + String(p).replace('.', '_')}>{fmtNum(p)}</span>
+              <span key={i} className={'plate p' + String(p).replace('.', '_')}>
+                {fmtNum(p)}
+              </span>
             ))}
           </div>
           {r.left > 0 && <p className="small field-error">{t('{w} per side cannot be loaded with standard plates.', { w: `${fmtNum(r.left)} ${unit}` })}</p>}

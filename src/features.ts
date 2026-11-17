@@ -25,8 +25,20 @@ export const FEATURES: Feature[] = [
   { id: 'recaps', label: tk('My recaps'), text: tk('Your week, month or year in a story, with an image to share.'), default: false, inTest: true },
   { id: 'comments', label: tk('Comments in the feed'), text: tk('Write and read comments on friends’ posts.'), default: true, inTest: false },
   { id: 'rpe', label: tk('Effort per set (RPE)'), text: tk('Note how hard each set felt, from 6 (easy) to 10 (nothing left).'), default: false, inTest: true },
-  { id: 'progression', label: tk('Best set from last time'), text: tk('Shows your best set from your last workout on each exercise.'), default: true, inTest: false },
-  { id: 'smartFoodOrder', label: tk('Foods you eat first'), text: tk('Foods you often log at this meal come first in the search.'), default: true, inTest: false },
+  {
+    id: 'progression',
+    label: tk('Best set from last time'),
+    text: tk('Shows your best set from your last workout on each exercise.'),
+    default: true,
+    inTest: false,
+  },
+  {
+    id: 'smartFoodOrder',
+    label: tk('Foods you eat first'),
+    text: tk('Foods you often log at this meal come first in the search.'),
+    default: true,
+    inTest: false,
+  },
 ];
 
 export function featureOn(settings: Pick<Settings, 'features'> | undefined, id: FeatureId): boolean {

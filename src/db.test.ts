@@ -28,7 +28,10 @@ function sample(): State {
         { id: 'l2', date: '2026-11-02', meal: 'lunch', name: 'x', grams: 1, kcal: 1, protein: 0, carbs: 0, fat: 0, createdAt: 2 },
         { id: 'l1', date: '2026-11-01', meal: 'lunch', name: 'y', grams: 1, kcal: 1, protein: 0, carbs: 0, fat: 0, createdAt: 1 },
       ],
-      weights: [{ date: '2026-11-02', kg: 80 }, { date: '2026-11-01', kg: 81 }],
+      weights: [
+        { date: '2026-11-02', kg: 80 },
+        { date: '2026-11-01', kg: 81 },
+      ],
       favorites: ['b', 'a'],
       incompleteDays: ['2026-11-02'],
     },

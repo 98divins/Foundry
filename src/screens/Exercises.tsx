@@ -32,14 +32,17 @@ export function Exercises() {
         onBack={() => back('')}
         right={
           <button className="btn btn-small" onClick={() => canAdd('customExercises', state.customExercises.length) && setCreating(true)}>
-            <Icon name="plus" size={16} />{' '}{t('New')}</button>
+            <Icon name="plus" size={16} /> {t('New')}
+          </button>
         }
       />
       <main className="page">
         <ExerciseFilters value={filter} onChange={setFilter} idPrefix="ex" />
         <div className="list-meta">
           <label className="toggle-line">
-            <input id="only-logged" type="checkbox" checked={onlyLogged} onChange={(e) => setOnlyLogged(e.target.checked)} />{t('Only exercises I have logged')}</label>
+            <input id="only-logged" type="checkbox" checked={onlyLogged} onChange={(e) => setOnlyLogged(e.target.checked)} />
+            {t('Only exercises I have logged')}
+          </label>
           <span className="muted small">{shown.length}</span>
         </div>
         <ul className="ex-list">

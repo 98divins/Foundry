@@ -197,10 +197,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
           if (await upload(uid)) return;
           continue;
         }
-        const action =
-          first && attempt === 0
-            ? loginAction(meta, uid, stateRef.current, { updatedAt: head.updated_at })
-            : refreshAction(meta, head.updated_at);
+        const action = first && attempt === 0 ? loginAction(meta, uid, stateRef.current, { updatedAt: head.updated_at }) : refreshAction(meta, head.updated_at);
         if (action === 'none') {
           setMeta({ ...meta, userId: uid, lastSyncAt: Date.now() });
           return;
@@ -515,7 +512,14 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     signOut: async (force = false) => {
       const sb = await getClient();
       // Merge and send anything pending first; if it still is not on the account, ask before losing it.
-      if (user && !force && (await prepareSignOut(() => metaRef.current.dirty, () => runSync(user.id, false))) === 'unsaved') {
+      if (
+        user &&
+        !force &&
+        (await prepareSignOut(
+          () => metaRef.current.dirty,
+          () => runSync(user.id, false),
+        )) === 'unsaved'
+      ) {
         return UNSAVED;
       }
       await sb?.auth.signOut();
@@ -544,4 +548,3 @@ export function useCloud(): CloudCtx {
   if (!c) throw new Error('useCloud outside CloudProvider');
   return c;
 }
-

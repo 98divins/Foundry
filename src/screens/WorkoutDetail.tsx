@@ -5,19 +5,7 @@ import { back, go } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { ExerciseKind, PRKind } from '../types';
 import { ExerciseImage } from '../components/ExerciseImage';
-import {
-  computePRs,
-  epley,
-  fmtDate,
-  fmtDuration,
-  fmtTime,
-  fmtVolume,
-  fmtEstimate,
-  fmtSet,
-  uid,
-  workoutSetCount,
-  workoutVolume,
-} from '../utils';
+import { computePRs, epley, fmtDate, fmtDuration, fmtTime, fmtVolume, fmtEstimate, fmtSet, uid, workoutSetCount, workoutVolume } from '../utils';
 import { t, tk, tp } from '../i18n';
 
 const PR_LABEL: Record<PRKind, string> = {
@@ -105,7 +93,9 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
         </div>
         {justFinished ? (
           <section className="panel done-banner">
-            <strong>{prSets.length ? tp(prSets.length, 'Workout done, with {n} record!', 'Workout done, with {n} records!') : t('Workout done. Nice work!')}</strong>
+            <strong>
+              {prSets.length ? tp(prSets.length, 'Workout done, with {n} record!', 'Workout done, with {n} records!') : t('Workout done. Nice work!')}
+            </strong>
             <button className="btn btn-primary btn-wide" onClick={() => setSharing(true)}>
               <Icon name="share" size={18} /> {t('Share my workout')}
             </button>
@@ -117,20 +107,26 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
         )}
         <ShareCardSheet workout={w} open={sharing} onClose={() => setSharing(false)} />
         {state.settings.shareStats !== false && (
-          <section className="panel feed-toggle"><label className="setting">
-            <span>
-              {t('Show in my friends’ activity feed')}
-              <br />
-              <span className="muted small">{w.hideFromFeed ? t('Only you see this workout.') : t('Your friends see a summary: name, duration, sets, volume, records.')}</span>
-            </span>
-            <input
-              id="feed-toggle"
-              type="checkbox"
-              className="switch"
-              checked={!w.hideFromFeed}
-              onChange={(e) => update((s) => ({ ...s, workouts: s.workouts.map((x) => (x.id === w.id ? { ...x, hideFromFeed: e.target.checked ? undefined : true } : x)) }))}
-            />
-          </label></section>
+          <section className="panel feed-toggle">
+            <label className="setting">
+              <span>
+                {t('Show in my friends’ activity feed')}
+                <br />
+                <span className="muted small">
+                  {w.hideFromFeed ? t('Only you see this workout.') : t('Your friends see a summary: name, duration, sets, volume, records.')}
+                </span>
+              </span>
+              <input
+                id="feed-toggle"
+                type="checkbox"
+                className="switch"
+                checked={!w.hideFromFeed}
+                onChange={(e) =>
+                  update((s) => ({ ...s, workouts: s.workouts.map((x) => (x.id === w.id ? { ...x, hideFromFeed: e.target.checked ? undefined : true } : x)) }))
+                }
+              />
+            </label>
+          </section>
         )}
         {w.note && <p className="note-block">{w.note}</p>}
 
@@ -176,11 +172,7 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
                             </span>
                           )}
                         </td>
-                        {show1rm && (
-                          <td className="num-col muted">
-                            {s.weight && s.reps ? fmtEstimate(epley(s.weight, s.reps), unit) : '–'}
-                          </td>
-                        )}
+                        {show1rm && <td className="num-col muted">{s.weight && s.reps ? fmtEstimate(epley(s.weight, s.reps), unit) : '–'}</td>}
                       </tr>
                     );
                   })}
@@ -194,12 +186,27 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
 
       <Sheet open={menu} onClose={() => setMenu(false)} title={w.name}>
         <div className="menu">
-          <button className="menu-item" onClick={() => { setMenu(false); go('edit/' + w.id); }}>
-            <Icon name="edit" size={18} />{' '}{t('Edit workout')}</button>
+          <button
+            className="menu-item"
+            onClick={() => {
+              setMenu(false);
+              go('edit/' + w.id);
+            }}
+          >
+            <Icon name="edit" size={18} /> {t('Edit workout')}
+          </button>
           <button className="menu-item" onClick={saveAsRoutine}>
-            <Icon name="copy" size={18} />{' '}{t('Save as workout')}</button>
-          <button className="menu-item danger" onClick={() => { setMenu(false); setConfirmDelete(true); }}>
-            <Icon name="trash" size={18} />{' '}{t('Delete workout')}</button>
+            <Icon name="copy" size={18} /> {t('Save as workout')}
+          </button>
+          <button
+            className="menu-item danger"
+            onClick={() => {
+              setMenu(false);
+              setConfirmDelete(true);
+            }}
+          >
+            <Icon name="trash" size={18} /> {t('Delete workout')}
+          </button>
         </div>
       </Sheet>
       <Confirm

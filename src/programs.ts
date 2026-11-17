@@ -35,8 +35,9 @@ export const PROGRAMS: Program[] = [
     level: 'Beginner',
     daysPerWeek: 3,
     goal: tk('Strength and muscle'),
-    description:
-      tk('Two full-body workouts done in turn (A, B, A, then B, A, B). Every muscle is trained three times every two weeks, with the big lifts first. A good first program.'),
+    description: tk(
+      'Two full-body workouts done in turn (A, B, A, then B, A, B). Every muscle is trained three times every two weeks, with the big lifts first. A good first program.',
+    ),
     routines: [
       {
         name: tk('Full Body A'),
@@ -68,8 +69,7 @@ export const PROGRAMS: Program[] = [
     level: 'Intermediate',
     daysPerWeek: 4,
     goal: tk('Muscle growth'),
-    description:
-      tk('Upper body and lower body on alternate days, each twice a week. One heavier day and one lighter, higher-rep day for each.'),
+    description: tk('Upper body and lower body on alternate days, each twice a week. One heavier day and one lighter, higher-rep day for each.'),
     routines: [
       {
         name: tk('Upper (heavy)'),
@@ -123,8 +123,7 @@ export const PROGRAMS: Program[] = [
     level: 'Intermediate',
     daysPerWeek: 3,
     goal: tk('Muscle growth'),
-    description:
-      tk('Pressing muscles, pulling muscles and legs on separate days. Run it once a week (3 days) or twice (6 days) as you progress.'),
+    description: tk('Pressing muscles, pulling muscles and legs on separate days. Run it once a week (3 days) or twice (6 days) as you progress.'),
     routines: [
       {
         name: tk('Push'),
@@ -181,8 +180,36 @@ export function routinesFromProgram(p: Program, folderId: string): Routine[] {
  * scratch. No real person's name, image or brand appears here without a signed agreement.
  */
 export const COMING_SOON: { id: string; name: string; description: string; level: string; daysPerWeek: number; goal: string }[] = [
-  { id: 'cs-sci-ul', name: tk('Science-based Upper / Lower'), description: tk('Five days, evidence-based volume and progression, built around the big lifts.'), level: tk('Intermediate'), daysPerWeek: 5, goal: tk('Muscle growth') },
-  { id: 'cs-powerbuilding', name: tk('Powerbuilding'), description: tk('Heavy compound work for strength plus accessories for size.'), level: tk('Intermediate'), daysPerWeek: 4, goal: tk('Strength and muscle') },
-  { id: 'cs-classic', name: tk('Classic physique'), description: tk('High-volume Push / Pull / Legs for a balanced, aesthetic physique.'), level: tk('Advanced'), daysPerWeek: 6, goal: tk('Aesthetics') },
-  { id: 'cs-fb-essentials', name: tk('Full body essentials'), description: tk('Three short full-body sessions a week for busy schedules.'), level: tk('Beginner'), daysPerWeek: 3, goal: tk('Strength and muscle') },
+  {
+    id: 'cs-sci-ul',
+    name: tk('Science-based Upper / Lower'),
+    description: tk('Five days, evidence-based volume and progression, built around the big lifts.'),
+    level: tk('Intermediate'),
+    daysPerWeek: 5,
+    goal: tk('Muscle growth'),
+  },
+  {
+    id: 'cs-powerbuilding',
+    name: tk('Powerbuilding'),
+    description: tk('Heavy compound work for strength plus accessories for size.'),
+    level: tk('Intermediate'),
+    daysPerWeek: 4,
+    goal: tk('Strength and muscle'),
+  },
+  {
+    id: 'cs-classic',
+    name: tk('Classic physique'),
+    description: tk('High-volume Push / Pull / Legs for a balanced, aesthetic physique.'),
+    level: tk('Advanced'),
+    daysPerWeek: 6,
+    goal: tk('Aesthetics'),
+  },
+  {
+    id: 'cs-fb-essentials',
+    name: tk('Full body essentials'),
+    description: tk('Three short full-body sessions a week for busy schedules.'),
+    level: tk('Beginner'),
+    daysPerWeek: 3,
+    goal: tk('Strength and muscle'),
+  },
 ];

@@ -97,7 +97,14 @@ export function PlanSheet({
           {week7.map((d) => {
             const disabled = !usable.includes(d);
             return (
-              <button key={d} type="button" className={'plan-day' + (days.includes(d) ? ' on' : '')} disabled={disabled} aria-pressed={days.includes(d)} onClick={() => toggle(d)}>
+              <button
+                key={d}
+                type="button"
+                className={'plan-day' + (days.includes(d) ? ' on' : '')}
+                disabled={disabled}
+                aria-pressed={days.includes(d)}
+                onClick={() => toggle(d)}
+              >
                 {(week !== 'month' || d < addDays(first, 7)) && <span className="small">{parseDay(d).toLocaleDateString(locale(), { weekday: 'short' })}</span>}
                 <strong>{parseDay(d).getDate()}</strong>
               </button>

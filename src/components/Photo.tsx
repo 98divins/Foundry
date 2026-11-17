@@ -20,7 +20,19 @@ export function PhotoView({ path, at, alt, className = 'photo' }: { path: string
 }
 
 /** Add, replace or remove the photo of an item. Needs an account (photos are stored online). */
-export function PhotoField({ kind, id, value, onChange, label }: { kind: PhotoKind; id: string; value?: PhotoRef | null; onChange: (p: PhotoRef | null) => void; label: string }) {
+export function PhotoField({
+  kind,
+  id,
+  value,
+  onChange,
+  label,
+}: {
+  kind: PhotoKind;
+  id: string;
+  value?: PhotoRef | null;
+  onChange: (p: PhotoRef | null) => void;
+  label: string;
+}) {
   const uid = useCloud().user?.id;
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -57,7 +69,9 @@ export function PhotoField({ kind, id, value, onChange, label }: { kind: PhotoKi
           <Icon name="plus" size={16} /> {busy ? t('Please wait…') : value ? t('Change photo') : t('Add a photo')}
         </button>
         {value && (
-          <button type="button" className="link-btn muted" disabled={busy} onClick={remove}>{t('Remove')}</button>
+          <button type="button" className="link-btn muted" disabled={busy} onClick={remove}>
+            {t('Remove')}
+          </button>
         )}
       </div>
       <input
@@ -73,7 +87,9 @@ export function PhotoField({ kind, id, value, onChange, label }: { kind: PhotoKi
         }}
       />
       {error && <p className="field-error">{error}</p>}
-      <p className="muted small">{kind === 'meal' ? t('Visible to your friends, and to everyone if you share the meal with the community.') : t('Only you can see it.')}</p>
+      <p className="muted small">
+        {kind === 'meal' ? t('Visible to your friends, and to everyone if you share the meal with the community.') : t('Only you can see it.')}
+      </p>
     </div>
   );
 }

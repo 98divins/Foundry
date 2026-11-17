@@ -90,8 +90,7 @@ let audio: AudioContext | null = null;
 /** Must run inside a user gesture so later beeps are allowed. */
 export function primeAudio() {
   try {
-    audio ??= new (window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    audio ??= new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     if (audio.state === 'suspended') audio.resume();
   } catch {
     /* no audio */

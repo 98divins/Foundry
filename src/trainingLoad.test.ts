@@ -10,14 +10,21 @@ let n = 0;
 function w(daysAgo: number, sets: number, rpe?: number): Workout {
   const start = NOW - daysAgo * DAY;
   return {
-    id: 'w' + ++n, name: 'W', startedAt: start, endedAt: start + 60 * 60000,
-    exercises: [{
-      id: 'e' + n, exerciseId: 'bench_bb', restSec: 90,
-      sets: [
-        { id: 'wu' + n, type: 'warmup', weight: 40, reps: 10, done: true },
-        ...Array.from({ length: sets }, (_, i) => ({ id: `s${n}-${i}`, type: 'normal' as const, weight: 100, reps: 5, done: true, ...(rpe ? { rpe } : {}) })),
-      ],
-    }],
+    id: 'w' + ++n,
+    name: 'W',
+    startedAt: start,
+    endedAt: start + 60 * 60000,
+    exercises: [
+      {
+        id: 'e' + n,
+        exerciseId: 'bench_bb',
+        restSec: 90,
+        sets: [
+          { id: 'wu' + n, type: 'warmup', weight: 40, reps: 10, done: true },
+          ...Array.from({ length: sets }, (_, i) => ({ id: `s${n}-${i}`, type: 'normal' as const, weight: 100, reps: 5, done: true, ...(rpe ? { rpe } : {}) })),
+        ],
+      },
+    ],
   };
 }
 

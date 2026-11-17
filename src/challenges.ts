@@ -35,14 +35,22 @@ export const CHALLENGES: ChallengeDef[] = [
     name: tk('Sixteen days'),
     goal: tk('Train on {target} different days this month.'),
     target: 16,
-    measure: (s, a, b) => new Set(finished(s.workouts).filter((w) => w.startedAt >= a && w.startedAt < b).map((w) => dayOf(w.startedAt))).size,
+    measure: (s, a, b) =>
+      new Set(
+        finished(s.workouts)
+          .filter((w) => w.startedAt >= a && w.startedAt < b)
+          .map((w) => dayOf(w.startedAt)),
+      ).size,
   },
   {
     id: 'sets250',
     name: tk('250 sets'),
     goal: tk('Do {target} sets this month.'),
     target: 250,
-    measure: (s, a, b) => finished(s.workouts).filter((w) => w.startedAt >= a && w.startedAt < b).reduce((n, w) => n + workoutSetCount(w), 0),
+    measure: (s, a, b) =>
+      finished(s.workouts)
+        .filter((w) => w.startedAt >= a && w.startedAt < b)
+        .reduce((n, w) => n + workoutSetCount(w), 0),
   },
   {
     id: 'cardio300',
@@ -60,7 +68,8 @@ export const CHALLENGES: ChallengeDef[] = [
     measure: (s, a, b) => {
       const prs = computePRs(s.workouts);
       let n = 0;
-      for (const w of finished(s.workouts)) if (w.startedAt >= a && w.startedAt < b) for (const e of w.exercises) for (const x of e.sets) if (prs.has(x.id)) n++;
+      for (const w of finished(s.workouts))
+        if (w.startedAt >= a && w.startedAt < b) for (const e of w.exercises) for (const x of e.sets) if (prs.has(x.id)) n++;
       return n;
     },
   },
@@ -84,10 +93,15 @@ export const CHALLENGES: ChallengeDef[] = [
     name: tk('Weigh-in habit'),
     goal: tk('Log your weight on {target} days this month.'),
     target: 8,
-    measure: (s, a, b) => new Set(s.nutrition.weights.filter((w) => {
-      const t = new Date(w.date + 'T12:00').getTime();
-      return t >= a && t < b;
-    }).map((w) => w.date)).size,
+    measure: (s, a, b) =>
+      new Set(
+        s.nutrition.weights
+          .filter((w) => {
+            const t = new Date(w.date + 'T12:00').getTime();
+            return t >= a && t < b;
+          })
+          .map((w) => w.date),
+      ).size,
   },
 ];
 
@@ -133,7 +147,7 @@ export function completedChallenges(state: State, now = Date.now()): { count: nu
   let n = 0;
   let perfect = 0;
   const d = new Date(first);
-  for (let k = monthKey(new Date(d.getFullYear(), d.getMonth(), 1).getTime()); ; ) {
+  for (let k = monthKey(new Date(d.getFullYear(), d.getMonth(), 1).getTime()); ;) {
     const done = monthChallenges(state, k).filter((c) => c.done).length;
     n += done;
     if (done === 3) perfect++;

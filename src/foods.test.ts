@@ -19,7 +19,11 @@ describe('built-in French foods', () => {
     const r = searchFoods(FR_FOOD_LIST, 'oeuf');
     expect(r[0].name).toMatch(/^Œuf|^Oeuf/);
     expect(searchFoods(FR_FOOD_LIST, 'poulet blanc cuit')[0].name).toBe('Blanc de poulet, cuit');
-    expect(searchFoods(FR_FOOD_LIST, 'riz complet').map((f) => f.name).sort()).toEqual(['Riz complet, cru', 'Riz complet, cuit']);
+    expect(
+      searchFoods(FR_FOOD_LIST, 'riz complet')
+        .map((f) => f.name)
+        .sort(),
+    ).toEqual(['Riz complet, cru', 'Riz complet, cuit']);
   });
 });
 

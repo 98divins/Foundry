@@ -32,7 +32,15 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
               sets++;
               vol += setVolume(s, exerciseKind(we.exerciseId));
             }
-        return [iso(w.startedAt), w.name, Math.round(((w.endedAt ?? w.startedAt) - w.startedAt) / 60000), w.exercises.length, sets, Math.round(vol), w.note ?? ''];
+        return [
+          iso(w.startedAt),
+          w.name,
+          Math.round(((w.endedAt ?? w.startedAt) - w.startedAt) / 60000),
+          w.exercises.length,
+          sets,
+          Math.round(vol),
+          w.note ?? '',
+        ];
       }),
     ],
   };
@@ -40,10 +48,36 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
   const sets: Sheet = {
     name: t('Sets'),
     rows: [
-      [t('Date'), t('Workout'), t('Exercise'), t('Muscle'), t('Set'), t('Type'), t('Weight (kg)'), t('Reps'), t('Est. 1RM (kg)'), t('Duration (s)'), t('Distance (km)')],
+      [
+        t('Date'),
+        t('Workout'),
+        t('Exercise'),
+        t('Muscle'),
+        t('Set'),
+        t('Type'),
+        t('Weight (kg)'),
+        t('Reps'),
+        t('Est. 1RM (kg)'),
+        t('Duration (s)'),
+        t('Distance (km)'),
+      ],
       ...done.flatMap((w) =>
         w.exercises.flatMap((we) =>
-          we.sets.filter((s) => s.done).map((s, i) => [iso(w.startedAt), w.name, name(we.exerciseId), exMap.get(we.exerciseId)?.muscle ?? '', i + 1, s.type, s.weight ?? '', s.reps ?? '', s.weight && s.reps ? r1(epley(s.weight, s.reps)) : '', s.duration ?? '', s.distance ?? '']),
+          we.sets
+            .filter((s) => s.done)
+            .map((s, i) => [
+              iso(w.startedAt),
+              w.name,
+              name(we.exerciseId),
+              exMap.get(we.exerciseId)?.muscle ?? '',
+              i + 1,
+              s.type,
+              s.weight ?? '',
+              s.reps ?? '',
+              s.weight && s.reps ? r1(epley(s.weight, s.reps)) : '',
+              s.duration ?? '',
+              s.distance ?? '',
+            ]),
         ),
       ),
     ],
@@ -58,7 +92,9 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
     name: t('Food log'),
     rows: [
       [t('Date'), t('Meal'), t('Food'), t('Brand'), t('Grams'), t('kcal'), t('Protein (g)'), t('Carbs (g)'), t('Fat (g)')],
-      ...[...n.log].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt).map((e) => [e.date, t(MEAL_LABEL[e.meal]), e.name, e.brand ?? '', e.grams ?? '', Math.round(e.kcal), r1(e.protein), r1(e.carbs), r1(e.fat)]),
+      ...[...n.log]
+        .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt)
+        .map((e) => [e.date, t(MEAL_LABEL[e.meal]), e.name, e.brand ?? '', e.grams ?? '', Math.round(e.kcal), r1(e.protein), r1(e.carbs), r1(e.fat)]),
     ],
   };
 
@@ -77,7 +113,17 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
         const tot = dayTotals(n.log, d);
         const tg = targetsOn(d);
         const start = new Date(d + 'T00:00').getTime();
-        return [d, Math.round(tot.kcal), r1(tot.protein), r1(tot.carbs), r1(tot.fat), tg?.kcal ?? '', tg?.protein ?? '', n.incompleteDays.includes(d) ? t('No') : t('Yes'), trainingDays(done.filter((w) => w.startedAt >= start && w.startedAt < start + 86400000))];
+        return [
+          d,
+          Math.round(tot.kcal),
+          r1(tot.protein),
+          r1(tot.carbs),
+          r1(tot.fat),
+          tg?.kcal ?? '',
+          tg?.protein ?? '',
+          n.incompleteDays.includes(d) ? t('No') : t('Yes'),
+          trainingDays(done.filter((w) => w.startedAt >= start && w.startedAt < start + 86400000)),
+        ];
       }),
     ],
   };
@@ -90,18 +136,47 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
   const weekly: Sheet = {
     name: t('Weekly report'),
     rows: [
-      [t('Week of'), t('Training days'), t('Workouts'), t('Sets'), t('Volume (kg)'), t('Minutes'), t('Avg kcal'), t('Logged days'), t('Protein (g/kg)'), t('Weight change (kg)'), t('Goals met'), ...MUSCLE_GROUPS.map((g) => t('Sets: {0}', { 0: g }))],
+      [
+        t('Week of'),
+        t('Training days'),
+        t('Workouts'),
+        t('Sets'),
+        t('Volume (kg)'),
+        t('Minutes'),
+        t('Avg kcal'),
+        t('Logged days'),
+        t('Protein (g/kg)'),
+        t('Weight change (kg)'),
+        t('Goals met'),
+        ...MUSCLE_GROUPS.map((g) => t('Sets: {0}', { 0: g })),
+      ],
       ...starts.map((s, i) => {
         const g = goals.find((x) => x.start === s);
         const gs = groupSets(state.workouts, exMap, s, s + 7 * 86400000);
-        return [dayKey(new Date(s)), tr[i].days, tr[i].workouts, tr[i].sets, Math.round(tr[i].volume), tr[i].minutes, diet[i].avgKcal ?? '', diet[i].loggedDays, diet[i].proteinPerKg ?? '', diet[i].weightChange ?? '', g ? (g.met ? t('Yes') : t('No')) : '', ...MUSCLE_GROUPS.map((x) => gs[x])];
+        return [
+          dayKey(new Date(s)),
+          tr[i].days,
+          tr[i].workouts,
+          tr[i].sets,
+          Math.round(tr[i].volume),
+          tr[i].minutes,
+          diet[i].avgKcal ?? '',
+          diet[i].loggedDays,
+          diet[i].proteinPerKg ?? '',
+          diet[i].weightChange ?? '',
+          g ? (g.met ? t('Yes') : t('No')) : '',
+          ...MUSCLE_GROUPS.map((x) => gs[x]),
+        ];
       }),
     ],
   };
 
   const checkIns: Sheet = {
     name: t('Check-ins'),
-    rows: [[t('Date'), t('Expenditure (kcal)'), t('Trend (kg)'), t('kcal target'), t('Protein target'), t('Carbs target'), t('Fat target')], ...n.checkIns.map((c) => [c.date, c.expenditure, c.trendKg ?? '', c.targets.kcal, c.targets.protein, c.targets.carbs, c.targets.fat])],
+    rows: [
+      [t('Date'), t('Expenditure (kcal)'), t('Trend (kg)'), t('kcal target'), t('Protein target'), t('Carbs target'), t('Fat target')],
+      ...n.checkIns.map((c) => [c.date, c.expenditure, c.trendKg ?? '', c.targets.kcal, c.targets.protein, c.targets.carbs, c.targets.fat]),
+    ],
   };
 
   return workbook([weekly, workouts, sets, weights, daily, food, checkIns]);

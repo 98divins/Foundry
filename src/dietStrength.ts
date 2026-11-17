@@ -85,13 +85,17 @@ export function dietTips(weeks: WeekSummary[], bodyKg: number | null): Tip[] {
       out.push({
         id: 'protein-cut',
         title: tk('Strength down two weeks in a row'),
-        text: tk('You are in a deficit, your strength index went down two weeks running and protein averaged under 1.6 g per kg. Many lifters keep strength better with a bit more protein during a cut.'),
+        text: tk(
+          'You are in a deficit, your strength index went down two weeks running and protein averaged under 1.6 g per kg. Many lifters keep strength better with a bit more protein during a cut.',
+        ),
       });
     else if (bodyKg && two.every((w) => w.weightChange != null && w.weightChange <= -0.01 * bodyKg))
       out.push({
         id: 'fast-loss',
         title: tk('Losing fast while strength drops'),
-        text: tk('You lost more than 1 % of your weight per week for two weeks while your strength index went down. A slower rate could help you hold on to strength.'),
+        text: tk(
+          'You lost more than 1 % of your weight per week for two weeks while your strength index went down. A slower rate could help you hold on to strength.',
+        ),
       });
   }
 
@@ -105,7 +109,9 @@ export function dietTips(weeks: WeekSummary[], bodyKg: number | null): Tip[] {
     out.push({
       id: 'fast-gain',
       title: tk('Weight up, strength flat'),
-      text: tk('For three weeks your weight went up more than 0.5 % a week while your strength index barely moved. If the goal is muscle, a smaller surplus may be enough.'),
+      text: tk(
+        'For three weeks your weight went up more than 0.5 % a week while your strength index barely moved. If the goal is muscle, a smaller surplus may be enough.',
+      ),
     });
 
   if (full(two) && !out.some((x) => x.id === 'protein-cut') && two.every((w) => w.proteinPerKg != null && w.proteinPerKg < 1.2))

@@ -126,10 +126,7 @@ export async function acceptFriend(uid: string, requester: string) {
 /** Decline a request, cancel yours, or remove a friend. */
 export async function removeFriend(uid: string, other: string) {
   const c = await sb();
-  const { error } = await c
-    .from('friendships')
-    .delete()
-    .or(`and(requester.eq.${uid},addressee.eq.${other}),and(requester.eq.${other},addressee.eq.${uid})`);
+  const { error } = await c.from('friendships').delete().or(`and(requester.eq.${uid},addressee.eq.${other}),and(requester.eq.${other},addressee.eq.${uid})`);
   check(error);
 }
 
@@ -159,7 +156,13 @@ export async function sendFeedback(kind: string, message: string, email: string)
 
 /** Number of friend requests waiting for this user (for the tab badge). */
 export async function incomingCount(uid: string): Promise<number> {
-  const { count, error } = await (await sb()).from('friendships').select('requester', { count: 'exact', head: true }).eq('addressee', uid).eq('status', 'pending');
+  const { count, error } = await (
+    await sb()
+  )
+    .from('friendships')
+    .select('requester', { count: 'exact', head: true })
+    .eq('addressee', uid)
+    .eq('status', 'pending');
   if (error) return 0;
   return count ?? 0;
 }
@@ -197,12 +200,19 @@ export interface SharedMeal {
 
 /** Publish (or update) one of the user's meals for other members. The server sets the author from the profile. */
 export async function shareMeal(uid: string, meal: { id: string; name: string; items: import('../nutrition').MealItem[] }) {
-  const tot = meal.items.reduce((a, i) => ({ kcal: a.kcal + i.kcal, protein: a.protein + i.protein, carbs: a.carbs + i.carbs, fat: a.fat + i.fat }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  const tot = meal.items.reduce((a, i) => ({ kcal: a.kcal + i.kcal, protein: a.protein + i.protein, carbs: a.carbs + i.carbs, fat: a.fat + i.fat }), {
+    kcal: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+  });
   const { error } = await (await sb()).from('shared_meals').upsert({
     user_id: uid,
     meal_id: meal.id,
     name: meal.name.slice(0, 80),
-    items: meal.items.slice(0, 40).map(({ foodId, name, brand, grams, kcal, protein, carbs, fat }) => ({ foodId, name, brand, grams, kcal, protein, carbs, fat })),
+    items: meal.items
+      .slice(0, 40)
+      .map(({ foodId, name, brand, grams, kcal, protein, carbs, fat }) => ({ foodId, name, brand, grams, kcal, protein, carbs, fat })),
     kcal: Math.round(tot.kcal),
     protein: Math.round(tot.protein * 10) / 10,
     carbs: Math.round(tot.carbs * 10) / 10,
@@ -226,7 +236,18 @@ export async function loadSharedMeals(uid: string, limit = 60): Promise<SharedMe
 
 /* ---------- Community foods (supabase/community_foods.sql) ---------- */
 
-type FoodRow = { id: string; name: string; brand: string | null; barcode: string | null; kcal: number; protein: number; carbs: number; fat: number; serving_label: string | null; serving_grams: number | null };
+type FoodRow = {
+  id: string;
+  name: string;
+  brand: string | null;
+  barcode: string | null;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  serving_label: string | null;
+  serving_grams: number | null;
+};
 const rowToFood = (r: FoodRow): import('../nutrition').Food => ({
   id: r.id,
   name: r.name,
@@ -264,7 +285,11 @@ export async function publishFood(uid: string, f: import('../nutrition').Food) {
 
 /** Foods from the shared database whose name contains every word typed. */
 export async function searchCommunityFoods(query: string, limit = 20): Promise<import('../nutrition').Food[]> {
-  const words = query.trim().split(/\s+/).filter((w) => w.length >= 2).slice(0, 4);
+  const words = query
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length >= 2)
+    .slice(0, 4);
   if (!words.length) return [];
   let q = (await sb()).from('community_foods').select('id, name, brand, barcode, kcal, protein, carbs, fat, serving_label, serving_grams');
   for (const w of words) q = q.ilike('name', `%${w.replace(/[%_,()]/g, '')}%`);
@@ -274,7 +299,13 @@ export async function searchCommunityFoods(query: string, limit = 20): Promise<i
 }
 
 export async function communityFoodByBarcode(code: string): Promise<import('../nutrition').Food | null> {
-  const { data, error } = await (await sb()).from('community_foods').select('id, name, brand, barcode, kcal, protein, carbs, fat, serving_label, serving_grams').eq('barcode', code).limit(1);
+  const { data, error } = await (
+    await sb()
+  )
+    .from('community_foods')
+    .select('id, name, brand, barcode, kcal, protein, carbs, fat, serving_label, serving_grams')
+    .eq('barcode', code)
+    .limit(1);
   check(error);
   const r = (data ?? [])[0] as FoodRow | undefined;
   return r ? rowToFood(r) : null;
@@ -292,7 +323,12 @@ export interface ProfilePage extends PublicProfile {
 
 /** Copy the gear, bio and visibility to the public profile (no-op without a profile row). */
 export async function publishGear(uid: string, gear: import('../gear').Gear, isPublic: boolean, bio: string) {
-  const { error } = await (await sb()).from('profiles').update({ gear, is_public: isPublic, bio: bio.slice(0, 160) }).eq('user_id', uid);
+  const { error } = await (
+    await sb()
+  )
+    .from('profiles')
+    .update({ gear, is_public: isPublic, bio: bio.slice(0, 160) })
+    .eq('user_id', uid);
   check(error);
 }
 
@@ -308,7 +344,11 @@ export async function smallAvatar(dataUrl: string): Promise<string> {
   const img = new Image();
   img.src = dataUrl;
   await img.decode();
-  for (const [size, q] of [[160, 0.8], [128, 0.7], [96, 0.6]] as const) {
+  for (const [size, q] of [
+    [160, 0.8],
+    [128, 0.7],
+    [96, 0.6],
+  ] as const) {
     const c = document.createElement('canvas');
     c.width = c.height = size;
     const s = Math.min(img.width, img.height);
@@ -334,7 +374,17 @@ export const profileLink = (username: string) => `${location.origin}${location.p
 /* ---------- Activity feed (supabase/activity.sql) ---------- */
 
 export type ActivityData =
-  | { kind: 'workout'; name: string; at: number; minutes: number; sets: number; volume: number; records: number; exercises: string[]; /** Same order as exercises: true for the member's own custom exercises. */ custom?: boolean[] }
+  | {
+      kind: 'workout';
+      name: string;
+      at: number;
+      minutes: number;
+      sets: number;
+      volume: number;
+      records: number;
+      exercises: string[];
+      /** Same order as exercises: true for the member's own custom exercises. */ custom?: boolean[];
+    }
   | { kind: 'level'; level: number }
   | { kind: 'badge'; badge: string };
 
@@ -357,10 +407,11 @@ export interface FeedItem {
 
 /** Publish (or update) something that happened, keyed by the app's own id. */
 export async function publishActivity(uid: string, ref: string, data: ActivityData, at?: number) {
-  const { error } = await (await sb()).from('activities').upsert(
-    { user_id: uid, ref, kind: data.kind, data, ...(at ? { created_at: new Date(at).toISOString() } : {}) },
-    { onConflict: 'user_id,ref' },
-  );
+  const { error } = await (
+    await sb()
+  )
+    .from('activities')
+    .upsert({ user_id: uid, ref, kind: data.kind, data, ...(at ? { created_at: new Date(at).toISOString() } : {}) }, { onConflict: 'user_id,ref' });
   check(error);
 }
 
@@ -399,7 +450,9 @@ export async function giveRespect(uid: string, activityId: string, on: boolean) 
 }
 
 export async function addComment(uid: string, activityId: string, body: string): Promise<ActivityComment> {
-  const { data, error } = await (await sb())
+  const { data, error } = await (
+    await sb()
+  )
     .from('activity_comments')
     .insert({ activity_id: activityId, user_id: uid, body: body.trim().slice(0, 280) })
     .select('id, user_id, body, created_at')
@@ -417,7 +470,11 @@ export async function deleteComment(id: string) {
 
 /** Report shared content. Reporting the same thing twice counts once. */
 export async function reportContent(kind: import('../reports').ReportKind, target: string, reason: import('../reports').ReportReason, details: string) {
-  const { error } = await (await sb()).from('content_reports').insert({ kind, target: target.slice(0, 200), reason, details: details.trim().slice(0, 1000) || null });
+  const { error } = await (
+    await sb()
+  )
+    .from('content_reports')
+    .insert({ kind, target: target.slice(0, 200), reason, details: details.trim().slice(0, 1000) || null });
   if (error?.code === '23505') return;
   check(error);
 }

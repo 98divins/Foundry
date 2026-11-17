@@ -141,7 +141,12 @@ function toPack(folder: RoutineFolder | undefined, routines: Routine[]): PackV1 
           }
           const sets = we.sets.map((s) => {
             const row: (string | number | null)[] = [
-              TYPE_CODE[s.type], s.reps ?? null, s.repsMax ?? null, s.weight ?? null, s.duration ?? null, s.distance ?? null,
+              TYPE_CODE[s.type],
+              s.reps ?? null,
+              s.repsMax ?? null,
+              s.weight ?? null,
+              s.duration ?? null,
+              s.distance ?? null,
             ];
             while (row.length > 1 && row[row.length - 1] == null) row.pop();
             return row;

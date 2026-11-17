@@ -42,8 +42,19 @@ const session = (daysAgo: number, lifts: [string, number, number, number][]): Wo
 const workouts: Workout[] = [];
 for (let wk = 0; wk < 8; wk++) {
   const daysAgo = 54 - wk * 7;
-  workouts.push(session(daysAgo, [['bench_bb', 80 + wk * 2.5, 8, 3], ['row_bb', 70, 10, 3], ['plank', 0, 0, 0]]));
-  workouts.push(session(daysAgo - 3, [['squat_bb', 100 + Math.floor(wk / 2) * 5, 6, 3], ['lateral_raise_db', 10, 15, 4]]));
+  workouts.push(
+    session(daysAgo, [
+      ['bench_bb', 80 + wk * 2.5, 8, 3],
+      ['row_bb', 70, 10, 3],
+      ['plank', 0, 0, 0],
+    ]),
+  );
+  workouts.push(
+    session(daysAgo - 3, [
+      ['squat_bb', 100 + Math.floor(wk / 2) * 5, 6, 3],
+      ['lateral_raise_db', 10, 15, 4],
+    ]),
+  );
 }
 
 describe('weeks', () => {
@@ -106,7 +117,8 @@ describe('diet × training', () => {
     for (let i = -1; i < 14; i++) {
       const d = addDays(first, i);
       nut.weights.push({ date: d, kg: 80 - i * 0.05 });
-      if (i >= 0 && i < 5) nut.log.push({ id: 'e' + i, date: d, meal: 'lunch', name: 'x', grams: null, kcal: 2000, protein: 160, carbs: 0, fat: 0, createdAt: 0 });
+      if (i >= 0 && i < 5)
+        nut.log.push({ id: 'e' + i, date: d, meal: 'lunch', name: 'x', grams: null, kcal: 2000, protein: 160, carbs: 0, fat: 0, createdAt: 0 });
     }
     const [w1] = weeklyDiet(nut, starts);
     expect(w1.loggedDays).toBe(5);
@@ -120,10 +132,7 @@ describe('diet × training', () => {
     const index = [100, 102, 102.5, 105, 105.2, 107.5, 107.6];
     const diet = [week(2, 0), week(2, 0), week(1.2, -0.4), week(2.1, 0), week(1.1, -0.5), week(2, -0.1), week(1.3, -0.3)];
     const insights = crossInsights(index, diet, 2);
-    expect(insights.map((i) => i.title)).toEqual([
-      'Your strength moves more in high-protein weeks',
-      'Strength slows in your faster-loss weeks',
-    ]);
+    expect(insights.map((i) => i.title)).toEqual(['Your strength moves more in high-protein weeks', 'Strength slows in your faster-loss weeks']);
     expect(crossInsights(index.slice(0, 4), diet.slice(0, 4), 2)).toEqual([]);
   });
 });

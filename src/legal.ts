@@ -23,7 +23,8 @@ export type LegalKind = 'notice' | 'privacy' | 'terms' | 'community' | 'sources'
 const fr = () => getLang() === 'fr';
 /** A field of the publisher's identity, or a visible placeholder while it is empty. */
 const v = (k: LegalField) => LEGAL[k].trim() || (fr() ? '[à compléter]' : '[to be completed]');
-const updated = () => (fr() ? 'Mise à jour : novembre 2026' : 'Last updated: November 2026') + (LEGAL_DRAFT ? (fr() ? ' · version bêta' : ' · beta version') : '');
+const updated = () =>
+  (fr() ? 'Mise à jour : novembre 2026' : 'Last updated: November 2026') + (LEGAL_DRAFT ? (fr() ? ' · version bêta' : ' · beta version') : '');
 
 /* ---------- Legal notice ---------- */
 
@@ -33,14 +34,14 @@ const notice = (): LegalDoc =>
         title: 'Mentions légales',
         updated: updated(),
         sections: [
-          { h: 'Éditeur', p: [`${v('publisher')}, ${v('status')}.`, `SIREN : ${v('siren')}.`, `Adresse : ${v('address')}.`, `Contact : ${v('contactEmail')}.`] },
+          {
+            h: 'Éditeur',
+            p: [`${v('publisher')}, ${v('status')}.`, `SIREN : ${v('siren')}.`, `Adresse : ${v('address')}.`, `Contact : ${v('contactEmail')}.`],
+          },
           { h: 'Directeur de la publication', p: [v('publicationDirector')] },
           {
             h: 'Hébergement',
-            p: [
-              `Application : ${v('appHost')}.`,
-              `Données des comptes : ${v('dataHost')}, sur des serveurs situés en ${v('dataRegion')}.`,
-            ],
+            p: [`Application : ${v('appHost')}.`, `Données des comptes : ${v('dataHost')}, sur des serveurs situés en ${v('dataRegion')}.`],
           },
         ],
       }
@@ -48,7 +49,10 @@ const notice = (): LegalDoc =>
         title: 'Legal notice',
         updated: updated(),
         sections: [
-          { h: 'Publisher', p: [`${v('publisher')}, ${v('status')}.`, `Company number: ${v('siren')}.`, `Address: ${v('address')}.`, `Contact: ${v('contactEmail')}.`] },
+          {
+            h: 'Publisher',
+            p: [`${v('publisher')}, ${v('status')}.`, `Company number: ${v('siren')}.`, `Address: ${v('address')}.`, `Contact: ${v('contactEmail')}.`],
+          },
           { h: 'Publication director', p: [v('publicationDirector')] },
           {
             h: 'Hosting',
@@ -65,7 +69,10 @@ const privacy = (): LegalDoc =>
         title: 'Politique de confidentialité',
         updated: updated(),
         sections: [
-          { h: 'Qui est responsable', p: [`${v('publisher')} (voir Mentions légales) est responsable du traitement de tes données. Contact : ${v('contactEmail')}.`] },
+          {
+            h: 'Qui est responsable',
+            p: [`${v('publisher')} (voir Mentions légales) est responsable du traitement de tes données. Contact : ${v('contactEmail')}.`],
+          },
           {
             h: 'Les données traitées',
             p: [
@@ -126,7 +133,9 @@ const privacy = (): LegalDoc =>
           },
           {
             h: 'Estimations, pas de décision automatisée',
-            p: ['Les objectifs et la dépense calculés par l’app sont des estimations que tu peux modifier à tout moment. Aucune décision produisant un effet juridique n’est prise de façon automatisée.'],
+            p: [
+              'Les objectifs et la dépense calculés par l’app sont des estimations que tu peux modifier à tout moment. Aucune décision produisant un effet juridique n’est prise de façon automatisée.',
+            ],
           },
           { h: 'Âge minimum', p: ['Foundry est réservé aux personnes de 16 ans ou plus. Les objectifs de perte de poids sont réservés aux 18 ans et plus.'] },
           { h: 'Modifications', p: ['Si cette politique change de façon importante, l’app te le signale et te demande de l’accepter à nouveau.'] },
@@ -197,7 +206,9 @@ const privacy = (): LegalDoc =>
           },
           {
             h: 'Estimates, no automated decisions',
-            p: ['The targets and expenditure the app computes are estimates you can change at any time. No decision with a legal effect is taken automatically.'],
+            p: [
+              'The targets and expenditure the app computes are estimates you can change at any time. No decision with a legal effect is taken automatically.',
+            ],
           },
           { h: 'Minimum age', p: ['Foundry is for people aged 16 or over. Weight-loss goals are for people aged 18 or over.'] },
           { h: 'Changes', p: ['If this policy changes in a significant way, the app tells you and asks you to accept it again.'] },
@@ -212,8 +223,18 @@ const terms = (): LegalDoc =>
         title: 'Conditions d’utilisation',
         updated: updated(),
         sections: [
-          { h: 'Le service', p: [`Foundry est une app de suivi d’entraînement et de nutrition éditée par ${v('publisher')}. Pendant la bêta, elle est gratuite et peut évoluer, être interrompue ou contenir des erreurs.`] },
-          { h: 'Ton compte', p: ['Tu dois avoir 16 ans ou plus. Un compte est personnel. Tu es responsable de la confidentialité de ton mot de passe et des informations que tu saisis.'] },
+          {
+            h: 'Le service',
+            p: [
+              `Foundry est une app de suivi d’entraînement et de nutrition éditée par ${v('publisher')}. Pendant la bêta, elle est gratuite et peut évoluer, être interrompue ou contenir des erreurs.`,
+            ],
+          },
+          {
+            h: 'Ton compte',
+            p: [
+              'Tu dois avoir 16 ans ou plus. Un compte est personnel. Tu es responsable de la confidentialité de ton mot de passe et des informations que tu saisis.',
+            ],
+          },
           {
             h: 'Pas un avis médical',
             p: [
@@ -222,7 +243,12 @@ const terms = (): LegalDoc =>
               'L’app ne propose pas d’objectif de perte de poids aux moins de 18 ans ni si ton indice de masse corporelle est inférieur à 18,5, limite le rythme de perte à 1 % du poids par semaine et ne descend jamais sous 1 200 kcal (femmes) ou 1 500 kcal (hommes) par jour. Ces garde-fous ne remplacent pas un suivi médical.',
             ],
           },
-          { h: 'Données de tiers', p: ['Les valeurs nutritionnelles viennent de bases publiques et de contributions de membres : elles peuvent contenir des erreurs. Vérifie l’étiquette quand c’est important.'] },
+          {
+            h: 'Données de tiers',
+            p: [
+              'Les valeurs nutritionnelles viennent de bases publiques et de contributions de membres : elles peuvent contenir des erreurs. Vérifie l’étiquette quand c’est important.',
+            ],
+          },
           {
             h: 'Contenus des membres',
             p: [
@@ -231,19 +257,52 @@ const terms = (): LegalDoc =>
               'Les aliments ajoutés à la base commune restent disponibles pour tous, sans lien avec toi, même après la suppression de ton compte.',
             ],
           },
-          { h: 'Tes données', p: ['Tes données t’appartiennent : exporte-les ou supprime ton compte à tout moment. Leur traitement est décrit dans la Politique de confidentialité.'] },
-          { h: 'Utilisation correcte', p: ['N’utilise pas l’app pour nuire à son fonctionnement, accéder aux données d’autrui, contourner ses protections ou fausser les classements. Un compte qui le fait peut être suspendu.'] },
-          { h: 'Propriété intellectuelle', p: ['Le nom Foundry, le logo, le design, les textes et le code appartiennent à l’éditeur. Les données et éléments de tiers sont listés dans Sources et licences.'] },
-          { h: 'Responsabilité', p: ['L’app est fournie en l’état. Dans les limites permises par la loi, l’éditeur n’est pas responsable des conséquences de l’usage des estimations ni d’une perte de données ; garde des sauvegardes si tes données comptent pour toi.'] },
-          { h: 'Modifications et droit applicable', p: ['Ces conditions peuvent évoluer ; l’app te demande de les accepter à nouveau après un changement important. Elles sont régies par le droit français ; en cas de litige, une solution amiable est recherchée avant toute action.'] },
+          {
+            h: 'Tes données',
+            p: [
+              'Tes données t’appartiennent : exporte-les ou supprime ton compte à tout moment. Leur traitement est décrit dans la Politique de confidentialité.',
+            ],
+          },
+          {
+            h: 'Utilisation correcte',
+            p: [
+              'N’utilise pas l’app pour nuire à son fonctionnement, accéder aux données d’autrui, contourner ses protections ou fausser les classements. Un compte qui le fait peut être suspendu.',
+            ],
+          },
+          {
+            h: 'Propriété intellectuelle',
+            p: [
+              'Le nom Foundry, le logo, le design, les textes et le code appartiennent à l’éditeur. Les données et éléments de tiers sont listés dans Sources et licences.',
+            ],
+          },
+          {
+            h: 'Responsabilité',
+            p: [
+              'L’app est fournie en l’état. Dans les limites permises par la loi, l’éditeur n’est pas responsable des conséquences de l’usage des estimations ni d’une perte de données ; garde des sauvegardes si tes données comptent pour toi.',
+            ],
+          },
+          {
+            h: 'Modifications et droit applicable',
+            p: [
+              'Ces conditions peuvent évoluer ; l’app te demande de les accepter à nouveau après un changement important. Elles sont régies par le droit français ; en cas de litige, une solution amiable est recherchée avant toute action.',
+            ],
+          },
         ],
       }
     : {
         title: 'Terms of use',
         updated: updated(),
         sections: [
-          { h: 'The service', p: [`Foundry is a training and nutrition tracking app published by ${v('publisher')}. During the beta it is free and may change, be interrupted or contain errors.`] },
-          { h: 'Your account', p: ['You must be 16 or over. An account is personal. You are responsible for keeping your password private and for what you enter.'] },
+          {
+            h: 'The service',
+            p: [
+              `Foundry is a training and nutrition tracking app published by ${v('publisher')}. During the beta it is free and may change, be interrupted or contain errors.`,
+            ],
+          },
+          {
+            h: 'Your account',
+            p: ['You must be 16 or over. An account is personal. You are responsible for keeping your password private and for what you enter.'],
+          },
           {
             h: 'Not medical advice',
             p: [
@@ -252,7 +311,10 @@ const terms = (): LegalDoc =>
               'The app does not offer weight-loss goals to people under 18 or with a body mass index below 18.5, caps the loss rate at 1% of body weight per week and never goes below 1,200 kcal (women) or 1,500 kcal (men) a day. These safeguards do not replace medical care.',
             ],
           },
-          { h: 'Third-party data', p: ['Nutrition values come from public databases and member contributions: they may contain errors. Check the label when it matters.'] },
+          {
+            h: 'Third-party data',
+            p: ['Nutrition values come from public databases and member contributions: they may contain errors. Check the label when it matters.'],
+          },
           {
             h: 'Member content',
             p: [
@@ -262,10 +324,28 @@ const terms = (): LegalDoc =>
             ],
           },
           { h: 'Your data', p: ['Your data is yours: export it or delete your account at any time. How it is processed is described in the Privacy policy.'] },
-          { h: 'Fair use', p: ['Do not use the app to disrupt it, access other people’s data, get around its protections or game the leaderboards. An account doing so may be suspended.'] },
-          { h: 'Intellectual property', p: ['The Foundry name, logo, design, texts and code belong to the publisher. Third-party data and assets are listed in Sources and licences.'] },
-          { h: 'Liability', p: ['The app is provided as is. To the extent the law allows, the publisher is not liable for the consequences of using the estimates or for data loss; keep backups if your data matters to you.'] },
-          { h: 'Changes and governing law', p: ['These terms may change; the app asks you to accept them again after a significant change. They are governed by French law; in a dispute, an amicable solution is sought first.'] },
+          {
+            h: 'Fair use',
+            p: [
+              'Do not use the app to disrupt it, access other people’s data, get around its protections or game the leaderboards. An account doing so may be suspended.',
+            ],
+          },
+          {
+            h: 'Intellectual property',
+            p: ['The Foundry name, logo, design, texts and code belong to the publisher. Third-party data and assets are listed in Sources and licences.'],
+          },
+          {
+            h: 'Liability',
+            p: [
+              'The app is provided as is. To the extent the law allows, the publisher is not liable for the consequences of using the estimates or for data loss; keep backups if your data matters to you.',
+            ],
+          },
+          {
+            h: 'Changes and governing law',
+            p: [
+              'These terms may change; the app asks you to accept them again after a significant change. They are governed by French law; in a dispute, an amicable solution is sought first.',
+            ],
+          },
         ],
       };
 
@@ -286,8 +366,14 @@ const community = (): LegalDoc =>
               'Le fait de se faire passer pour quelqu’un d’autre ; les contenus qui encouragent des comportements dangereux pour la santé (jeûnes extrêmes, produits dopants…).',
             ],
           },
-          { h: 'Signaler', p: ['Touche « Signaler » sur un aliment, un repas, un commentaire ou un profil. Le contenu disparaît pour toi tout de suite ; l’équipe l’examine.'] },
-          { h: 'Contester', p: [`Si un de tes contenus a été retiré ou ton compte suspendu, écris à ${v('contactEmail')} en expliquant pourquoi : la décision est réexaminée.`] },
+          {
+            h: 'Signaler',
+            p: ['Touche « Signaler » sur un aliment, un repas, un commentaire ou un profil. Le contenu disparaît pour toi tout de suite ; l’équipe l’examine.'],
+          },
+          {
+            h: 'Contester',
+            p: [`Si un de tes contenus a été retiré ou ton compte suspendu, écris à ${v('contactEmail')} en expliquant pourquoi : la décision est réexaminée.`],
+          },
         ],
       }
     : {
@@ -304,7 +390,12 @@ const community = (): LegalDoc =>
             ],
           },
           { h: 'Report', p: ['Tap “Report” on a food, a meal, a comment or a profile. It disappears for you at once; the team looks at it.'] },
-          { h: 'Contest', p: [`If something you shared was removed or your account suspended, write to ${v('contactEmail')} and explain why: the decision is looked at again.`] },
+          {
+            h: 'Contest',
+            p: [
+              `If something you shared was removed or your account suspended, write to ${v('contactEmail')} and explain why: the decision is looked at again.`,
+            ],
+          },
         ],
       };
 
@@ -326,7 +417,12 @@ const sources = (): LegalDoc =>
           },
           { h: 'Polices', p: ['Archivo et IBM Plex Sans, licence SIL Open Font License 1.1.'] },
           { h: 'Logiciels', p: ['React (MIT), Supabase JS (MIT), ZXing (Apache 2.0), Vite (MIT) et leurs dépendances, chacune sous sa propre licence.'] },
-          { h: 'Marques citées', p: ['Hevy est une marque de son propriétaire, citée uniquement pour décrire le format de fichier que Foundry sait importer. Foundry n’est affilié à aucune marque citée.'] },
+          {
+            h: 'Marques citées',
+            p: [
+              'Hevy est une marque de son propriétaire, citée uniquement pour décrire le format de fichier que Foundry sait importer. Foundry n’est affilié à aucune marque citée.',
+            ],
+          },
         ],
       }
     : {
@@ -343,7 +439,12 @@ const sources = (): LegalDoc =>
           },
           { h: 'Typefaces', p: ['Archivo and IBM Plex Sans, SIL Open Font License 1.1.'] },
           { h: 'Software', p: ['React (MIT), Supabase JS (MIT), ZXing (Apache 2.0), Vite (MIT) and their dependencies, each under its own licence.'] },
-          { h: 'Brands mentioned', p: ['Hevy is a trademark of its owner, mentioned only to describe the file format Foundry can import. Foundry is not affiliated with any brand mentioned.'] },
+          {
+            h: 'Brands mentioned',
+            p: [
+              'Hevy is a trademark of its owner, mentioned only to describe the file format Foundry can import. Foundry is not affiliated with any brand mentioned.',
+            ],
+          },
         ],
       };
 

@@ -8,7 +8,18 @@ import { weekStart } from './utils';
 const H = 3600000;
 const DAY = 24 * H;
 const w = (startedAt: number): Workout => ({ id: String(startedAt), name: 'W', startedAt, endedAt: startedAt + H, exercises: [] });
-const entry = (date: string, kcal: number, protein: number) => ({ id: date + kcal, date, meal: 'lunch' as const, name: 'x', grams: 100, kcal, protein, carbs: 0, fat: 0, createdAt: 0 });
+const entry = (date: string, kcal: number, protein: number) => ({
+  id: date + kcal,
+  date,
+  meal: 'lunch' as const,
+  name: 'x',
+  grams: 100,
+  kcal,
+  protein,
+  carbs: 0,
+  fat: 0,
+  createdAt: 0,
+});
 
 describe('weekly goals', () => {
   const thisWeek = weekStart(Date.now());

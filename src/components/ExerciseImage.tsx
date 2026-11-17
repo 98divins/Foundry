@@ -8,17 +8,7 @@ import { PhotoView } from './Photo';
  * Exercise photo with fallbacks: CDN, then GitHub, then the first letter of the name.
  * crossOrigin keeps responses readable so the service worker can cache them for offline use.
  */
-export function ExerciseImage({
-  ex,
-  label,
-  size = 'thumb',
-  frame = 0,
-}: {
-  ex: Exercise | undefined;
-  label: string;
-  size?: 'thumb' | 'large';
-  frame?: 0 | 1;
-}) {
+export function ExerciseImage({ ex, label, size = 'thumb', frame = 0 }: { ex: Exercise | undefined; label: string; size?: 'thumb' | 'large'; frame?: 0 | 1 }) {
   const urls = ex?.image ? photoUrls(ex.image, frame) : [];
   const [attempt, setAttempt] = useState(0);
   const cls = size === 'thumb' ? 'ex-thumb' : 'ex-photo';
@@ -35,7 +25,7 @@ export function ExerciseImage({
     <img
       className={cls}
       src={urls[attempt]}
-      alt={size === 'large' ? frame ? t('{name}, end position', { name: label }) : t('{name}, start position', { name: label }) : ''}
+      alt={size === 'large' ? (frame ? t('{name}, end position', { name: label }) : t('{name}, start position', { name: label })) : ''}
       loading="lazy"
       decoding="async"
       crossOrigin="anonymous"

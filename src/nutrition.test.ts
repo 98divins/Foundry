@@ -179,7 +179,19 @@ describe('saved meals', () => {
 describe('planned meals', () => {
   it('do not count until confirmed', async () => {
     const { dayTotals } = await import('./nutrition');
-    const e = (id: string, kcal: number, planned?: boolean) => ({ id, date: '2026-11-20', meal: 'lunch' as const, name: id, grams: 100, kcal, protein: 10, carbs: 10, fat: 1, createdAt: 0, ...(planned ? { planned } : {}) });
+    const e = (id: string, kcal: number, planned?: boolean) => ({
+      id,
+      date: '2026-11-20',
+      meal: 'lunch' as const,
+      name: id,
+      grams: 100,
+      kcal,
+      protein: 10,
+      carbs: 10,
+      fat: 1,
+      createdAt: 0,
+      ...(planned ? { planned } : {}),
+    });
     expect(dayTotals([e('a', 300), e('b', 500, true)], '2026-11-20').kcal).toBe(300);
     expect(dayTotals([e('a', 300), e('b', 500, false)], '2026-11-20').kcal).toBe(800);
   });
@@ -194,7 +206,8 @@ describe('planned foods', () => {
         const date = addDays(today, -i);
         n.weights.push({ date, kg: 80 });
         n.log.push({ id: 'a' + i, date, meal: 'lunch', name: 'x', grams: null, kcal: 2500, protein: 0, carbs: 0, fat: 0, createdAt: 0 });
-        if (withPlanned) n.log.push({ id: 'p' + i, date, meal: 'dinner', name: 'planned', grams: null, kcal: 800, protein: 0, carbs: 0, fat: 0, createdAt: 0, planned: true });
+        if (withPlanned)
+          n.log.push({ id: 'p' + i, date, meal: 'dinner', name: 'planned', grams: null, kcal: 800, protein: 0, carbs: 0, fat: 0, createdAt: 0, planned: true });
       }
       return n;
     };

@@ -1,5 +1,16 @@
 import { useMemo, useState } from 'react';
-import { MUSCLE_GROUPS, dayKeyOf, groupSets, monthStart, muscleSets, periodSummary, topExercises, trainedDaySet, weekStreak, type MuscleGroup } from '../analytics';
+import {
+  MUSCLE_GROUPS,
+  dayKeyOf,
+  groupSets,
+  monthStart,
+  muscleSets,
+  periodSummary,
+  topExercises,
+  trainedDaySet,
+  weekStreak,
+  type MuscleGroup,
+} from '../analytics';
 import { BarChart, RadarChart } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon, Segmented, Stat } from '../components/ui';
@@ -119,7 +130,11 @@ function Distribution() {
     <Sub title={t('Muscle balance')}>
       <Segmented label={t('Period')} value={days} onChange={setDays} options={PERIODS.map((p) => ({ value: p.value, label: t(p.label) }))} />
       <section className="panel">
-        <RadarChart labels={MUSCLE_GROUPS.map((g) => t(GROUP_LABEL[g]))} current={MUSCLE_GROUPS.map((g) => cur[g])} previous={MUSCLE_GROUPS.map((g) => prev[g])} />
+        <RadarChart
+          labels={MUSCLE_GROUPS.map((g) => t(GROUP_LABEL[g]))}
+          current={MUSCLE_GROUPS.map((g) => cur[g])}
+          previous={MUSCLE_GROUPS.map((g) => prev[g])}
+        />
         <p className="legend small">
           <span className="dot cur" /> {t('This period')} <span className="dot prev" /> {t('Period before')}
         </p>
@@ -133,7 +148,10 @@ function Distribution() {
                 <span>{t(GROUP_LABEL[g])}</span>
                 <span className="muted small">{total ? Math.round((cur[g] / total) * 100) : 0} %</span>
                 <strong>{cur[g]}</strong>
-                <span className={'delta ' + (d > 0 ? 'up' : d < 0 ? 'down' : '')}>{d > 0 ? '+' : ''}{d}</span>
+                <span className={'delta ' + (d > 0 ? 'up' : d < 0 ? 'down' : '')}>
+                  {d > 0 ? '+' : ''}
+                  {d}
+                </span>
               </li>
             );
           })}
@@ -161,7 +179,8 @@ function MusclesByWeek() {
           <Icon name="back" />
         </button>
         <strong>
-          {new Date(start).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })} – {new Date(start + 6 * DAY).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })}
+          {new Date(start).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })} –{' '}
+          {new Date(start + 6 * DAY).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })}
         </strong>
         <button className="icon-btn" aria-label={t('Next week')} disabled={isThisWeek} onClick={() => setStart(weekStart(start + 10.5 * DAY))}>
           <Icon name="chevron" />
@@ -233,7 +252,9 @@ function TrainingLoad() {
           <>
             <div className={'load-ratio z-' + ratio.zone}>
               <strong>{ratio.ratio.toLocaleString(locale())}</strong>
-              <span className="muted small">{t('{a} sets in the last 7 days · usual {b} a week (last 4 weeks)', { a: ratio.acute, b: ratio.chronic.toLocaleString(locale()) })}</span>
+              <span className="muted small">
+                {t('{a} sets in the last 7 days · usual {b} a week (last 4 weeks)', { a: ratio.acute, b: ratio.chronic.toLocaleString(locale()) })}
+              </span>
             </div>
             <div className="load-scale" aria-hidden="true">
               <span className="z-low">{'< 0,8'}</span>
@@ -273,7 +294,11 @@ function MainExercises() {
   return (
     <Sub title={t('Main exercises')}>
       <Segmented label={t('Period')} value={days} onChange={setDays} options={PERIODS.map((p) => ({ value: p.value, label: t(p.label) }))} />
-      {!top.length && <div className="empty-card"><p>{t('No workout in this period yet.')}</p></div>}
+      {!top.length && (
+        <div className="empty-card">
+          <p>{t('No workout in this period yet.')}</p>
+        </div>
+      )}
       <ul className="lift-list">
         {top.map((e) => (
           <li key={e.exerciseId}>
@@ -345,11 +370,46 @@ function MonthReport() {
       </div>
 
       <div className="stats-row">
-        <Stat label={t('Training days')} value={<>{cur.days} <Delta cur={cur.days} prev={prev.days} /></>} />
-        <Stat label={t('Workouts')} value={<>{cur.workouts} <Delta cur={cur.workouts} prev={prev.workouts} /></>} />
-        <Stat label={t('Duration')} value={<>{fmtDuration(cur.minutes * 60000)} <Delta cur={cur.minutes} prev={prev.minutes} fmt={(v) => fmtDuration(v * 60000)} /></>} />
-        <Stat label={t('Volume')} value={<>{fmtVolume(cur.volume, unit)} <Delta cur={cur.volume} prev={prev.volume} fmt={(v) => fmtVolume(v, unit)} /></>} />
-        <Stat label={t('Sets')} value={<>{cur.sets} <Delta cur={cur.sets} prev={prev.sets} /></>} />
+        <Stat
+          label={t('Training days')}
+          value={
+            <>
+              {cur.days} <Delta cur={cur.days} prev={prev.days} />
+            </>
+          }
+        />
+        <Stat
+          label={t('Workouts')}
+          value={
+            <>
+              {cur.workouts} <Delta cur={cur.workouts} prev={prev.workouts} />
+            </>
+          }
+        />
+        <Stat
+          label={t('Duration')}
+          value={
+            <>
+              {fmtDuration(cur.minutes * 60000)} <Delta cur={cur.minutes} prev={prev.minutes} fmt={(v) => fmtDuration(v * 60000)} />
+            </>
+          }
+        />
+        <Stat
+          label={t('Volume')}
+          value={
+            <>
+              {fmtVolume(cur.volume, unit)} <Delta cur={cur.volume} prev={prev.volume} fmt={(v) => fmtVolume(v, unit)} />
+            </>
+          }
+        />
+        <Stat
+          label={t('Sets')}
+          value={
+            <>
+              {cur.sets} <Delta cur={cur.sets} prev={prev.sets} />
+            </>
+          }
+        />
       </div>
       <p className="muted small">{t('Arrows compare with the month before.')}</p>
 

@@ -29,7 +29,9 @@ export function bestLastSet(prev: SetEntry[]): { weight: number; reps: number } 
 
 /** Fills the empty working sets (no weight and no reps yet) with that set. */
 export function fillWithBest(sets: SetEntry[], best: { weight: number; reps: number }): SetEntry[] {
-  return sets.map((s) => (!s.done && s.type !== 'warmup' && s.type !== 'drop' && s.weight == null && s.reps == null ? { ...s, weight: best.weight, reps: best.reps } : s));
+  return sets.map((s) =>
+    !s.done && s.type !== 'warmup' && s.type !== 'drop' && s.weight == null && s.reps == null ? { ...s, weight: best.weight, reps: best.reps } : s,
+  );
 }
 
 /**
@@ -39,7 +41,12 @@ export function fillWithBest(sets: SetEntry[], best: { weight: number; reps: num
 export function warmupSets(work: number, unit: Unit, makeId: () => string): SetEntry[] {
   const bar = unit === 'lb' ? 45 * LB : 20;
   if (work < bar * 1.5) return [];
-  const steps: [number, number][] = [[0, 10], [0.5, 5], [0.7, 3], [0.85, 2]];
+  const steps: [number, number][] = [
+    [0, 10],
+    [0.5, 5],
+    [0.7, 3],
+    [0.85, 2],
+  ];
   const out: SetEntry[] = [];
   let lastW = -1;
   for (const [pct, reps] of steps) {

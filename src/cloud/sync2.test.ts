@@ -65,8 +65,16 @@ describe('sync v2', () => {
   });
 
   it('uses the same deletion names as v1 for every kind of item', () => {
-    const s = { ...sample(), folders: [{ id: 'f1', name: 'F' }], nutrition: { ...sample().nutrition, favorites: ['a'], incompleteDays: ['2026-11-01'], checkIns: [{ date: '2026-11-01' } as never] } } as State;
-    const v1 = new Set(Object.values(collections(s)).flat().map((x) => x.key));
+    const s = {
+      ...sample(),
+      folders: [{ id: 'f1', name: 'F' }],
+      nutrition: { ...sample().nutrition, favorites: ['a'], incompleteDays: ['2026-11-01'], checkIns: [{ date: '2026-11-01' } as never] },
+    } as State;
+    const v1 = new Set(
+      Object.values(collections(s))
+        .flat()
+        .map((x) => x.key),
+    );
     for (const k of splitState(s).items.keys()) expect(v1.has(tombstoneKey(k))).toBe(true);
   });
 });

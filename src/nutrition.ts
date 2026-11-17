@@ -411,10 +411,12 @@ export const MEALS: Meal[] = ['breakfast', 'snack_breakfast', 'lunch', 'snacks',
 /* ---------- Saved meals ---------- */
 
 export function mealTotals(items: MealItem[], servings = 1): Macros {
-  const t = items.reduce(
-    (a, i) => ({ kcal: a.kcal + i.kcal, protein: a.protein + i.protein, carbs: a.carbs + i.carbs, fat: a.fat + i.fat }),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-  );
+  const t = items.reduce((a, i) => ({ kcal: a.kcal + i.kcal, protein: a.protein + i.protein, carbs: a.carbs + i.carbs, fat: a.fat + i.fat }), {
+    kcal: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+  });
   return {
     kcal: Math.round(t.kcal * servings),
     protein: round1(t.protein * servings),
@@ -433,14 +435,7 @@ const scaleItem = (i: MealItem, k: number): MealItem => ({
 });
 
 /** Entries for one logging of a saved meal: a copy of its items × servings, grouped together. */
-export function entriesFromMeal(
-  sm: SavedMeal,
-  servings: number,
-  date: string,
-  meal: Meal,
-  makeId: () => string,
-  now = Date.now(),
-): FoodEntry[] {
+export function entriesFromMeal(sm: SavedMeal, servings: number, date: string, meal: Meal, makeId: () => string, now = Date.now()): FoodEntry[] {
   const group = { id: makeId(), savedMealId: sm.id, name: sm.name, servings };
   return sm.items.map((i, k) => ({ ...scaleItem(i, servings), id: makeId(), date, meal, createdAt: now + k, group }));
 }

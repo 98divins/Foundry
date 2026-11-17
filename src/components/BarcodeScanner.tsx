@@ -65,13 +65,9 @@ export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => 
           hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E]);
           hints.set(DecodeHintType.TRY_HARDER, true);
           const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 150 });
-          const controls = await reader.decodeFromConstraints(
-            { video: CAMERA, audio: false },
-            video.current,
-            (result) => {
-              if (result) found(result.getText());
-            },
-          );
+          const controls = await reader.decodeFromConstraints({ video: CAMERA, audio: false }, video.current, (result) => {
+            if (result) found(result.getText());
+          });
           stopZxing = () => controls.stop();
         }
       } catch (e) {
@@ -103,7 +99,9 @@ export function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => 
         </div>
       )}
       <p className="muted small">{t('Point the camera at the barcode. It scans by itself.')}</p>
-      <button className="btn btn-small" onClick={onClose}>{t('Close camera')}</button>
+      <button className="btn btn-small" onClick={onClose}>
+        {t('Close camera')}
+      </button>
     </div>
   );
 }

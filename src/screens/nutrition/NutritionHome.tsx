@@ -27,7 +27,6 @@ import { locale, t, tp } from '../../i18n';
 import { canAdd, requirePro } from '../../pro';
 import { bmi, MIN_BMI } from '../../safeguards';
 
-
 export function fmtDay(key: string): string {
   const today = dayKey();
   if (key === today) return t('Today');
@@ -81,8 +80,14 @@ export function NutritionHome({ date }: { date: string }) {
           <section className="hero-card">
             <span className="eyebrow">{t('Get started')}</span>
             <h2 className="hero-title">{t('Eat to your goal')}</h2>
-            <p>{t('Log what you eat and weigh in most mornings. Foundry estimates how many calories you really burn from your weight trend and intake, then adjusts your calorie and macro targets every week.')}</p>
-            <button className="btn btn-primary btn-wide" onClick={() => go('n/setup')}>{t('Set up my plan')}</button>
+            <p>
+              {t(
+                'Log what you eat and weigh in most mornings. Foundry estimates how many calories you really burn from your weight trend and intake, then adjusts your calorie and macro targets every week.',
+              )}
+            </p>
+            <button className="btn btn-primary btn-wide" onClick={() => go('n/setup')}>
+              {t('Set up my plan')}
+            </button>
           </section>
         </main>
       </>
@@ -170,9 +175,11 @@ export function NutritionHome({ date }: { date: string }) {
             </div>
             {targets && (
               <div className="kcal-side small muted">
-                <span>{t('Eaten')}{' '}<strong className="fg">{totals.kcal}</strong>
+                <span>
+                  {t('Eaten')} <strong className="fg">{totals.kcal}</strong>
                 </span>
-                <span>{t('Target')}{' '}<strong className="fg">{targets.kcal}</strong>
+                <span>
+                  {t('Target')} <strong className="fg">{targets.kcal}</strong>
                 </span>
               </div>
             )}
@@ -217,12 +224,12 @@ export function NutritionHome({ date }: { date: string }) {
               onChange={(e) =>
                 setN((x) => ({
                   ...x,
-                  incompleteDays: e.target.checked
-                    ? [...x.incompleteDays, date]
-                    : x.incompleteDays.filter((d) => d !== date),
+                  incompleteDays: e.target.checked ? [...x.incompleteDays, date] : x.incompleteDays.filter((d) => d !== date),
                 }))
               }
-            />{t('I did not log everything this day (leave it out of the expenditure estimate)')}</label>
+            />
+            {t('I did not log everything this day (leave it out of the expenditure estimate)')}
+          </label>
         )}
 
         <button className="btn btn-wide more-row" onClick={() => setMore(true)}>
@@ -232,13 +239,22 @@ export function NutritionHome({ date }: { date: string }) {
         </button>
         <Sheet open={more} onClose={() => setMore(false)} title={t('More')}>
           <div className="menu">
-            {([
-              ['ruler', t('Weight'), t('Your weigh-ins and the trend line.'), 'n/weight'],
-              ['chart', t('Expenditure'), t('How many calories you really burn, learned from your data.'), 'n/insights'],
-              ['copy', t('Meals'), t('Your saved meals, meal ideas and community meals.'), 'n/meals'],
-              ['flag', t('Plan'), t('Your goal, calories and macros.'), 'n/plan'],
-            ] as const).map(([icon, label, text, to]) => (
-              <button key={to} className="menu-item routine-kind" onClick={() => { setMore(false); go(to); }}>
+            {(
+              [
+                ['ruler', t('Weight'), t('Your weigh-ins and the trend line.'), 'n/weight'],
+                ['chart', t('Expenditure'), t('How many calories you really burn, learned from your data.'), 'n/insights'],
+                ['copy', t('Meals'), t('Your saved meals, meal ideas and community meals.'), 'n/meals'],
+                ['flag', t('Plan'), t('Your goal, calories and macros.'), 'n/plan'],
+              ] as const
+            ).map(([icon, label, text, to]) => (
+              <button
+                key={to}
+                className="menu-item routine-kind"
+                onClick={() => {
+                  setMore(false);
+                  go(to);
+                }}
+              >
                 <Icon name={icon} size={22} />
                 <span>
                   <strong>{label}</strong>
@@ -260,21 +276,21 @@ function EntryRow({ e, onEdit, onConfirm }: { e: FoodEntry; onEdit: (e: FoodEntr
   return (
     <li className={e.planned ? 'planned' : ''}>
       <div className="entry-line">
-      <button className="entry" onClick={() => onEdit(e)}>
-        <span className="entry-text">
-          <span className="entry-name">{e.name}</span>
-          <span className="muted small">
-            {e.grams != null ? `${fmtNum(e.grams)} g · ` : t('Quick add') + ' · '}
-            {t('P {p} · C {c} · F {f}', { p: fmtNum(Math.round(e.protein)), c: fmtNum(Math.round(e.carbs)), f: fmtNum(Math.round(e.fat)) })}
+        <button className="entry" onClick={() => onEdit(e)}>
+          <span className="entry-text">
+            <span className="entry-name">{e.name}</span>
+            <span className="muted small">
+              {e.grams != null ? `${fmtNum(e.grams)} g · ` : t('Quick add') + ' · '}
+              {t('P {p} · C {c} · F {f}', { p: fmtNum(Math.round(e.protein)), c: fmtNum(Math.round(e.carbs)), f: fmtNum(Math.round(e.fat)) })}
+            </span>
           </span>
-        </span>
-        <span className="entry-kcal">{Math.round(e.kcal)}</span>
-      </button>
-      {e.planned && onConfirm && (
-        <button className="icon-btn confirm-btn" aria-label={t('I ate it')} onClick={() => onConfirm([e.id])}>
-          <Icon name="check" size={18} />
+          <span className="entry-kcal">{Math.round(e.kcal)}</span>
         </button>
-      )}
+        {e.planned && onConfirm && (
+          <button className="icon-btn confirm-btn" aria-label={t('I ate it')} onClick={() => onConfirm([e.id])}>
+            <Icon name="check" size={18} />
+          </button>
+        )}
       </div>
     </li>
   );
@@ -351,14 +367,16 @@ function MealSection({
               <h2>{t(MEAL_LABEL[meal])}</h2>
             </span>
             <span className="muted small">
-              {tp(entries.length, '{n} food', '{n} foods')} · {Math.round(kcal)} kcal · {t('P {p} · C {c} · F {f}', { p: sum('protein'), c: sum('carbs'), f: sum('fat') })}
+              {tp(entries.length, '{n} food', '{n} foods')} · {Math.round(kcal)} kcal ·{' '}
+              {t('P {p} · C {c} · F {f}', { p: sum('protein'), c: sum('carbs'), f: sum('fat') })}
             </span>
           </button>
         ) : (
           <h2 className="meal-title-empty">{t(MEAL_LABEL[meal])}</h2>
         )}
         <button className="btn btn-small" onClick={onAdd} aria-label={t('Add food to {meal}', { meal: t(MEAL_LABEL[meal]) })}>
-          <Icon name="plus" size={16} />{' '}{t('Add')}</button>
+          <Icon name="plus" size={16} /> {t('Add')}
+        </button>
       </div>
       {expanded && blocks.length > 0 && (
         <ul className="entries">
@@ -366,13 +384,23 @@ function MealSection({
             Array.isArray(b) ? (
               <li key={b[0].group!.id} className="meal-block">
                 <div className="entry">
-                  <button className="entry-text block-toggle" onClick={() => setOpen(open === b[0].group!.id ? null : b[0].group!.id)} aria-expanded={open === b[0].group!.id}>
+                  <button
+                    className="entry-text block-toggle"
+                    onClick={() => setOpen(open === b[0].group!.id ? null : b[0].group!.id)}
+                    aria-expanded={open === b[0].group!.id}
+                  >
                     <span className="entry-name">
                       <Icon name="chevron" size={14} /> {b[0].group!.name}
                       {b[0].group!.servings !== 1 && <span className="muted"> × {fmtNum(b[0].group!.servings)}</span>}
                     </span>
                     <span className="muted small">
-                      {t('{0} foods · P {1} · C {3} · F {4}', { 0: b.length, 1: fmtNum(Math.round(b.reduce((t, e) => t + e.protein, 0))), 3: fmtNum(Math.round(b.reduce((t, e) => t + e.carbs, 0))), 4: fmtNum(Math.round(b.reduce((t, e) => t + e.fat, 0))) })}</span>
+                      {t('{0} foods · P {1} · C {3} · F {4}', {
+                        0: b.length,
+                        1: fmtNum(Math.round(b.reduce((t, e) => t + e.protein, 0))),
+                        3: fmtNum(Math.round(b.reduce((t, e) => t + e.carbs, 0))),
+                        4: fmtNum(Math.round(b.reduce((t, e) => t + e.fat, 0))),
+                      })}
+                    </span>
                   </button>
                   <span className="entry-kcal">{Math.round(b.reduce((t, e) => t + e.kcal, 0))}</span>
                   <button className="icon-btn" aria-label={t('Options for {name}', { name: b[0].group!.name })} onClick={() => setGroupMenu(b)}>
@@ -397,15 +425,19 @@ function MealSection({
         <div className="meal-actions">
           {canConfirm && plannedHere.length > 0 && (
             <button className="add-in-folder" onClick={() => onConfirm(plannedHere.map((e) => e.id))}>
-              <Icon name="check" size={15} />{' '}{t('I ate this meal')}</button>
+              <Icon name="check" size={15} /> {t('I ate this meal')}
+            </button>
           )}
           <button className="add-in-folder" onClick={() => setMoving({ entries, title: t('Move: {meal}', { meal: t(MEAL_LABEL[meal]) }) })}>
-            <Icon name="swap" size={15} />{' '}{t('Move')}</button>
+            <Icon name="swap" size={15} /> {t('Move')}
+          </button>
           <button className="add-in-folder" onClick={() => setPlanning(true)}>
-            <Icon name="history" size={15} />{' '}{t('Plan on other days')}</button>
+            <Icon name="history" size={15} /> {t('Plan on other days')}
+          </button>
           {entries.length > 1 && (
             <button className="add-in-folder" onClick={() => setNaming('')}>
-              <Icon name="copy" size={15} />{' '}{t('Save as meal')}</button>
+              <Icon name="copy" size={15} /> {t('Save as meal')}
+            </button>
           )}
         </div>
       )}
@@ -438,11 +470,26 @@ function MealSection({
                 setGroupMenu(null);
               }}
             >
-              <Icon name="unlink" size={18} />{' '}{t('Show as separate foods')}</button>
-            <button className="menu-item" onClick={() => { setMoving({ entries: groupMenu, title: t('Move “{name}”', { name: groupMenu[0].group!.name }) }); setGroupMenu(null); }}>
-              <Icon name="swap" size={18} />{' '}{t('Move to another meal or day')}</button>
-            <button className="menu-item" onClick={() => { go('n/meals/' + groupMenu[0].group!.savedMealId); setGroupMenu(null); }}>
-              <Icon name="edit" size={18} />{' '}{t('Edit the saved meal')}</button>
+              <Icon name="unlink" size={18} /> {t('Show as separate foods')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                setMoving({ entries: groupMenu, title: t('Move “{name}”', { name: groupMenu[0].group!.name }) });
+                setGroupMenu(null);
+              }}
+            >
+              <Icon name="swap" size={18} /> {t('Move to another meal or day')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                go('n/meals/' + groupMenu[0].group!.savedMealId);
+                setGroupMenu(null);
+              }}
+            >
+              <Icon name="edit" size={18} /> {t('Edit the saved meal')}
+            </button>
             <button
               className="menu-item danger"
               onClick={() => {
@@ -451,7 +498,8 @@ function MealSection({
                 setGroupMenu(null);
               }}
             >
-              <Icon name="trash" size={18} />{' '}{t('Remove from this day')}</button>
+              <Icon name="trash" size={18} /> {t('Remove from this day')}
+            </button>
           </div>
         )}
       </Sheet>
@@ -464,14 +512,20 @@ function MealSection({
             saveAsMeal(naming ?? '');
           }}
         >
-          <p className="muted small">{t('The {0} foods of this {1} become a meal you can log in one tap.', { 0: entries.length, 1: t(MEAL_LABEL[meal]).toLowerCase() })}</p>
+          <p className="muted small">
+            {t('The {0} foods of this {1} become a meal you can log in one tap.', { 0: entries.length, 1: t(MEAL_LABEL[meal]).toLowerCase() })}
+          </p>
           <label className="field">
             <span>{t('Meal name')}</span>
             <input id="save-meal-name" autoFocus placeholder={t('e.g. Usual breakfast')} value={naming ?? ''} onChange={(e) => setNaming(e.target.value)} />
           </label>
           <div className="sheet-actions">
-            <button type="button" className="btn" onClick={() => setNaming(null)}>{t('Cancel')}</button>
-            <button type="submit" className="btn btn-primary" disabled={!naming?.trim()}>{t('Save meal')}</button>
+            <button type="button" className="btn" onClick={() => setNaming(null)}>
+              {t('Cancel')}
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={!naming?.trim()}>
+              {t('Save meal')}
+            </button>
           </div>
         </form>
       </Sheet>
@@ -498,8 +552,7 @@ function WeighInCard({ date, weigh, trend, unit }: { date: string; weigh: number
               {fmtNum(toDisplay(weigh, unit))} {unit}
             </strong>
             {trend != null && (
-              <span className="muted small">
-                {t('{0} · trend {1} {2}', { 0: ' ', 1: fmtNum(Math.round(toDisplay(trend, unit) * 10) / 10), 2: unit })}</span>
+              <span className="muted small">{t('{0} · trend {1} {2}', { 0: ' ', 1: fmtNum(Math.round(toDisplay(trend, unit) * 10) / 10), 2: unit })}</span>
             )}
           </span>
         ) : (
@@ -534,7 +587,10 @@ function CheckInSheet({ open, onClose, current }: { open: boolean; onClose: () =
         <>
           <p className="sheet-text">
             {ci.trendKg != null
-              ? t('Your estimated expenditure is {kcal} kcal/day and your trend weight is {kg} kg. New daily targets:', { kcal: ci.expenditure, kg: ci.trendKg })
+              ? t('Your estimated expenditure is {kcal} kcal/day and your trend weight is {kg} kg. New daily targets:', {
+                  kcal: ci.expenditure,
+                  kg: ci.trendKg,
+                })
               : t('Your estimated expenditure is {kcal} kcal/day. New daily targets:', { kcal: ci.expenditure })}
           </p>
           <table className="ci-table">
@@ -558,14 +614,18 @@ function CheckInSheet({ open, onClose, current }: { open: boolean; onClose: () =
             </tbody>
           </table>
           <div className="sheet-actions">
-            <button className="btn" onClick={onClose}>{t('Later')}</button>
+            <button className="btn" onClick={onClose}>
+              {t('Later')}
+            </button>
             <button
               className="btn btn-primary"
               onClick={() => {
                 setN((x) => ({ ...x, checkIns: [...x.checkIns, ci] }));
                 onClose();
               }}
-            >{t('Apply targets')}</button>
+            >
+              {t('Apply targets')}
+            </button>
           </div>
         </>
       )}

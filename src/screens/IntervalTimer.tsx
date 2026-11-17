@@ -17,9 +17,20 @@ function Stepper({ id, label, value, onChange, kind }: { id: string; label: stri
     <div className="stepper">
       <span className="stepper-label">{label}</span>
       <span className="stepper-ctl">
-        <button type="button" className="icon-btn" aria-label={t('Less: {name}', { name: label })} onClick={() => onChange(Math.max(min, value - step))}>−</button>
-        <output id={id} className="stepper-val">{kind === 'time' ? (value ? fmtSec(value) : t('Off')) : value}</output>
-        <button type="button" className="icon-btn" aria-label={t('More: {name}', { name: label })} onClick={() => onChange(Math.min(kind === 'count' ? 99 : 3600, value + step))}>+</button>
+        <button type="button" className="icon-btn" aria-label={t('Less: {name}', { name: label })} onClick={() => onChange(Math.max(min, value - step))}>
+          −
+        </button>
+        <output id={id} className="stepper-val">
+          {kind === 'time' ? (value ? fmtSec(value) : t('Off')) : value}
+        </output>
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label={t('More: {name}', { name: label })}
+          onClick={() => onChange(Math.min(kind === 'count' ? 99 : 3600, value + step))}
+        >
+          +
+        </button>
       </span>
     </div>
   );
@@ -33,12 +44,26 @@ export function IntervalEditor({ id, folderId }: { id: string; folderId?: string
   const [plan, setPlan] = useState<IntervalPlan>(existing?.interval ?? DEFAULT_PLAN);
   const [moves, setMoves] = useState((existing?.interval?.moves ?? []).join('\n'));
   const set = (k: keyof IntervalPlan) => (v: number) => setPlan({ ...plan, [k]: v });
-  const full = { ...plan, moves: moves.split('\n').map((m) => m.trim()).filter(Boolean).slice(0, 30) };
+  const full = {
+    ...plan,
+    moves: moves
+      .split('\n')
+      .map((m) => m.trim())
+      .filter(Boolean)
+      .slice(0, 30),
+  };
 
   const save = (): string | null => {
     if (!existing && !canAdd('routines', state.routines.length)) return null;
     const rid = existing?.id ?? uid();
-    const r: Routine = { id: rid, name: name.trim() || t('Interval workout'), exercises: [], interval: full, updatedAt: Date.now(), folderId: existing?.folderId ?? folderId };
+    const r: Routine = {
+      id: rid,
+      name: name.trim() || t('Interval workout'),
+      exercises: [],
+      interval: full,
+      updatedAt: Date.now(),
+      folderId: existing?.folderId ?? folderId,
+    };
     update((s) => ({ ...s, routines: existing ? s.routines.map((x) => (x.id === rid ? r : x)) : [...s.routines, r] }));
     return rid;
   };
@@ -48,7 +73,11 @@ export function IntervalEditor({ id, folderId }: { id: string; folderId?: string
       <Header
         title={existing ? t('Edit intervals') : t('New interval workout')}
         onBack={() => back('')}
-        right={<button className="btn btn-primary btn-small" onClick={() => save() && back('')}>{t('Save')}</button>}
+        right={
+          <button className="btn btn-primary btn-small" onClick={() => save() && back('')}>
+            {t('Save')}
+          </button>
+        }
       />
       <main className="page form">
         <label className="field">
@@ -58,7 +87,15 @@ export function IntervalEditor({ id, folderId }: { id: string; folderId?: string
         {!existing && (
           <div className="chips wrap">
             {PRESETS.map((p) => (
-              <button key={p.id} type="button" className="chip" onClick={() => { setPlan({ ...p.plan, moves: full.moves }); if (!existing) setName(t(p.name)); }}>
+              <button
+                key={p.id}
+                type="button"
+                className="chip"
+                onClick={() => {
+                  setPlan({ ...p.plan, moves: full.moves });
+                  if (!existing) setName(t(p.name));
+                }}
+              >
                 {t(p.name)}
               </button>
             ))}
@@ -75,14 +112,26 @@ export function IntervalEditor({ id, folderId }: { id: string; folderId?: string
         </section>
         <label className="field">
           <span>{t('Exercises (optional, one per line)')}</span>
-          <textarea id="interval-moves" rows={4} value={moves} placeholder={t('Burpees\nJump squats\nMountain climbers')} onChange={(e) => setMoves(e.target.value)} />
+          <textarea
+            id="interval-moves"
+            rows={4}
+            value={moves}
+            placeholder={t('Burpees\nJump squats\nMountain climbers')}
+            onChange={(e) => setMoves(e.target.value)}
+          />
           <span className="muted small">{t('Shown during work rounds, in turn.')}</span>
         </label>
         <p className="interval-total">
           <strong>{t('Total: {t}', { t: fmtSec(totalSeconds(full)) })}</strong>{' '}
           <span className="muted">· {t('{n} work rounds', { n: plan.rounds * plan.cycles })}</span>
         </p>
-        <button className="btn btn-primary btn-wide" onClick={() => { const rid = save(); if (rid) go('timer/' + rid, { replace: true }); }}>
+        <button
+          className="btn btn-primary btn-wide"
+          onClick={() => {
+            const rid = save();
+            if (rid) go('timer/' + rid, { replace: true });
+          }}
+        >
           <Icon name="play" size={18} /> {t('Save and start')}
         </button>
       </main>
@@ -133,7 +182,16 @@ function unlockSounds() {
     }
     const a = sounds[k]!;
     a.muted = true;
-    a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }, () => { a.muted = false; });
+    a.play().then(
+      () => {
+        a.pause();
+        a.currentTime = 0;
+        a.muted = false;
+      },
+      () => {
+        a.muted = false;
+      },
+    );
   }
 }
 function play(k: Sound) {
@@ -177,7 +235,10 @@ export function IntervalRun({ id }: { id: string }) {
   useEffect(() => {
     if (started == null) return;
     let lock: { release: () => Promise<void> } | null = null;
-    (navigator as Navigator & { wakeLock?: { request: (t: string) => Promise<typeof lock> } }).wakeLock?.request('screen').then((l) => (lock = l), () => {});
+    (navigator as Navigator & { wakeLock?: { request: (t: string) => Promise<typeof lock> } }).wakeLock?.request('screen').then(
+      (l) => (lock = l),
+      () => {},
+    );
     return () => void lock?.release().catch(() => {});
   }, [started]);
 
@@ -202,7 +263,14 @@ export function IntervalRun({ id }: { id: string }) {
       pausedMs,
       routineId: r.id,
       hideFromFeed: state.settings.postWorkouts === false || undefined,
-      exercises: [{ id: uid(), exerciseId: 'hiit', restSec: 0, sets: completed.map((sec) => ({ id: uid(), type: 'normal' as const, weight: null, reps: null, duration: sec, done: true })) }],
+      exercises: [
+        {
+          id: uid(),
+          exerciseId: 'hiit',
+          restSec: 0,
+          sets: completed.map((sec) => ({ id: uid(), type: 'normal' as const, weight: null, reps: null, duration: sec, done: true })),
+        },
+      ],
     };
     update((s) => ({ ...s, workouts: [...s.workouts, w] }));
     go('w/' + w.id + '/done', { replace: true });
@@ -242,7 +310,9 @@ export function IntervalRun({ id }: { id: string }) {
     return (
       <>
         <Header title={t('Timer')} onBack={() => back('')} />
-        <main className="page"><p className="muted">{t('This workout no longer exists.')}</p></main>
+        <main className="page">
+          <p className="muted">{t('This workout no longer exists.')}</p>
+        </main>
       </>
     );
   }
@@ -268,7 +338,7 @@ export function IntervalRun({ id }: { id: string }) {
   };
   const jump = (to: number) => {
     if (to < 0 || to >= phases.length) return;
-    if (to > idx && phases[idx].kind === 'work') workDone.current.push(phases[idx].sec - Math.max(0, Math.ceil(((pausedLeft ?? endAt - Date.now())) / 1000)));
+    if (to > idx && phases[idx].kind === 'work') workDone.current.push(phases[idx].sec - Math.max(0, Math.ceil((pausedLeft ?? endAt - Date.now()) / 1000)));
     const left = phases[to].sec * 1000;
     setIdx(to);
     lastBeep.current = -1;
@@ -277,7 +347,7 @@ export function IntervalRun({ id }: { id: string }) {
   };
 
   const ph = phases[Math.min(idx, phases.length - 1)];
-  const leftMs = started == null ? ph.sec * 1000 : pausedLeft ?? Math.max(0, endAt - now);
+  const leftMs = started == null ? ph.sec * 1000 : (pausedLeft ?? Math.max(0, endAt - now));
   const left = Math.ceil(leftMs / 1000);
   const pct = 1 - leftMs / (ph.sec * 1000);
   const next = phases[idx + 1];
@@ -287,12 +357,18 @@ export function IntervalRun({ id }: { id: string }) {
   return (
     <div className={'timer phase-' + (started == null ? 'idle' : ph.kind)}>
       <div className="timer-top">
-        <button className="icon-btn" aria-label={t('Stop')} onClick={() => {
-          if (started == null) return back('');
-          wasRunning.current = pausedLeft == null;
-          if (wasRunning.current) pause();
-          setStopping(true);
-        }}><Icon name="x" /></button>
+        <button
+          className="icon-btn"
+          aria-label={t('Stop')}
+          onClick={() => {
+            if (started == null) return back('');
+            wasRunning.current = pausedLeft == null;
+            if (wasRunning.current) pause();
+            setStopping(true);
+          }}
+        >
+          <Icon name="x" />
+        </button>
         <strong>{r.name}</strong>
         <span className="timer-right">
           <span className="muted small">{fmtSec(remaining)}</span>
@@ -311,7 +387,17 @@ export function IntervalRun({ id }: { id: string }) {
               if (v) unlockSounds();
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <path d="M4 9h4l5-4v14l-5-4H4z" />
               {sound ? <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" /> : <path d="M17 9l5 6M22 9l-5 6" />}
             </svg>
@@ -328,32 +414,63 @@ export function IntervalRun({ id }: { id: string }) {
           {t('Round {a}/{b}', { a: ph.round, b: plan.rounds })}
           {plan.cycles > 1 && <> · {t('Cycle {a}/{b}', { a: ph.cycle, b: plan.cycles })}</>}
         </p>
-        {next && started != null && <p className="timer-next muted">{t('Next: {what} · {t}', { what: next.kind === 'work' && next.move ? next.move : t(PHASE_LABEL[next.kind]), t: fmtSec(next.sec) })}</p>}
+        {next && started != null && (
+          <p className="timer-next muted">
+            {t('Next: {what} · {t}', { what: next.kind === 'work' && next.move ? next.move : t(PHASE_LABEL[next.kind]), t: fmtSec(next.sec) })}
+          </p>
+        )}
       </div>
       <div className="timer-controls">
         {started == null ? (
-          <button className="btn btn-primary btn-wide timer-go" onClick={start}><Icon name="play" size={22} /> {t('Start')}</button>
+          <button className="btn btn-primary btn-wide timer-go" onClick={start}>
+            <Icon name="play" size={22} /> {t('Start')}
+          </button>
         ) : (
           <>
-            <button className="icon-btn timer-skip" aria-label={t('Previous step')} onClick={() => jump(idx - 1)}><Icon name="back" /></button>
+            <button className="icon-btn timer-skip" aria-label={t('Previous step')} onClick={() => jump(idx - 1)}>
+              <Icon name="back" />
+            </button>
             <button className="btn btn-primary timer-pause" onClick={pausedLeft == null ? pause : resume}>
               <Icon name={pausedLeft == null ? 'pause' : 'play'} size={26} />
             </button>
-            <button className="icon-btn timer-skip next" aria-label={t('Next step')} onClick={() => jump(idx + 1)}><Icon name="back" /></button>
+            <button className="icon-btn timer-skip next" aria-label={t('Next step')} onClick={() => jump(idx + 1)}>
+              <Icon name="back" />
+            </button>
           </>
         )}
       </div>
-      <Sheet open={stopping} onClose={() => { setStopping(false); if (wasRunning.current) resume(); }} title={t('Stop the timer?')}>
+      <Sheet
+        open={stopping}
+        onClose={() => {
+          setStopping(false);
+          if (wasRunning.current) resume();
+        }}
+        title={t('Stop the timer?')}
+      >
         <div className="menu">
           {workDone.current.length > 0 && (
             <button className="btn btn-primary btn-wide" onClick={() => finish(workDone.current)}>
               {t('Stop and save ({n} rounds)', { n: workDone.current.length })}
             </button>
           )}
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => { setStopping(false); back(''); }}>
+          <button
+            className="btn btn-ghost-danger btn-wide"
+            onClick={() => {
+              setStopping(false);
+              back('');
+            }}
+          >
             {t('Quit without saving')}
           </button>
-          <button className="btn btn-wide" onClick={() => { setStopping(false); if (wasRunning.current) resume(); }}>{t('Keep going')}</button>
+          <button
+            className="btn btn-wide"
+            onClick={() => {
+              setStopping(false);
+              if (wasRunning.current) resume();
+            }}
+          >
+            {t('Keep going')}
+          </button>
         </div>
       </Sheet>
     </div>

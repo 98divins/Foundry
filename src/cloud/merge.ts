@@ -82,7 +82,7 @@ export function mergeStates(local: State, remote: State, localNewer: boolean, no
   const dead = mergeTombstones(local.deleted, remote.deleted, now);
   const L = collections(local);
   const R = collections(remote);
-  const m = <T,>(name: string) => mergeList<T>(L[name], R[name], dead, localNewer);
+  const m = <T>(name: string) => mergeList<T>(L[name], R[name], dead, localNewer);
   const newer = localNewer ? local : remote;
   const workouts = m<State['workouts'][number]>('workouts').sort((a, b) => a.startedAt - b.startedAt);
   // A workout in progress that the other copy already finished is not resumed.

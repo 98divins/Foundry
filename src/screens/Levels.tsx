@@ -33,15 +33,21 @@ export function LevelCard() {
   return (
     <button className="panel level-card" onClick={() => go('levels')}>
       <span className="level-card-head">
-        <span className="level-num" style={{ '--rank': p.rank.color } as React.CSSProperties}>{p.level}</span>
+        <span className="level-num" style={{ '--rank': p.rank.color } as React.CSSProperties}>
+          {p.level}
+        </span>
         <span className="level-card-text">
-          <strong>{t('Level {n}', { n: p.level })} · {t(p.rank.name)}</strong>
+          <strong>
+            {t('Level {n}', { n: p.level })} · {t(p.rank.name)}
+          </strong>
           <XpBar p={p} />
         </span>
         <Icon name="chevron" size={18} />
       </span>
       <span className="level-card-badges">
-        {latest.map((b) => <BadgeMedal key={b.id} id={b.id} earned size={30} />)}
+        {latest.map((b) => (
+          <BadgeMedal key={b.id} id={b.id} earned size={30} />
+        ))}
         <span className="muted small">{t('{a} / {b} badges', { a: p.badges.length, b: BADGES.length })}</span>
       </span>
     </button>
@@ -64,7 +70,9 @@ export function LevelsPage() {
       <Header title={t('Level and badges')} onBack={() => back('profile')} />
       <main className="page">
         <section className="panel level-hero">
-          <span className="level-num big" style={{ '--rank': p.rank.color } as React.CSSProperties}>{p.level}</span>
+          <span className="level-num big" style={{ '--rank': p.rank.color } as React.CSSProperties}>
+            {p.level}
+          </span>
           <LevelChip level={p.level} />
           <strong>{t('{n} XP', { n: fmtNum(p.xp) })}</strong>
           <XpBar p={p} />
@@ -75,15 +83,25 @@ export function LevelsPage() {
           <ul className="lift-list">
             {p.parts.map((x) => (
               <li key={x.id} className="lift-row">
-                <span>{t(x.label)} <span className="muted small">× {x.count}</span></span>
+                <span>
+                  {t(x.label)} <span className="muted small">× {x.count}</span>
+                </span>
                 <strong>{fmtNum(x.xp)}</strong>
               </li>
             ))}
           </ul>
           <p className="muted small">
-            {t('Workout (20 min or 6 sets, 2 a day max) {a} XP · record {b} XP (3 per workout max) · week on your goal {c} XP · each week in a row +{d} XP more · day on nutrition target {e} XP · weekly weigh-in {f} XP.', {
-              a: XP.workout, b: XP.record, c: XP.weekGoal, d: XP.streakStep, e: XP.dietDay, f: XP.weighInWeek,
-            })}
+            {t(
+              'Workout (20 min or 6 sets, 2 a day max) {a} XP · record {b} XP (3 per workout max) · week on your goal {c} XP · each week in a row +{d} XP more · day on nutrition target {e} XP · weekly weigh-in {f} XP.',
+              {
+                a: XP.workout,
+                b: XP.record,
+                c: XP.weekGoal,
+                d: XP.streakStep,
+                e: XP.dietDay,
+                f: XP.weighInWeek,
+              },
+            )}
           </p>
           <p className="muted small">{t('XP rewards showing up, not the weight on the bar: a beginner levels up as fast as anyone.')}</p>
         </section>
@@ -111,8 +129,12 @@ export function LevelsPage() {
           <ul className="lift-list">
             {RANKS.map((r, i) => (
               <li key={r.id} className="lift-row">
-                <span><span className="rank-dot" style={{ background: r.color }} /> {t(r.name)}</span>
-                <span className="muted">{r.from === MAX_LEVEL ? t('Level {n}', { n: r.from }) : t('Levels {a}–{b}', { a: r.from, b: RANKS[i + 1].from - 1 })}</span>
+                <span>
+                  <span className="rank-dot" style={{ background: r.color }} /> {t(r.name)}
+                </span>
+                <span className="muted">
+                  {r.from === MAX_LEVEL ? t('Level {n}', { n: r.from }) : t('Levels {a}–{b}', { a: r.from, b: RANKS[i + 1].from - 1 })}
+                </span>
               </li>
             ))}
           </ul>

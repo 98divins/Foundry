@@ -126,9 +126,10 @@ async function offFetch(url: string, retries = 1): Promise<unknown> {
 export async function offByBarcode(code: string): Promise<Food | null> {
   const clean = code.replace(/\D/g, '');
   if (clean.length < 6) throw new OffError(t('A barcode has at least 8 digits.'));
-  const data = (await offFetch(`https://world.openfoodfacts.org/api/v2/product/${clean}.json?fields=${OFF_FIELDS}`)) as
-    | { status?: number; product?: OffProduct }
-    | null;
+  const data = (await offFetch(`https://world.openfoodfacts.org/api/v2/product/${clean}.json?fields=${OFF_FIELDS}`)) as {
+    status?: number;
+    product?: OffProduct;
+  } | null;
   if (!data || data.status !== 1 || !data.product) return null;
   return foodFromOff({ ...data.product, code: data.product.code ?? clean });
 }
@@ -151,11 +152,7 @@ const DAY_MS = 86400000;
  * about 3 weeks), entries at the same meal more than at other meals, and entries logged near this
  * time of day a little more. Returns food id → score (0 when never logged).
  */
-export function foodUsage(
-  log: { foodId?: string; meal: string; createdAt: number }[],
-  meal: string,
-  now = Date.now(),
-): Map<string, number> {
+export function foodUsage(log: { foodId?: string; meal: string; createdAt: number }[], meal: string, now = Date.now()): Map<string, number> {
   const out = new Map<string, number>();
   const hour = new Date(now).getHours();
   for (const e of log) {

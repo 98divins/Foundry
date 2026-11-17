@@ -41,7 +41,13 @@ export function EditWorkout({ id }: { id: string }) {
         sets: we.sets.map((s, i) => {
           const live = liveSetFromRoutine(s);
           const p = prev[i];
-          return { ...live, weight: p?.weight ?? s.weight ?? null, reps: p?.reps ?? s.reps ?? null, duration: p?.duration ?? live.duration, distance: p?.distance ?? live.distance };
+          return {
+            ...live,
+            weight: p?.weight ?? s.weight ?? null,
+            reps: p?.reps ?? s.reps ?? null,
+            duration: p?.duration ?? live.duration,
+            distance: p?.distance ?? live.distance,
+          };
         }),
       };
     });
@@ -89,7 +95,9 @@ export function EditWorkout({ id }: { id: string }) {
         title={existing ? t('Edit workout') : t('Log past workout')}
         onBack={() => back('history')}
         right={
-          <button className="btn btn-primary btn-small" onClick={save}>{t('Save')}</button>
+          <button className="btn btn-primary btn-small" onClick={save}>
+            {t('Save')}
+          </button>
         }
       />
       <main className="page">
@@ -112,22 +120,12 @@ export function EditWorkout({ id }: { id: string }) {
           </label>
           <label className="field field-narrow">
             <span>{t('Duration (min)')}</span>
-            <input
-              id="edit-duration"
-              inputMode="numeric"
-              value={minutes}
-              onChange={(e) => setMinutes(Number(e.target.value.replace(/\D/g, '')) || 0)}
-            />
+            <input id="edit-duration" inputMode="numeric" value={minutes} onChange={(e) => setMinutes(Number(e.target.value.replace(/\D/g, '')) || 0)} />
           </label>
         </div>
         <label className="field">
           <span>{t('Notes')}</span>
-          <textarea
-            id="edit-note"
-            rows={2}
-            value={draft.note ?? ''}
-            onChange={(e) => setDraft({ ...draft, note: e.target.value })}
-          />
+          <textarea id="edit-note" rows={2} value={draft.note ?? ''} onChange={(e) => setDraft({ ...draft, note: e.target.value })} />
         </label>
         {!existing && state.routines.length > 0 && (
           <button className="btn btn-wide" onClick={() => requirePro('fillFromRoutine') && setPicking(true)}>

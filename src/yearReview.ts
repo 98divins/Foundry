@@ -47,7 +47,8 @@ const keyOf = (t: number) => {
 export function periodRange(kind: RecapKind, t: number, offset = 0): [number, number] {
   const d = new Date(t);
   if (kind === 'year') return [new Date(d.getFullYear() + offset, 0, 1).getTime(), new Date(d.getFullYear() + offset + 1, 0, 1).getTime()];
-  if (kind === 'month') return [new Date(d.getFullYear(), d.getMonth() + offset, 1).getTime(), new Date(d.getFullYear(), d.getMonth() + offset + 1, 1).getTime()];
+  if (kind === 'month')
+    return [new Date(d.getFullYear(), d.getMonth() + offset, 1).getTime(), new Date(d.getFullYear(), d.getMonth() + offset + 1, 1).getTime()];
   const m = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7) + 7 * offset);
   return [m.getTime(), new Date(m.getFullYear(), m.getMonth(), m.getDate() + 7).getTime()];
 }
@@ -79,11 +80,15 @@ export function periodReview(state: State, a: number, b: number): YearReview {
   // Lifts: the 3 weight exercises with the most sessions; best e1RM in the first and last 2 months trained.
   const best = (id: string, from: number, to: number) => {
     let m = 0;
-    for (const w of all) if (w.startedAt >= from && w.startedAt < to) for (const e of w.exercises) if (e.exerciseId === id) for (const s of e.sets) if (countsForStats(s) && s.weight && s.reps) m = Math.max(m, epley(s.weight, s.reps));
+    for (const w of all)
+      if (w.startedAt >= from && w.startedAt < to)
+        for (const e of w.exercises)
+          if (e.exerciseId === id) for (const s of e.sets) if (countsForStats(s) && s.weight && s.reps) m = Math.max(m, epley(s.weight, s.reps));
     return Math.round(m * 10) / 10;
   };
   const sessions = new Map<string, number>();
-  for (const w of ws) for (const e of w.exercises) if (e.sets.some((s) => s.weight && s.reps && s.done)) sessions.set(e.exerciseId, (sessions.get(e.exerciseId) ?? 0) + 1);
+  for (const w of ws)
+    for (const e of w.exercises) if (e.sets.some((s) => s.weight && s.reps && s.done)) sessions.set(e.exerciseId, (sessions.get(e.exerciseId) ?? 0) + 1);
   // Best before the period → best during it (for a year: first two months → last two months).
   const long = b - a > 200 * 86400000;
   const firstT = ws[0]?.startedAt ?? a;
@@ -125,8 +130,16 @@ export function periodReview(state: State, a: number, b: number): YearReview {
     bestStreak = Math.max(bestStreak, chain);
   }
 
-  const before = { ...state, workouts: state.workouts.filter((w) => w.startedAt < a), nutrition: { ...state.nutrition, log: state.nutrition.log.filter((e) => e.date < ka), weights: state.nutrition.weights.filter((x) => x.date < ka) } };
-  const atEnd = { ...state, workouts: state.workouts.filter((w) => w.startedAt < b), nutrition: { ...state.nutrition, log: state.nutrition.log.filter((e) => e.date < kb), weights: state.nutrition.weights.filter((x) => x.date < kb) } };
+  const before = {
+    ...state,
+    workouts: state.workouts.filter((w) => w.startedAt < a),
+    nutrition: { ...state.nutrition, log: state.nutrition.log.filter((e) => e.date < ka), weights: state.nutrition.weights.filter((x) => x.date < ka) },
+  };
+  const atEnd = {
+    ...state,
+    workouts: state.workouts.filter((w) => w.startedAt < b),
+    nutrition: { ...state.nutrition, log: state.nutrition.log.filter((e) => e.date < kb), weights: state.nutrition.weights.filter((x) => x.date < kb) },
+  };
   const p0 = progression(before as State, a);
   const p1 = progression(atEnd as State, Math.min(b - 1, Date.now()));
   const wts = state.nutrition.weights.filter((x) => inRange(x.date)).sort((x, y) => x.date.localeCompare(y.date));

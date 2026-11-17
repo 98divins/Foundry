@@ -5,8 +5,7 @@ import pkg from './package.json' with { type: 'json' };
 import { readFileSync } from 'node:fs';
 
 /** The Supabase project the build talks to: same rule as src/cloud/config.ts. */
-const SUPABASE_URL =
-  process.env.VITE_SUPABASE_URL ?? /DEFAULT_URL = '([^']+)'/.exec(readFileSync('./src/cloud/config.ts', 'utf8'))![1];
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? /DEFAULT_URL = '([^']+)'/.exec(readFileSync('./src/cloud/config.ts', 'utf8'))![1];
 const SUPABASE = new URL(SUPABASE_URL);
 
 /**

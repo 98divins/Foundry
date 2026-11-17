@@ -25,17 +25,7 @@ export type Muscle =
   | 'other'
   /** Used by the first library; still valid for custom exercises made then. */
   | 'back';
-export type Equipment =
-  | 'barbell'
-  | 'dumbbell'
-  | 'machine'
-  | 'cable'
-  | 'bodyweight'
-  | 'kettlebell'
-  | 'band'
-  | 'plate'
-  | 'suspension'
-  | 'other';
+export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweight' | 'kettlebell' | 'band' | 'plate' | 'suspension' | 'other';
 /**
  * weight: load × reps. bodyweight: reps, optional added load. assisted: reps, the load is the help
  * (so it never counts as volume). duration: a timed hold. cardio: distance and time.

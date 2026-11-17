@@ -30,14 +30,38 @@ export const LISTS: ListDef[] = [
   { kind: 'workout', get: (s) => s.workouts as unknown as AnyItem[], set: (s, xs) => ({ ...s, workouts: xs as never }), key: byId, sort: num('startedAt') },
   { kind: 'routine', get: (s) => s.routines as unknown as AnyItem[], set: (s, xs) => ({ ...s, routines: xs as never }), key: byId, ordered: true },
   { kind: 'folder', get: (s) => s.folders as unknown as AnyItem[], set: (s, xs) => ({ ...s, folders: xs as never }), key: byId, ordered: true },
-  { kind: 'exercise', get: (s) => s.customExercises as unknown as AnyItem[], set: (s, xs) => ({ ...s, customExercises: xs as never }), key: byId, ordered: true },
+  {
+    kind: 'exercise',
+    get: (s) => s.customExercises as unknown as AnyItem[],
+    set: (s, xs) => ({ ...s, customExercises: xs as never }),
+    key: byId,
+    ordered: true,
+  },
   { kind: 'food', get: (s) => n(s)?.foods as unknown as AnyItem[], set: (s, xs) => setN(s, 'foods', xs), key: byId, ordered: true },
   { kind: 'meal', get: (s) => n(s)?.savedMeals as unknown as AnyItem[], set: (s, xs) => setN(s, 'savedMeals', xs), key: byId, ordered: true },
   { kind: 'log', get: (s) => n(s)?.log as unknown as AnyItem[], set: (s, xs) => setN(s, 'log', xs), key: byId, sort: num('createdAt') },
-  { kind: 'weight', get: (s) => n(s)?.weights as unknown as AnyItem[], set: (s, xs) => setN(s, 'weights', xs), key: (x) => (x as { date: string }).date, sort: str('date') },
-  { kind: 'checkin', get: (s) => n(s)?.checkIns as unknown as AnyItem[], set: (s, xs) => setN(s, 'checkIns', xs), key: (x) => (x as { date: string }).date, sort: str('date') },
+  {
+    kind: 'weight',
+    get: (s) => n(s)?.weights as unknown as AnyItem[],
+    set: (s, xs) => setN(s, 'weights', xs),
+    key: (x) => (x as { date: string }).date,
+    sort: str('date'),
+  },
+  {
+    kind: 'checkin',
+    get: (s) => n(s)?.checkIns as unknown as AnyItem[],
+    set: (s, xs) => setN(s, 'checkIns', xs),
+    key: (x) => (x as { date: string }).date,
+    sort: str('date'),
+  },
   { kind: 'favorite', get: (s) => n(s)?.favorites as unknown as AnyItem[], set: (s, xs) => setN(s, 'favorites', xs), key: (x) => x as string, ordered: true },
-  { kind: 'incomplete', get: (s) => n(s)?.incompleteDays as unknown as AnyItem[], set: (s, xs) => setN(s, 'incompleteDays', xs), key: (x) => x as string, sort: (a, b) => String(a).localeCompare(String(b)) },
+  {
+    kind: 'incomplete',
+    get: (s) => n(s)?.incompleteDays as unknown as AnyItem[],
+    set: (s, xs) => setN(s, 'incompleteDays', xs),
+    key: (x) => x as string,
+    sort: (a, b) => String(a).localeCompare(String(b)),
+  },
 ];
 
 const TOP_LISTS = new Set(['workouts', 'routines', 'folders', 'customExercises', 'nutrition']);
@@ -174,7 +198,7 @@ export const diffSize = (d: Diff) => d.put.length + d.del.length + d.docs.length
 const DB_NAME = 'foundry';
 const DB_VERSION = 2;
 
-const req = <T,>(r: IDBRequest<T>) =>
+const req = <T>(r: IDBRequest<T>) =>
   new Promise<T>((res, rej) => {
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);

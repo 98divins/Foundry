@@ -24,7 +24,13 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Mix the night before, eat cold in the morning. Oats, milk, whey, chia and red fruit.'),
     tags: ['breakfast'],
     minutes: 5,
-    ingredients: [['g-fr-flocons-d-avoine', 60], ['g-fr-lait-demi-ecreme', 150], ['g-fr-whey-proteine', 30], ['g-fr-graines-de-chia', 10], ['g-fr-fruits-rouges-surgeles', 80]],
+    ingredients: [
+      ['g-fr-flocons-d-avoine', 60],
+      ['g-fr-lait-demi-ecreme', 150],
+      ['g-fr-whey-proteine', 30],
+      ['g-fr-graines-de-chia', 10],
+      ['g-fr-fruits-rouges-surgeles', 80],
+    ],
   },
   {
     id: 'eggs-toast-avocado',
@@ -32,7 +38,12 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Three eggs scrambled or fried, two slices of wholemeal bread, half an avocado and cherry tomatoes.'),
     tags: ['breakfast', 'veggie'],
     minutes: 10,
-    ingredients: [['g-fr-uf-entier-cru', 150], ['g-fr-pain-complet', 70], ['g-fr-avocat', 70], ['g-fr-tomates-cerises', 100]],
+    ingredients: [
+      ['g-fr-uf-entier-cru', 150],
+      ['g-fr-pain-complet', 70],
+      ['g-fr-avocat', 70],
+      ['g-fr-tomates-cerises', 100],
+    ],
   },
   {
     id: 'skyr-granola-banana',
@@ -40,7 +51,11 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('A high-protein bowl ready in two minutes.'),
     tags: ['breakfast', 'snack', 'veggie'],
     minutes: 2,
-    ingredients: [['g-fr-skyr-nature', 200], ['g-fr-granola', 40], ['g-fr-banane', 100]],
+    ingredients: [
+      ['g-fr-skyr-nature', 200],
+      ['g-fr-granola', 40],
+      ['g-fr-banane', 100],
+    ],
   },
   {
     id: 'chicken-rice-broccoli',
@@ -48,7 +63,12 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('The classic: chicken breast, basmati rice, broccoli and a drizzle of olive oil.'),
     tags: ['main'],
     minutes: 20,
-    ingredients: [['g-fr-blanc-de-poulet-cuit', 150], ['g-fr-riz-basmati-cuit', 200], ['g-fr-brocoli-cuit', 150], ['g-fr-huile-d-olive', 5]],
+    ingredients: [
+      ['g-fr-blanc-de-poulet-cuit', 150],
+      ['g-fr-riz-basmati-cuit', 200],
+      ['g-fr-brocoli-cuit', 150],
+      ['g-fr-huile-d-olive', 5],
+    ],
   },
   {
     id: 'salmon-sweet-potato',
@@ -56,7 +76,11 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Oven-baked salmon fillet with sweet potato and green beans.'),
     tags: ['main'],
     minutes: 25,
-    ingredients: [['g-fr-saumon-d-elevage-cuit', 125], ['g-fr-patate-douce-cuite', 200], ['g-fr-haricots-verts-cuits', 150]],
+    ingredients: [
+      ['g-fr-saumon-d-elevage-cuit', 125],
+      ['g-fr-patate-douce-cuite', 200],
+      ['g-fr-haricots-verts-cuits', 150],
+    ],
   },
   {
     id: 'beef-pasta-tomato',
@@ -64,7 +88,12 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Wholemeal pasta, 5 % fat minced beef and plain tomato sauce, grated cheese on top.'),
     tags: ['main'],
     minutes: 15,
-    ingredients: [['g-fr-pates-completes-cuites', 200], ['g-fr-buf-hache-5-mg-cru', 125], ['g-fr-coulis-sauce-tomate-nature', 120], ['g-fr-fromage-rape-emmental', 15]],
+    ingredients: [
+      ['g-fr-pates-completes-cuites', 200],
+      ['g-fr-buf-hache-5-mg-cru', 125],
+      ['g-fr-coulis-sauce-tomate-nature', 120],
+      ['g-fr-fromage-rape-emmental', 15],
+    ],
   },
   {
     id: 'tuna-quinoa-salad',
@@ -72,7 +101,13 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Cold salad: quinoa, tuna, cucumber, cherry tomatoes and a little olive oil.'),
     tags: ['main'],
     minutes: 10,
-    ingredients: [['g-fr-quinoa-cuit', 180], ['g-fr-thon-au-naturel-egoutte', 112], ['g-fr-concombre', 100], ['g-fr-tomates-cerises', 100], ['g-fr-huile-d-olive', 10]],
+    ingredients: [
+      ['g-fr-quinoa-cuit', 180],
+      ['g-fr-thon-au-naturel-egoutte', 112],
+      ['g-fr-concombre', 100],
+      ['g-fr-tomates-cerises', 100],
+      ['g-fr-huile-d-olive', 10],
+    ],
   },
   {
     id: 'chicken-wrap',
@@ -80,7 +115,13 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Wheat tortilla, chicken, salad, carrot and a spoon of hummus.'),
     tags: ['main'],
     minutes: 10,
-    ingredients: [['g-fr-tortilla-de-ble', 60], ['g-fr-blanc-de-poulet-cuit', 120], ['g-fr-salade-verte', 30], ['g-fr-carotte-crue', 50], ['g-fr-houmous', 30]],
+    ingredients: [
+      ['g-fr-tortilla-de-ble', 60],
+      ['g-fr-blanc-de-poulet-cuit', 120],
+      ['g-fr-salade-verte', 30],
+      ['g-fr-carotte-crue', 50],
+      ['g-fr-houmous', 30],
+    ],
   },
   {
     id: 'tofu-stir-fry',
@@ -88,7 +129,13 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Firm tofu and frozen stir-fry vegetables in a pan with soy sauce, on brown rice.'),
     tags: ['main', 'veggie'],
     minutes: 15,
-    ingredients: [['g-fr-tofu-ferme', 150], ['g-fr-legumes-pour-poelee-surgeles', 200], ['g-fr-riz-complet-cuit', 180], ['g-fr-sauce-soja', 15], ['g-fr-huile-d-olive', 5]],
+    ingredients: [
+      ['g-fr-tofu-ferme', 150],
+      ['g-fr-legumes-pour-poelee-surgeles', 200],
+      ['g-fr-riz-complet-cuit', 180],
+      ['g-fr-sauce-soja', 15],
+      ['g-fr-huile-d-olive', 5],
+    ],
   },
   {
     id: 'lentil-bowl',
@@ -96,7 +143,13 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Lentils, rice, red pepper, courgette and feta: complete plant and dairy protein.'),
     tags: ['main', 'veggie'],
     minutes: 15,
-    ingredients: [['g-fr-lentilles-cuites', 200], ['g-fr-riz-blanc-cuit', 100], ['g-fr-poivron-rouge', 80], ['g-fr-courgette', 100], ['g-fr-feta', 30]],
+    ingredients: [
+      ['g-fr-lentilles-cuites', 200],
+      ['g-fr-riz-blanc-cuit', 100],
+      ['g-fr-poivron-rouge', 80],
+      ['g-fr-courgette', 100],
+      ['g-fr-feta', 30],
+    ],
   },
   {
     id: 'ham-cheese-omelette',
@@ -104,7 +157,13 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Three-egg omelette with ham and emmental, a green salad on the side.'),
     tags: ['main'],
     minutes: 10,
-    ingredients: [['g-fr-uf-entier-cru', 150], ['g-fr-jambon-blanc-tranche', 40], ['g-fr-emmental-gruyere', 20], ['g-fr-salade-verte', 50], ['g-fr-pain-complet', 35]],
+    ingredients: [
+      ['g-fr-uf-entier-cru', 150],
+      ['g-fr-jambon-blanc-tranche', 40],
+      ['g-fr-emmental-gruyere', 20],
+      ['g-fr-salade-verte', 50],
+      ['g-fr-pain-complet', 35],
+    ],
   },
   {
     id: 'quark-fruit-almonds',
@@ -112,7 +171,12 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('A light, protein-rich snack.'),
     tags: ['snack', 'veggie'],
     minutes: 2,
-    ingredients: [['g-fr-fromage-blanc-0', 200], ['g-fr-fruits-rouges-surgeles', 100], ['g-fr-amandes', 15], ['g-fr-miel', 10]],
+    ingredients: [
+      ['g-fr-fromage-blanc-0', 200],
+      ['g-fr-fruits-rouges-surgeles', 100],
+      ['g-fr-amandes', 15],
+      ['g-fr-miel', 10],
+    ],
   },
   {
     id: 'protein-shake-banana-pb',
@@ -120,7 +184,12 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Blend whey, milk, a banana and a spoon of peanut butter.'),
     tags: ['snack', 'breakfast'],
     minutes: 3,
-    ingredients: [['g-fr-whey-proteine', 30], ['g-fr-lait-demi-ecreme', 250], ['g-fr-banane', 100], ['g-fr-beurre-de-cacahuete', 15]],
+    ingredients: [
+      ['g-fr-whey-proteine', 30],
+      ['g-fr-lait-demi-ecreme', 250],
+      ['g-fr-banane', 100],
+      ['g-fr-beurre-de-cacahuete', 15],
+    ],
   },
   {
     id: 'chickpea-salad',
@@ -128,7 +197,13 @@ export const MEAL_IDEAS: MealIdea[] = [
     description: tk('Chickpeas, cucumber, cherry tomatoes, feta and olive oil. No cooking.'),
     tags: ['main', 'veggie'],
     minutes: 5,
-    ingredients: [['g-fr-pois-chiches-en-conserve-egouttes', 200], ['g-fr-concombre', 100], ['g-fr-tomates-cerises', 100], ['g-fr-feta', 40], ['g-fr-huile-d-olive', 10]],
+    ingredients: [
+      ['g-fr-pois-chiches-en-conserve-egouttes', 200],
+      ['g-fr-concombre', 100],
+      ['g-fr-tomates-cerises', 100],
+      ['g-fr-feta', 40],
+      ['g-fr-huile-d-olive', 10],
+    ],
   },
 ];
 

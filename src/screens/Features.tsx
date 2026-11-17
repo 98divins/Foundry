@@ -43,7 +43,9 @@ export function FeatureOff() {
       <main className="page">
         <div className="empty-card">
           <p>{t('This feature is switched off.')}</p>
-          <button className="btn btn-primary" onClick={() => go('settings/features')}>{t('Features in test')}</button>
+          <button className="btn btn-primary" onClick={() => go('settings/features')}>
+            {t('Features in test')}
+          </button>
         </div>
       </main>
     </>

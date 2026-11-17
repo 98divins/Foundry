@@ -55,7 +55,12 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
         </button>
         <button
           className="link-btn"
-          onClick={() => navigator.clipboard?.writeText(this.report()).then(() => this.setState({ copied: true }), () => {})}
+          onClick={() =>
+            navigator.clipboard?.writeText(this.report()).then(
+              () => this.setState({ copied: true }),
+              () => {},
+            )
+          }
         >
           {this.state.copied ? t('Copied. Send it to us with what you were doing.') : t('Copy the error details')}
         </button>

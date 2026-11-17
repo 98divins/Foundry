@@ -75,10 +75,13 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
         />
         {added.length > 0 && (
           <div className="added-box" role="status">
-            <span>{t('Added:')}{' '}{added.slice(-3).join(', ')}
+            <span>
+              {t('Added:')} {added.slice(-3).join(', ')}
               {added.length > 3 && t(' and {n} more', { n: added.length - 3 })}
             </span>
-            <button className="btn btn-small btn-primary" onClick={() => back('n/' + date)}>{t('Done')}</button>
+            <button className="btn btn-small btn-primary" onClick={() => back('n/' + date)}>
+              {t('Done')}
+            </button>
           </div>
         )}
 
@@ -100,7 +103,10 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
         {mode === 'meals' && (
           <SavedMealsList
             onLog={(sm, servings) => {
-              setN((x) => ({ ...x, log: [...x.log, ...entriesFromMeal(sm, servings, date, meal, uid).map((e) => (date > dayKey() ? { ...e, planned: true } : e))] }));
+              setN((x) => ({
+                ...x,
+                log: [...x.log, ...entriesFromMeal(sm, servings, date, meal, uid).map((e) => (date > dayKey() ? { ...e, planned: true } : e))],
+              }));
               setAdded((a) => [...a, sm.name]);
             }}
           />
@@ -154,7 +160,11 @@ export function FoodRow({
       <button className="food-row" onClick={() => onPick(food)}>
         <span className="entry-text">
           <span className="entry-name">
-            {favorite && <span className="fav-star" aria-label={t('Favourite')}>★ </span>}
+            {favorite && (
+              <span className="fav-star" aria-label={t('Favourite')}>
+                ★{' '}
+              </span>
+            )}
             {food.name}
             {food.source === 'custom' && <span className="tag">{t('Mine')}</span>}
             {food.source === 'community' && <span className="tag tag-community">{t('Added by a member')}</span>}
@@ -162,7 +172,8 @@ export function FoodRow({
           </span>
           <span className="muted small">
             {food.brand && <>{food.brand} · </>}
-            {t('{kcal} kcal · P {p} · C {c} · F {f} per 100 g', { kcal: Math.round(p.kcal), p: fmtNum(p.protein), c: fmtNum(p.carbs), f: fmtNum(p.fat) })}</span>
+            {t('{kcal} kcal · P {p} · C {c} · F {f} per 100 g', { kcal: Math.round(p.kcal), p: fmtNum(p.protein), c: fmtNum(p.carbs), f: fmtNum(p.fat) })}
+          </span>
         </span>
         {!onQuick && <Icon name="plus" size={18} />}
       </button>
@@ -248,7 +259,10 @@ export function SearchFoods({
     const q = query.trim();
     if (q.length < 2) return;
     const id = setTimeout(() => {
-      searchCommunityFoods(q).then((foods) => setCommunity({ q, foods: foods.filter((f) => !local.some((l) => l.id === f.id)) }), () => {});
+      searchCommunityFoods(q).then(
+        (foods) => setCommunity({ q, foods: foods.filter((f) => !local.some((l) => l.id === f.id)) }),
+        () => {},
+      );
     }, 350);
     return () => clearTimeout(id);
   }, [query, local]);
@@ -392,7 +406,11 @@ export function SearchFoods({
           )}
         </>
       )}
-      <p className="muted small credit">{t('Basic foods: USDA FoodData Central via TempoLife (tempolife.app, CC-BY-4.0). Brands and barcodes: Open Food Facts (ODbL). Check the label when it matters.')}</p>
+      <p className="muted small credit">
+        {t(
+          'Basic foods: USDA FoodData Central via TempoLife (tempolife.app, CC-BY-4.0). Brands and barcodes: Open Food Facts (ODbL). Check the label when it matters.',
+        )}
+      </p>
     </>
   );
 }
@@ -421,7 +439,10 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
         } catch (e) {
           offError = e;
         }
-        food ??= await communityFoodByBarcode(c).then((f) => (f && hidden('food', f.id) ? null : f), () => null);
+        food ??= await communityFoodByBarcode(c).then(
+          (f) => (f && hidden('food', f.id) ? null : f),
+          () => null,
+        );
         if (!food && offError) throw offError;
         if (food) {
           setStatus(null);
@@ -441,7 +462,9 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
       {camera ? (
         <BarcodeScanner onCode={lookup} onClose={() => setCamera(false)} />
       ) : (
-        <button className="btn btn-wide" onClick={() => setCamera(true)}>{t('Scan with the camera')}</button>
+        <button className="btn btn-wide" onClick={() => setCamera(true)}>
+          {t('Scan with the camera')}
+        </button>
       )}
       <form
         className="barcode-form"
@@ -457,13 +480,17 @@ function ScanFood({ foods, onPick, onCreate }: { foods: Food[]; onPick: (f: Food
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
         />
-        <button className="btn btn-primary" type="submit" disabled={code.length < 8}>{t('Look up')}</button>
+        <button className="btn btn-primary" type="submit" disabled={code.length < 8}>
+          {t('Look up')}
+        </button>
       </form>
       {status && (
         <p className={status.error ? 'field-error' : 'muted small'}>
           {status.text}{' '}
           {status.notFound && (
-            <button className="link-btn" onClick={onCreate}>{t('Create it from the label')}</button>
+            <button className="link-btn" onClick={onCreate}>
+              {t('Create it from the label')}
+            </button>
           )}
         </p>
       )}
@@ -510,7 +537,8 @@ function QuickAdd({ onAdd }: { onAdd: (e: Omit<FoodEntry, 'id' | 'date' | 'meal'
         ))}
       </div>
       <p className="muted small">{t('Leave calories empty to compute them from the macros (4 / 4 / 9 kcal per gram).')}</p>
-      <button className="btn btn-primary btn-wide" type="submit" disabled={!kcal}>{t('Add')}{' '}{kcal ? `${kcal} kcal` : ''}
+      <button className="btn btn-primary btn-wide" type="submit" disabled={!kcal}>
+        {t('Add')} {kcal ? `${kcal} kcal` : ''}
       </button>
     </form>
   );
@@ -535,15 +563,18 @@ function CreateFood({ onCreate }: { onCreate: (f: Food, share: boolean) => void 
       onSubmit={(e) => {
         e.preventDefault();
         if (!name.trim() || kcal == null) return;
-        onCreate({
-          id: 'c-' + uid(),
-          name: name.trim(),
-          brand: brand.trim() || undefined,
-          per100: { kcal, protein: v.protein ?? 0, carbs: v.carbs ?? 0, fat: v.fat ?? 0 },
-          serving: serving.grams ? { label: serving.label.trim() || t('1 portion'), grams: serving.grams } : null,
-          source: 'custom',
-          barcode: barcode || undefined,
-        }, share);
+        onCreate(
+          {
+            id: 'c-' + uid(),
+            name: name.trim(),
+            brand: brand.trim() || undefined,
+            per100: { kcal, protein: v.protein ?? 0, carbs: v.carbs ?? 0, fat: v.fat ?? 0 },
+            serving: serving.grams ? { label: serving.label.trim() || t('1 portion'), grams: serving.grams } : null,
+            source: 'custom',
+            barcode: barcode || undefined,
+          },
+          share,
+        );
       }}
     >
       <label className="field">
@@ -581,12 +612,7 @@ function CreateFood({ onCreate }: { onCreate: (f: Food, share: boolean) => void 
         </label>
         <label className="field field-narrow">
           <span>{t('Portion (g)')}</span>
-          <NumInput
-            id="new-food-serving-g"
-            label={t('Portion in grams')}
-            value={serving.grams}
-            onChange={(g) => setServing((s) => ({ ...s, grams: g }))}
-          />
+          <NumInput id="new-food-serving-g" label={t('Portion in grams')} value={serving.grams} onChange={(g) => setServing((s) => ({ ...s, grams: g }))} />
         </label>
       </div>
       <label className="field">
@@ -597,7 +623,9 @@ function CreateFood({ onCreate }: { onCreate: (f: Food, share: boolean) => void 
         <input id="new-food-share" type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
         <span className="small">{t('Add it to the shared food list so every member can find it')}</span>
       </label>
-      <button className="btn btn-primary btn-wide" type="submit" disabled={!name.trim() || kcal == null}>{t('Create and choose the amount')}</button>
+      <button className="btn btn-primary btn-wide" type="submit" disabled={!name.trim() || kcal == null}>
+        {t('Create and choose the amount')}
+      </button>
     </form>
   );
 }
@@ -630,7 +658,12 @@ export function AmountSheet({
   const presets = [
     ...(food.serving ? [{ label: food.serving.label, g: food.serving.grams }] : []),
     { label: '100 g', g: 100 },
-    ...(food.serving ? [{ label: `2 × ${food.serving.label}`, g: food.serving.grams * 2 }] : [{ label: '50 g', g: 50 }, { label: '200 g', g: 200 }]),
+    ...(food.serving
+      ? [{ label: `2 × ${food.serving.label}`, g: food.serving.grams * 2 }]
+      : [
+          { label: '50 g', g: 50 },
+          { label: '200 g', g: 200 },
+        ]),
   ];
   return (
     <Sheet open onClose={onClose} title={food.name}>
@@ -653,12 +686,7 @@ export function AmountSheet({
         <div className="amount-head">
           <span className="muted small">{food.brand ?? ''}</span>
           {onToggleFavorite && (
-            <button
-              type="button"
-              className={'fav-btn' + (favorite ? ' on' : '')}
-              aria-pressed={favorite}
-              onClick={() => onToggleFavorite(food)}
-            >
+            <button type="button" className={'fav-btn' + (favorite ? ' on' : '')} aria-pressed={favorite} onClick={() => onToggleFavorite(food)}>
               {favorite ? t('★ Favourite') : t('☆ Add to favourites')}
             </button>
           )}
@@ -679,7 +707,9 @@ export function AmountSheet({
           <strong>{t('{0} kcal', { 0: m.kcal })}</strong> · {t('P {p} g · C {c} g · F {f} g', { p: fmtNum(m.protein), c: fmtNum(m.carbs), f: fmtNum(m.fat) })}
         </p>
         <div className="sheet-actions">
-          <button type="button" className="btn" onClick={onClose}>{t('Cancel')}</button>
+          <button type="button" className="btn" onClick={onClose}>
+            {t('Cancel')}
+          </button>
           <button type="submit" className="btn btn-primary" disabled={!grams}>
             {addLabel}
           </button>
@@ -690,7 +720,13 @@ export function AmountSheet({
           </button>
         )}
       </form>
-      <ReportSheet item={reporting ? { kind: 'food', target: food.id, label: food.name } : null} onClose={() => { setReporting(false); onClose(); }} />
+      <ReportSheet
+        item={reporting ? { kind: 'food', target: food.id, label: food.name } : null}
+        onClose={() => {
+          setReporting(false);
+          onClose();
+        }}
+      />
     </Sheet>
   );
 }

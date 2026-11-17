@@ -2,8 +2,7 @@ import { memoByRef } from './memo';
 import type { ExerciseKind, PRKind, SetEntry, Unit, Workout, WorkoutExercise } from './types';
 import { locale, t, getLang } from './i18n';
 
-export const uid = () =>
-  Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
 const LB_PER_KG = 2.20462262;
 
@@ -57,8 +56,7 @@ export function registerKinds(fn: (exerciseId: string) => ExerciseKind) {
 export const exerciseKind = (exerciseId: string) => kindOf(exerciseId);
 
 /** A set counts toward stats once it is completed, is not a warm-up and has something logged. */
-export const countsForStats = (s: SetEntry) =>
-  s.done && s.type !== 'warmup' && ((s.reps ?? 0) > 0 || (s.duration ?? 0) > 0 || (s.distance ?? 0) > 0);
+export const countsForStats = (s: SetEntry) => s.done && s.type !== 'warmup' && ((s.reps ?? 0) > 0 || (s.duration ?? 0) > 0 || (s.distance ?? 0) > 0);
 
 /** Whether a set holds something the user typed, for its kind (ignores hints and placeholders). */
 export function hasEntry(s: SetEntry, kind: ExerciseKind): boolean {
@@ -161,8 +159,7 @@ export function defaultWorkoutName(ts = Date.now()): string {
   return t('Evening workout');
 }
 
-export const finished = (workouts: Workout[]) =>
-  workouts.filter((w) => w.endedAt != null).sort((a, b) => a.startedAt - b.startedAt);
+export const finished = (workouts: Workout[]) => workouts.filter((w) => w.endedAt != null).sort((a, b) => a.startedAt - b.startedAt);
 
 export interface Session {
   workoutId: string;

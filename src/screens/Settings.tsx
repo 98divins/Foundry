@@ -18,7 +18,27 @@ import { LogoutButton } from '../components/LogoutButton';
 import { FriendsSettings, PublicIdentity } from './Friends';
 import { FeaturesPage } from './Features';
 
-type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'friends' | 'privacy' | 'privacy-settings' | 'community' | 'notice' | 'sources' | 'terms' | 'contact' | 'features';
+type Page =
+  | 'profile'
+  | 'account'
+  | 'workouts'
+  | 'units'
+  | 'language'
+  | 'theme'
+  | 'data'
+  | 'guide'
+  | 'faq'
+  | 'about'
+  | 'subscription'
+  | 'friends'
+  | 'privacy'
+  | 'privacy-settings'
+  | 'community'
+  | 'notice'
+  | 'sources'
+  | 'terms'
+  | 'contact'
+  | 'features';
 
 function Row({ icon, label, value, onClick }: { icon: IconName; label: string; value?: string; onClick: () => void }) {
   return (
@@ -53,7 +73,12 @@ export function SettingsHub() {
         <ul className="settings-list">
           <Row icon="user" label={t('Profile')} value={state.profile?.name || undefined} onClick={() => open('profile')} />
           <Row icon="lock" label={t('Account')} value={c.user?.email ?? undefined} onClick={() => open('account')} />
-          <Row icon="trophy" label={t('Subscription')} value={hasPro() ? (PRO_FREE_DURING_BETA ? t('Pro · beta') : t('Pro')) : t('Free')} onClick={() => open('subscription')} />
+          <Row
+            icon="trophy"
+            label={t('Subscription')}
+            value={hasPro() ? (PRO_FREE_DURING_BETA ? t('Pro · beta') : t('Pro')) : t('Free')}
+            onClick={() => open('subscription')}
+          />
         </ul>
         <h2 className="settings-group">{t('Friends')}</h2>
         <ul className="settings-list">
@@ -65,7 +90,12 @@ export function SettingsHub() {
           <Row icon="ruler" label={t('Units')} value={`${s.unit} · ${s.distanceUnit ?? 'km'} · ${s.heightUnit ?? 'cm'}`} onClick={() => open('units')} />
           <Row icon="globe" label={t('Language')} value={(s.appLang ?? detectLang()) === 'fr' ? 'Français' : 'English'} onClick={() => open('language')} />
           <Row icon="flame" label={t('Features in test')} onClick={() => open('features')} />
-          <Row icon="moon" label={t('Theme')} value={t({ system: 'System', light: 'Light', dark: 'Dark' }[s.theme ?? 'system']) + (s.accent || s.pureBlack ? ' · ' + t('Custom') : '')} onClick={() => open('theme')} />
+          <Row
+            icon="moon"
+            label={t('Theme')}
+            value={t({ system: 'System', light: 'Light', dark: 'Dark' }[s.theme ?? 'system']) + (s.accent || s.pureBlack ? ' · ' + t('Custom') : '')}
+            onClick={() => open('theme')}
+          />
         </ul>
         <h2 className="settings-group">{t('Data')}</h2>
         <ul className="settings-list">
@@ -86,9 +116,7 @@ export function SettingsHub() {
           <Row icon="info" label={t('Legal notice')} onClick={() => open('notice')} />
           <Row icon="info" label={t('Sources and licences')} onClick={() => open('sources')} />
         </ul>
-        {c.user && (
-          <LogoutButton className="btn btn-ghost-danger btn-wide settings-logout" />
-        )}
+        {c.user && <LogoutButton className="btn btn-ghost-danger btn-wide settings-logout" />}
       </main>
     </>
   );
@@ -206,7 +234,9 @@ function ProfilePage() {
             {p.avatar ? t('Change picture') : t('Add a picture')}
           </button>
           {p.avatar && (
-            <button className="link-btn muted" onClick={() => setP({ avatar: null })}>{t('Remove')}</button>
+            <button className="link-btn muted" onClick={() => setP({ avatar: null })}>
+              {t('Remove')}
+            </button>
           )}
         </div>
         <input
@@ -260,13 +290,16 @@ function AccountPage() {
   return (
     <Sub title={t('Account')}>
       <section className="panel">
-        <p>{t('Signed in as')}{' '}<strong>{c.user?.email}</strong>
+        <p>
+          {t('Signed in as')} <strong>{c.user?.email}</strong>
         </p>
         <p className={'sync-status ' + c.status}>
           <span className="sync-dot" aria-hidden="true" /> {status[c.status] ?? ''}
         </p>
         {c.error && <p className="field-error">{c.error}</p>}
-        <button className="btn btn-small" onClick={() => c.syncNow()} disabled={c.status === 'syncing'}>{t('Sync now')}</button>
+        <button className="btn btn-small" onClick={() => c.syncNow()} disabled={c.status === 'syncing'}>
+          {t('Sync now')}
+        </button>
       </section>
       <form
         className="panel form"
@@ -282,7 +315,9 @@ function AccountPage() {
           <span>{t('New email')}</span>
           <input id="acc-new-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <button className="btn" type="submit" disabled={!email.includes('@')}>{t('Change email')}</button>
+        <button className="btn" type="submit" disabled={!email.includes('@')}>
+          {t('Change email')}
+        </button>
       </form>
       <form
         className="panel form"
@@ -299,10 +334,14 @@ function AccountPage() {
           <input id="acc-new-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <span className="muted small">{t('At least 8 characters.')}</span>
         </label>
-        <button className="btn" type="submit" disabled={password.length < 8}>{t('Update password')}</button>
+        <button className="btn" type="submit" disabled={password.length < 8}>
+          {t('Update password')}
+        </button>
       </form>
       {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
-      <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete account')}</button>
+      <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>
+        {t('Delete account')}
+      </button>
       <Confirm
         open={confirmDelete}
         title={t('Delete your account?')}
@@ -342,13 +381,7 @@ function WorkoutPrefs() {
         </label>
         <label className="setting">
           <span>{t('Keep the screen on during a workout')}</span>
-          <input
-            id="keep-awake"
-            type="checkbox"
-            className="switch"
-            checked={s.keepAwake ?? true}
-            onChange={(e) => set('keepAwake', e.target.checked)}
-          />
+          <input id="keep-awake" type="checkbox" className="switch" checked={s.keepAwake ?? true} onChange={(e) => set('keepAwake', e.target.checked)} />
         </label>
         <label className="setting">
           <span>{t('First day of the week')}</span>
@@ -474,7 +507,12 @@ function ThemePage() {
       <h2 className="settings-group">{t('Accent colour')}</h2>
       <div className="swatches">
         {ACCENTS.map((a) => (
-          <button key={a.hex} className="swatch" aria-pressed={accent === a.hex} onClick={() => (a.hex === DEFAULT_ACCENT || requirePro('customTheme')) && set('accent', a.hex === DEFAULT_ACCENT ? undefined : a.hex)}>
+          <button
+            key={a.hex}
+            className="swatch"
+            aria-pressed={accent === a.hex}
+            onClick={() => (a.hex === DEFAULT_ACCENT || requirePro('customTheme')) && set('accent', a.hex === DEFAULT_ACCENT ? undefined : a.hex)}
+          >
             <span className="swatch-dot" style={{ background: a.hex }}>
               {accent === a.hex && <Icon name="check" size={18} />}
             </span>
@@ -484,7 +522,9 @@ function ThemePage() {
         <label className="swatch" data-on={!isPreset}>
           <span className="swatch-dot swatch-custom" style={!isPreset ? { background: accent } : undefined}>
             {!isPreset && <Icon name="check" size={18} />}
-          </span>{t('Custom')}<input type="color" value={accent} aria-label={t('Custom colour')} onChange={(e) => requirePro('customTheme') && set('accent', e.target.value)} />
+          </span>
+          {t('Custom')}
+          <input type="color" value={accent} aria-label={t('Custom colour')} onChange={(e) => requirePro('customTheme') && set('accent', e.target.value)} />
         </label>
       </div>
       <div className="theme-preview" aria-label={t('Preview')}>
@@ -493,18 +533,26 @@ function ThemePage() {
           <Avatar size={40} />
           <span className="theme-preview-text">
             <strong>{t('Push day')}</strong>
-            <span className="xp-bar"><span style={{ width: '65%', background: 'var(--accent)' }} /></span>
+            <span className="xp-bar">
+              <span style={{ width: '65%', background: 'var(--accent)' }} />
+            </span>
           </span>
-          <span className="chip on" aria-hidden="true">{t('Today')}</span>
+          <span className="chip on" aria-hidden="true">
+            {t('Today')}
+          </span>
         </div>
-        <span className="btn btn-primary btn-wide theme-preview-btn" aria-hidden="true">{t('Example button')}</span>
+        <span className="btn btn-primary btn-wide theme-preview-btn" aria-hidden="true">
+          {t('Example button')}
+        </span>
         <span className="muted small">{t('This is only a preview of the colours. Colours adjust a little in light and dark mode to stay readable.')}</span>
       </div>
 
       <h2 className="settings-group">{t('Background')}</h2>
       <section className="panel">
         <label className="setting">
-          <span>{t('Pure black')}<br />
+          <span>
+            {t('Pure black')}
+            <br />
             <span className="muted small">
               {s.theme === 'light'
                 ? t('Only in dark mode: switching it on also turns on dark mode.')
@@ -530,7 +578,9 @@ function ThemePage() {
             set('accent', undefined);
             set('pureBlack', undefined);
           }}
-        >{t('Reset to Foundry colours')}</button>
+        >
+          {t('Reset to Foundry colours')}
+        </button>
       )}
     </Sub>
   );
@@ -540,10 +590,23 @@ function ThemePage() {
 
 function GuidePage() {
   const steps: [string, string][] = [
-    [t('Set up your workouts'), t('Workout tab → New workout, or Explore programs for a ready-made plan. Group workouts in folders, pair exercises as supersets from their ⋯ menu, and set target reps like 8-12.')],
-    [t('Train'), t('Start a workout and tick each set as you go. The rest timer starts by itself. Empty sets reuse last time’s numbers when you tick them. Change a set’s type (warm-up, drop, failure) by tapping its number.')],
+    [
+      t('Set up your workouts'),
+      t(
+        'Workout tab → New workout, or Explore programs for a ready-made plan. Group workouts in folders, pair exercises as supersets from their ⋯ menu, and set target reps like 8-12.',
+      ),
+    ],
+    [
+      t('Train'),
+      t(
+        'Start a workout and tick each set as you go. The rest timer starts by itself. Empty sets reuse last time’s numbers when you tick them. Change a set’s type (warm-up, drop, failure) by tapping its number.',
+      ),
+    ],
     [t('Finish'), t('Tap Finish at any time: sets you filled in are saved, empty ones are dropped. Records are marked with a trophy.')],
-    [t('Eat to your goal'), t('Nutrition tab → set up your plan, weigh in most mornings and log your meals. Save meals you eat often and star your favourite foods.')],
+    [
+      t('Eat to your goal'),
+      t('Nutrition tab → set up your plan, weigh in most mornings and log your meals. Save meals you eat often and star your favourite foods.'),
+    ],
     [t('Weekly check-in'), t('Once a week Foundry compares what you ate with how your weight moved, and adjusts your calorie and macro targets.')],
     [t('Track progress'), t('Progress tab: strength trends per lift, weekly volume per muscle, records, and how your diet lines up with your strength.')],
   ];
@@ -564,12 +627,34 @@ function GuidePage() {
 function FaqPage() {
   const qa: [string, string][] = [
     [t('Where is my data stored?'), t('In your Foundry account, and on your phone for offline use. Each person can only read their own data.')],
-    [t('Can I use Foundry on several devices?'), t('Yes: log in with the same account and your data follows. If two devices changed things at the same time, Foundry asks which version to keep.')],
-    [t('Does it work without internet?'), t('Yes. Log workouts and meals offline; changes are sent to your account when you are back online. Brand search and barcode lookup need a connection.')],
-    [t('How is my expenditure estimated?'), t('It starts from your age, height, weight, sex and activity, then learns from your data: what you ate over the last 3 weeks against how your weight moved (about 7 700 kcal per kg). Days you mark as not fully logged are left out.')],
-    [t('Why didn’t the rest timer ring with the app closed?'), t('Phones pause web apps in the background. When you come back, Foundry shows when the rest ended. On iPhone, Guided Access keeps you in the app during a workout.')],
-    [t('How do I bring my Hevy history?'), t('In Hevy: Settings → Export & Import Data → Export workouts. Then in Foundry: Settings → Export & import data → Import CSV.')],
-    [t('How do I share a workout?'), t('Open the workout → Copy link, or a folder’s ⋯ menu → Copy share link. Whoever opens it can add the workouts to their Foundry.')],
+    [
+      t('Can I use Foundry on several devices?'),
+      t('Yes: log in with the same account and your data follows. If two devices changed things at the same time, Foundry asks which version to keep.'),
+    ],
+    [
+      t('Does it work without internet?'),
+      t('Yes. Log workouts and meals offline; changes are sent to your account when you are back online. Brand search and barcode lookup need a connection.'),
+    ],
+    [
+      t('How is my expenditure estimated?'),
+      t(
+        'It starts from your age, height, weight, sex and activity, then learns from your data: what you ate over the last 3 weeks against how your weight moved (about 7 700 kcal per kg). Days you mark as not fully logged are left out.',
+      ),
+    ],
+    [
+      t('Why didn’t the rest timer ring with the app closed?'),
+      t(
+        'Phones pause web apps in the background. When you come back, Foundry shows when the rest ended. On iPhone, Guided Access keeps you in the app during a workout.',
+      ),
+    ],
+    [
+      t('How do I bring my Hevy history?'),
+      t('In Hevy: Settings → Export & Import Data → Export workouts. Then in Foundry: Settings → Export & import data → Import CSV.'),
+    ],
+    [
+      t('How do I share a workout?'),
+      t('Open the workout → Copy link, or a folder’s ⋯ menu → Copy share link. Whoever opens it can add the workouts to their Foundry.'),
+    ],
   ];
   return (
     <Sub title={t('FAQ')}>
@@ -594,7 +679,11 @@ function AboutPage() {
       <div className="about-head">
         <Logo size={56} />
         <strong className="brand">{t('Foundry')}</strong>
-        <span className="muted small">{t('Version {0}', { 0: `${__APP_VERSION__} · ${new Date(parseInt(__BUILD_ID__.split('-').pop() ?? '0', 36)).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' })}` })}</span>
+        <span className="muted small">
+          {t('Version {0}', {
+            0: `${__APP_VERSION__} · ${new Date(parseInt(__BUILD_ID__.split('-').pop() ?? '0', 36)).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' })}`,
+          })}
+        </span>
       </div>
       <section className="panel">
         <h2 className="panel-title">{t('Credits')}</h2>
@@ -654,9 +743,20 @@ function SubscriptionPage() {
         <label className="toggle-line">
           <span>
             <strong>{t('Preview the free version')}</strong>
-            <span className="muted small">{t('Everything is unlocked during the beta. Switch this on to see the limits of a free account (on this device only).')}</span>
+            <span className="muted small">
+              {t('Everything is unlocked during the beta. Switch this on to see the limits of a free account (on this device only).')}
+            </span>
           </span>
-          <input id="preview-free" type="checkbox" className="switch" checked={free} onChange={(e) => { setPreviewFree(e.target.checked); setFree(e.target.checked); }} />
+          <input
+            id="preview-free"
+            type="checkbox"
+            className="switch"
+            checked={free}
+            onChange={(e) => {
+              setPreviewFree(e.target.checked);
+              setFree(e.target.checked);
+            }}
+          />
         </label>
       </section>
     </Sub>
@@ -680,20 +780,34 @@ function PrivacyPage() {
       <section className="panel">
         {consent ? (
           <>
-            <p className="small">{t('You agreed that Foundry processes your weight, measurements and food intake. Withdrawing erases them, on this phone and in your account. Your training stays.')}</p>
-            <button className="btn btn-ghost-danger btn-wide btn-wrap" onClick={() => setConfirm(true)}>{t('Withdraw my consent and erase my nutrition and weight data')}</button>
+            <p className="small">
+              {t(
+                'You agreed that Foundry processes your weight, measurements and food intake. Withdrawing erases them, on this phone and in your account. Your training stays.',
+              )}
+            </p>
+            <button className="btn btn-ghost-danger btn-wide btn-wrap" onClick={() => setConfirm(true)}>
+              {t('Withdraw my consent and erase my nutrition and weight data')}
+            </button>
           </>
         ) : (
           <>
-            <p className="small">{done ? t('Done: your nutrition and weight data were erased.') : t('You have not agreed to the processing of health data: nutrition is switched off.')}</p>
-            <button className="btn btn-wide" onClick={() => go('n')}>{t('Turn on nutrition')}</button>
+            <p className="small">
+              {done
+                ? t('Done: your nutrition and weight data were erased.')
+                : t('You have not agreed to the processing of health data: nutrition is switched off.')}
+            </p>
+            <button className="btn btn-wide" onClick={() => go('n')}>
+              {t('Turn on nutrition')}
+            </button>
           </>
         )}
       </section>
       <Confirm
         open={confirm}
         title={t('Erase your nutrition and weight data?')}
-        message={t('Your food log, weigh-ins, nutrition profile, targets and weekly check-ins are erased for good. Saved meals and your own foods stay. Export your data first if you may need it.')}
+        message={t(
+          'Your food log, weigh-ins, nutrition profile, targets and weekly check-ins are erased for good. Saved meals and your own foods stay. Export your data first if you may need it.',
+        )}
         confirmLabel={t('Withdraw and erase')}
         danger
         onConfirm={() => {
@@ -746,10 +860,21 @@ function ContactPage() {
       <p className="muted">{t('An idea, a bug, a question? Every message is read.')}</p>
       <section className="panel form">
         <span>{t('Subject')}</span>
-        <Segmented<FeedbackKind> label={t('Subject')} value={kind} onChange={setKind} options={(Object.keys(labels) as FeedbackKind[]).map((k) => ({ value: k, label: labels[k] }))} />
+        <Segmented<FeedbackKind>
+          label={t('Subject')}
+          value={kind}
+          onChange={setKind}
+          options={(Object.keys(labels) as FeedbackKind[]).map((k) => ({ value: k, label: labels[k] }))}
+        />
         <label className="field">
           <span>{t('Your message')}</span>
-          <textarea id="feedback" rows={6} value={text} placeholder={kind === 'bug' ? t('What happened, on which screen, and what you expected.') : t('Tell us what you think.')} onChange={(e) => setText(e.target.value)} />
+          <textarea
+            id="feedback"
+            rows={6}
+            value={text}
+            placeholder={kind === 'bug' ? t('What happened, on which screen, and what you expected.') : t('Tell us what you think.')}
+            onChange={(e) => setText(e.target.value)}
+          />
         </label>
         <button className="btn btn-primary btn-wide" disabled={!text.trim() || state === 'sending' || !c.user} onClick={send}>
           {state === 'sending' ? t('Sending…') : t('Send')}

@@ -33,15 +33,7 @@ export function useFilteredExercises({ query, muscle, equipment }: ExerciseFilte
   }, [exercises, query, muscle, equipment]);
 }
 
-export function ExerciseFilters({
-  value,
-  onChange,
-  idPrefix,
-}: {
-  value: ExerciseFilter;
-  onChange: (f: ExerciseFilter) => void;
-  idPrefix: string;
-}) {
+export function ExerciseFilters({ value, onChange, idPrefix }: { value: ExerciseFilter; onChange: (f: ExerciseFilter) => void; idPrefix: string }) {
   const { state } = useStore();
   const lang = state.settings.exerciseLang;
   return (
@@ -171,18 +163,20 @@ export function ExercisePicker({
         {!list.length && <li className="muted empty-line">{t('No exercise matches these filters.')}</li>}
       </ul>
       <div className="sheet-actions sticky-actions">
-        <button className="btn" onClick={() => canAdd('customExercises', customCount) && setCreating(true)}>{t('New exercise')}</button>
-        {!replacing && (
-        <button
-          className="btn btn-primary"
-          disabled={!picked.length}
-          onClick={() => {
-            onPick(picked);
-            close();
-          }}
-        >
-          {picked.length ? t('Add {n}', { n: picked.length }) : t('Add')}
+        <button className="btn" onClick={() => canAdd('customExercises', customCount) && setCreating(true)}>
+          {t('New exercise')}
         </button>
+        {!replacing && (
+          <button
+            className="btn btn-primary"
+            disabled={!picked.length}
+            onClick={() => {
+              onPick(picked);
+              close();
+            }}
+          >
+            {picked.length ? t('Add {n}', { n: picked.length }) : t('Add')}
+          </button>
         )}
       </div>
       <CreateExercise
@@ -217,9 +211,7 @@ export function CreateExercise({
   const [muscle, setMuscle] = useState<Muscle>('chest');
   const [equipment, setEquipment] = useState<Equipment>('barbell');
   const [kind, setKind] = useState<ExerciseKind>('weight');
-  const clash = exercises.some(
-    (e) => fold(e.name) === fold(name.trim()) || (e.nameFr && fold(e.nameFr) === fold(name.trim())),
-  );
+  const clash = exercises.some((e) => fold(e.name) === fold(name.trim()) || (e.nameFr && fold(e.nameFr) === fold(name.trim())));
 
   return (
     <Sheet open={open} onClose={onClose} title={t('New exercise')}>
@@ -271,8 +263,12 @@ export function CreateExercise({
           </select>
         </label>
         <div className="sheet-actions">
-          <button type="button" className="btn" onClick={onClose}>{t('Cancel')}</button>
-          <button type="submit" className="btn btn-primary" disabled={!name.trim() || clash}>{t('Create')}</button>
+          <button type="button" className="btn" onClick={onClose}>
+            {t('Cancel')}
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={!name.trim() || clash}>
+            {t('Create')}
+          </button>
         </div>
       </form>
     </Sheet>

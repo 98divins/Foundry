@@ -73,16 +73,15 @@ export function RoutineView({ id }: { id: string }) {
       <main className="page">
         {folder && <p className="muted small">{t('In folder {0}', { 0: folder.name })}</p>}
         <div className="routine-actions">
-          <button
-            className="btn btn-primary"
-            disabled={!!state.active || !r.exercises.length}
-            onClick={() => startWorkout(update, r)}
-          >
-            <Icon name="play" size={16} />{' '}{t('Start workout')}</button>
+          <button className="btn btn-primary" disabled={!!state.active || !r.exercises.length} onClick={() => startWorkout(update, r)}>
+            <Icon name="play" size={16} /> {t('Start workout')}
+          </button>
           <button className="btn" onClick={() => go('r/' + r.id)}>
-            <Icon name="edit" size={16} />{' '}{t('Edit')}</button>
+            <Icon name="edit" size={16} /> {t('Edit')}
+          </button>
           <button className="btn" onClick={() => share(undefined, [r])}>
-            <Icon name="link" size={16} />{' '}{t('Copy link')}</button>
+            <Icon name="link" size={16} /> {t('Copy link')}
+          </button>
         </div>
         {state.active && <p className="muted small">{t('Finish the workout in progress to start this workout.')}</p>}
         <ShareResult shared={shared} onClose={clear} />

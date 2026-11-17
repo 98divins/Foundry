@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { go, useNow } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { Routine, RoutineFolder, State, Workout } from '../types';
-import { defaultWorkoutName, fmtClock, fmtDate, fmtDuration, fmtVolume, uid, weekStart, workoutVolume , workoutElapsed } from '../utils';
+import { defaultWorkoutName, fmtClock, fmtDate, fmtDuration, fmtVolume, uid, weekStart, workoutVolume, workoutElapsed } from '../utils';
 import { Confirm, Header, Icon, Logo, Sheet } from '../components/ui';
 import { codeFromText, liveSetFromRoutine } from '../routines';
 import { ShareResult, useShareLink } from '../components/Share';
@@ -37,11 +37,9 @@ export function startWorkout(update: (fn: (s: State) => State) => void, routine?
 }
 
 /** The folder a routine shows in; one whose folder no longer exists counts as unfiled. */
-const folderOf = (r: Routine, folders: RoutineFolder[]) =>
-  r.folderId && folders.some((f) => f.id === r.folderId) ? r.folderId : undefined;
+const folderOf = (r: Routine, folders: RoutineFolder[]) => (r.folderId && folders.some((f) => f.id === r.folderId) ? r.folderId : undefined);
 
-const inFolder = (r: Routine, folders: RoutineFolder[], folderId: string | undefined) =>
-  folderOf(r, folders) === folderId;
+const inFolder = (r: Routine, folders: RoutineFolder[], folderId: string | undefined) => folderOf(r, folders) === folderId;
 
 export function WorkoutTab() {
   const { state, update } = useStore();
@@ -95,15 +93,12 @@ export function WorkoutTab() {
     if (!name) return;
     update((s) => ({
       ...s,
-      folders: folderForm.id
-        ? s.folders.map((f) => (f.id === folderForm.id ? { ...f, name } : f))
-        : [...s.folders, { id: uid(), name }],
+      folders: folderForm.id ? s.folders.map((f) => (f.id === folderForm.id ? { ...f, name } : f)) : [...s.folders, { id: uid(), name }],
     }));
     setFolderForm(null);
   };
 
-  const toggleFolder = (id: string) =>
-    update((s) => ({ ...s, folders: s.folders.map((f) => (f.id === id ? { ...f, collapsed: !f.collapsed } : f)) }));
+  const toggleFolder = (id: string) => update((s) => ({ ...s, folders: s.folders.map((f) => (f.id === id ? { ...f, collapsed: !f.collapsed } : f)) }));
 
   const moveFolder = (id: string, dir: -1 | 1) =>
     update((s) => {
@@ -119,9 +114,7 @@ export function WorkoutTab() {
     update((s) => ({
       ...s,
       folders: s.folders.filter((x) => x.id !== f.id),
-      routines: withRoutines
-        ? s.routines.filter((r) => r.folderId !== f.id)
-        : s.routines.map((r) => (r.folderId === f.id ? { ...r, folderId: undefined } : r)),
+      routines: withRoutines ? s.routines.filter((r) => r.folderId !== f.id) : s.routines.map((r) => (r.folderId === f.id ? { ...r, folderId: undefined } : r)),
     }));
     setFolderDelete(null);
   };
@@ -175,7 +168,8 @@ export function WorkoutTab() {
       <Header
         title={
           <span className="brand">
-            <Logo />{' '}{t('Foundry')}</span>
+            <Logo /> {t('Foundry')}
+          </span>
         }
         right={<StreakChip />}
       />
@@ -186,7 +180,9 @@ export function WorkoutTab() {
               <span className="eyebrow">{t('In progress')}</span>
               <h2 className="hero-title">{active.name}</h2>
               <p className="hero-clock">{fmtClock(workoutElapsed(active, now) / 1000)}</p>
-              <button className="btn btn-primary btn-wide" onClick={() => go('active')}>{t('Resume workout')}</button>
+              <button className="btn btn-primary btn-wide" onClick={() => go('active')}>
+                {t('Resume workout')}
+              </button>
             </>
           ) : (
             <>
@@ -194,14 +190,23 @@ export function WorkoutTab() {
               <h2 className="hero-title">
                 {thisWeek.length} {thisWeek.length === 1 ? t('workout') : t('workouts')}
                 <span className="muted hero-sub">
-                  {t('{0} · {1} lifted', { 0: ' ', 1: fmtVolume(thisWeek.reduce((t, w) => t + workoutVolume(w), 0), state.settings.unit) })}</span>
+                  {t('{0} · {1} lifted', {
+                    0: ' ',
+                    1: fmtVolume(
+                      thisWeek.reduce((t, w) => t + workoutVolume(w), 0),
+                      state.settings.unit,
+                    ),
+                  })}
+                </span>
               </h2>
               {last && (
                 <button className="link-btn muted small hero-last" onClick={() => go('history')}>
-                  {t('Last: {0}, {1} ({2})', { 0: last.name, 1: fmtDate(last.startedAt), 2: fmtDuration(last.endedAt! - last.startedAt) })} ›</button>
+                  {t('Last: {0}, {1} ({2})', { 0: last.name, 1: fmtDate(last.startedAt), 2: fmtDuration(last.endedAt! - last.startedAt) })} ›
+                </button>
               )}
               <button className="btn btn-primary btn-wide" onClick={() => (routines.length ? setChoosing(true) : startWorkout(update))}>
-                <Icon name="play" size={18} />{' '}{routines.length ? t('Start one of my workouts') : t('Start an empty workout')}</button>
+                <Icon name="play" size={18} /> {routines.length ? t('Start one of my workouts') : t('Start an empty workout')}
+              </button>
             </>
           )}
         </section>
@@ -210,82 +215,118 @@ export function WorkoutTab() {
           <h2>{t('My workouts')}</h2>
           <div className="section-actions">
             <button className="btn btn-small btn-primary" onClick={() => canAdd('routines', state.routines.length) && setNewIn({})}>
-              <Icon name="plus" size={16} />{' '}{t('New')}</button>
+              <Icon name="plus" size={16} /> {t('New')}
+            </button>
             <button className="btn btn-small" onClick={() => canAdd('folders', state.folders.length) && setFolderForm({ name: '' })}>
-              <Icon name="folder" size={16} />{' '}{t('Folder')}</button>
+              <Icon name="folder" size={16} /> {t('Folder')}
+            </button>
           </div>
         </div>
         {active && routines.length > 0 && <p className="muted small">{t('Finish the workout in progress to start a workout.')}</p>}
         <Sheet open={choosing} onClose={() => setChoosing(false)} title={t('Start a workout')} tall>
-        <div className="menu">
-          {routines.map((r) => (
-            <button key={r.id} className="menu-item routine-kind" disabled={!!active} onClick={() => { setChoosing(false); startWorkout(update, r); }}>
-              <Icon name={r.interval ? 'timer' : 'dumbbell'} size={22} />
-              <span>
-                <strong>{r.name}</strong>
-                <span className="muted small">
-                  {r.interval ? planSummary(r.interval, t) : r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ') || t('No exercises yet')}
+          <div className="menu">
+            {routines.map((r) => (
+              <button
+                key={r.id}
+                className="menu-item routine-kind"
+                disabled={!!active}
+                onClick={() => {
+                  setChoosing(false);
+                  startWorkout(update, r);
+                }}
+              >
+                <Icon name={r.interval ? 'timer' : 'dumbbell'} size={22} />
+                <span>
+                  <strong>{r.name}</strong>
+                  <span className="muted small">
+                    {r.interval ? planSummary(r.interval, t) : r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ') || t('No exercises yet')}
+                  </span>
                 </span>
-              </span>
-            </button>
-          ))}
-          <button className="menu-item routine-kind" disabled={!!active} onClick={() => { setChoosing(false); startWorkout(update); }}>
-            <Icon name="plus" size={22} />
-            <span>
-              <strong>{t('Empty workout')}</strong>
-              <span className="muted small">{t('Add exercises as you go.')}</span>
-            </span>
-          </button>
-        </div>
-      </Sheet>
-      <Sheet open={more} onClose={() => setMore(false)} title={t('More')}>
-        <div className="menu">
-          {([
-            ['history', t('History'), t('Every workout you finished, and log a past one.'), () => go('history')],
-            ['list', t('Exercises'), t('The exercise library, and your own exercises.'), () => go('exercises')],
-            ['search', t('Explore programs'), t('Ready-made programs to copy into My workouts.'), () => go('explore')],
-            ['link', t('Import from a link'), t('Add workouts a friend shared with you.'), () => setImporting(true)],
-          ] as const).map(([icon, label, text, run]) => (
-            <button key={icon} className="menu-item routine-kind" onClick={() => { setMore(false); run(); }}>
-              <Icon name={icon} size={22} />
+              </button>
+            ))}
+            <button
+              className="menu-item routine-kind"
+              disabled={!!active}
+              onClick={() => {
+                setChoosing(false);
+                startWorkout(update);
+              }}
+            >
+              <Icon name="plus" size={22} />
               <span>
-                <strong>{label}</strong>
-                <span className="muted small">{text}</span>
+                <strong>{t('Empty workout')}</strong>
+                <span className="muted small">{t('Add exercises as you go.')}</span>
               </span>
             </button>
-          ))}
-        </div>
-      </Sheet>
-      <Sheet open={!!newIn} onClose={() => setNewIn(null)} title={t('New workout')}>
-        <div className="menu">
-          <button className="menu-item routine-kind" onClick={() => { const f = newIn?.folderId; setNewIn(null); go('r/new' + (f ? '/' + f : '')); }}>
-            <Icon name="dumbbell" size={22} />
-            <span>
-              <strong>{t('Strength training')}</strong>
-              <span className="muted small">{t('Exercises with sets, reps and weights.')}</span>
-            </span>
-          </button>
-          <button className="menu-item routine-kind" onClick={() => { const f = newIn?.folderId; setNewIn(null); go('ti/new' + (f ? '/' + f : '')); }}>
-            <Icon name="timer" size={22} />
-            <span>
-              <strong>{t('Intervals (timer)')}</strong>
-              <span className="muted small">{t('HIIT, Tabata, circuits, run/walk: work, rest, rounds and cycles.')}</span>
-            </span>
-          </button>
-        </div>
-      </Sheet>
-      <ShareResult shared={shared} onClose={clear} />
+          </div>
+        </Sheet>
+        <Sheet open={more} onClose={() => setMore(false)} title={t('More')}>
+          <div className="menu">
+            {(
+              [
+                ['history', t('History'), t('Every workout you finished, and log a past one.'), () => go('history')],
+                ['list', t('Exercises'), t('The exercise library, and your own exercises.'), () => go('exercises')],
+                ['search', t('Explore programs'), t('Ready-made programs to copy into My workouts.'), () => go('explore')],
+                ['link', t('Import from a link'), t('Add workouts a friend shared with you.'), () => setImporting(true)],
+              ] as const
+            ).map(([icon, label, text, run]) => (
+              <button
+                key={icon}
+                className="menu-item routine-kind"
+                onClick={() => {
+                  setMore(false);
+                  run();
+                }}
+              >
+                <Icon name={icon} size={22} />
+                <span>
+                  <strong>{label}</strong>
+                  <span className="muted small">{text}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </Sheet>
+        <Sheet open={!!newIn} onClose={() => setNewIn(null)} title={t('New workout')}>
+          <div className="menu">
+            <button
+              className="menu-item routine-kind"
+              onClick={() => {
+                const f = newIn?.folderId;
+                setNewIn(null);
+                go('r/new' + (f ? '/' + f : ''));
+              }}
+            >
+              <Icon name="dumbbell" size={22} />
+              <span>
+                <strong>{t('Strength training')}</strong>
+                <span className="muted small">{t('Exercises with sets, reps and weights.')}</span>
+              </span>
+            </button>
+            <button
+              className="menu-item routine-kind"
+              onClick={() => {
+                const f = newIn?.folderId;
+                setNewIn(null);
+                go('ti/new' + (f ? '/' + f : ''));
+              }}
+            >
+              <Icon name="timer" size={22} />
+              <span>
+                <strong>{t('Intervals (timer)')}</strong>
+                <span className="muted small">{t('HIIT, Tabata, circuits, run/walk: work, rest, rounds and cycles.')}</span>
+              </span>
+            </button>
+          </div>
+        </Sheet>
+        <ShareResult shared={shared} onClose={clear} />
 
         {folders.map((f) => {
           const list = routines.filter((r) => inFolder(r, folders, f.id));
           return (
             <section key={f.id} className="folder">
               <div className="folder-head">
-                <button
-                  className="folder-toggle"
-                  aria-expanded={!f.collapsed}
-                  onClick={() => toggleFolder(f.id)}
-                >
+                <button className="folder-toggle" aria-expanded={!f.collapsed} onClick={() => toggleFolder(f.id)}>
                   <span className={'folder-chevron' + (f.collapsed ? '' : ' open')}>
                     <Icon name="chevron" size={16} />
                   </span>
@@ -300,7 +341,7 @@ export function WorkoutTab() {
                 <>
                   {renderRoutines(list)}
                   <button className="add-in-folder" onClick={() => canAdd('routines', state.routines.length) && setNewIn({ folderId: f.id })}>
-                    <Icon name="plus" size={15} />{' '}{t('New workout in')}{' '}{f.name}
+                    <Icon name="plus" size={15} /> {t('New workout in')} {f.name}
                   </button>
                 </>
               )}
@@ -346,7 +387,9 @@ export function WorkoutTab() {
             />
           </label>
           <div className="sheet-actions">
-            <button type="button" className="btn" onClick={() => setFolderForm(null)}>{t('Cancel')}</button>
+            <button type="button" className="btn" onClick={() => setFolderForm(null)}>
+              {t('Cancel')}
+            </button>
             <button type="submit" className="btn btn-primary" disabled={!folderForm?.name.trim()}>
               {folderForm?.id ? t('Rename') : t('Create')}
             </button>
@@ -358,16 +401,27 @@ export function WorkoutTab() {
       <Sheet open={!!folderMenu} onClose={() => setFolderMenu(null)} title={folderMenu?.name}>
         {folderMenu && (
           <div className="menu">
-            <button className="menu-item" onClick={() => { if (canAdd('routines', state.routines.length)) setNewIn({ folderId: folderMenu.id }); setFolderMenu(null); }}>
-              <Icon name="plus" size={18} />{' '}{t('New workout in this folder')}</button>
             <button
               className="menu-item"
               onClick={() => {
-                share(folderMenu, routines.filter((r) => inFolder(r, folders, folderMenu.id)));
+                if (canAdd('routines', state.routines.length)) setNewIn({ folderId: folderMenu.id });
                 setFolderMenu(null);
               }}
             >
-              <Icon name="link" size={18} />{' '}{t('Copy share link')}</button>
+              <Icon name="plus" size={18} /> {t('New workout in this folder')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                share(
+                  folderMenu,
+                  routines.filter((r) => inFolder(r, folders, folderMenu.id)),
+                );
+                setFolderMenu(null);
+              }}
+            >
+              <Icon name="link" size={18} /> {t('Copy share link')}
+            </button>
             <button
               className="menu-item"
               disabled={routines.filter((r) => inFolder(r, folders, folderMenu.id)).length < 2}
@@ -377,15 +431,46 @@ export function WorkoutTab() {
                 setFolderMenu(null);
               }}
             >
-              <Icon name="swap" size={18} />{' '}{t('Merge workouts')}</button>
-            <button className="menu-item" onClick={() => { setFolderForm({ id: folderMenu.id, name: folderMenu.name }); setFolderMenu(null); }}>
-              <Icon name="edit" size={18} />{' '}{t('Rename')}</button>
-            <button className="menu-item" disabled={folders[0]?.id === folderMenu.id} onClick={() => { moveFolder(folderMenu.id, -1); setFolderMenu(null); }}>
-              <Icon name="up" size={18} />{' '}{t('Move up')}</button>
-            <button className="menu-item" disabled={folders[folders.length - 1]?.id === folderMenu.id} onClick={() => { moveFolder(folderMenu.id, 1); setFolderMenu(null); }}>
-              <Icon name="down" size={18} />{' '}{t('Move down')}</button>
-            <button className="menu-item danger" onClick={() => { setFolderDelete(folderMenu); setFolderMenu(null); }}>
-              <Icon name="trash" size={18} />{' '}{t('Delete folder')}</button>
+              <Icon name="swap" size={18} /> {t('Merge workouts')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                setFolderForm({ id: folderMenu.id, name: folderMenu.name });
+                setFolderMenu(null);
+              }}
+            >
+              <Icon name="edit" size={18} /> {t('Rename')}
+            </button>
+            <button
+              className="menu-item"
+              disabled={folders[0]?.id === folderMenu.id}
+              onClick={() => {
+                moveFolder(folderMenu.id, -1);
+                setFolderMenu(null);
+              }}
+            >
+              <Icon name="up" size={18} /> {t('Move up')}
+            </button>
+            <button
+              className="menu-item"
+              disabled={folders[folders.length - 1]?.id === folderMenu.id}
+              onClick={() => {
+                moveFolder(folderMenu.id, 1);
+                setFolderMenu(null);
+              }}
+            >
+              <Icon name="down" size={18} /> {t('Move down')}
+            </button>
+            <button
+              className="menu-item danger"
+              onClick={() => {
+                setFolderDelete(folderMenu);
+                setFolderMenu(null);
+              }}
+            >
+              <Icon name="trash" size={18} /> {t('Delete folder')}
+            </button>
           </div>
         )}
       </Sheet>
@@ -429,46 +514,97 @@ export function WorkoutTab() {
 
       {/* Folder delete: keep or remove its routines */}
       <Sheet open={!!folderDelete} onClose={() => setFolderDelete(null)} title={t('Delete folder?')}>
-        {folderDelete && (() => {
-          const n = routines.filter((r) => r.folderId === folderDelete.id).length;
-          return (
-            <>
-              <p className="muted sheet-text">
-                {n
-                  ? tp(n, '“{name}” holds {n} workout. Keep it (it moves out of the folder) or delete it with the folder. Past workouts stay in your history either way.', '“{name}” holds {n} workouts. Keep them (they move out of the folder) or delete them with the folder. Past workouts stay in your history either way.', { name: folderDelete.name })
-                  : t('“{name}” is empty.', { name: folderDelete.name })}
-              </p>
-              <div className="menu">
-                <button className="btn btn-wide" onClick={() => deleteFolder(folderDelete, false)}>
-                  {n ? t('Delete folder, keep workouts') : t('Delete folder')}
-                </button>
-                {n > 0 && (
-                  <button className="btn btn-danger btn-wide" onClick={() => deleteFolder(folderDelete, true)}>{tp(n, 'Delete folder and its {n} workout', 'Delete folder and its {n} workouts')}
+        {folderDelete &&
+          (() => {
+            const n = routines.filter((r) => r.folderId === folderDelete.id).length;
+            return (
+              <>
+                <p className="muted sheet-text">
+                  {n
+                    ? tp(
+                        n,
+                        '“{name}” holds {n} workout. Keep it (it moves out of the folder) or delete it with the folder. Past workouts stay in your history either way.',
+                        '“{name}” holds {n} workouts. Keep them (they move out of the folder) or delete them with the folder. Past workouts stay in your history either way.',
+                        { name: folderDelete.name },
+                      )
+                    : t('“{name}” is empty.', { name: folderDelete.name })}
+                </p>
+                <div className="menu">
+                  <button className="btn btn-wide" onClick={() => deleteFolder(folderDelete, false)}>
+                    {n ? t('Delete folder, keep workouts') : t('Delete folder')}
                   </button>
-                )}
-                <button className="btn btn-ghost btn-wide" onClick={() => setFolderDelete(null)}>{t('Cancel')}</button>
-              </div>
-            </>
-          );
-        })()}
+                  {n > 0 && (
+                    <button className="btn btn-danger btn-wide" onClick={() => deleteFolder(folderDelete, true)}>
+                      {tp(n, 'Delete folder and its {n} workout', 'Delete folder and its {n} workouts')}
+                    </button>
+                  )}
+                  <button className="btn btn-ghost btn-wide" onClick={() => setFolderDelete(null)}>
+                    {t('Cancel')}
+                  </button>
+                </div>
+              </>
+            );
+          })()}
       </Sheet>
 
       {/* Routine options */}
       <Sheet open={!!routineMenu} onClose={() => setRoutineMenu(null)} title={routineMenu?.name}>
         {routineMenu && (
           <div className="menu">
-            <button className="menu-item" onClick={() => { go('r/' + routineMenu.id); setRoutineMenu(null); }}>
-              <Icon name="edit" size={18} />{' '}{t('Edit workout')}</button>
-            <button className="menu-item" onClick={() => { duplicate(routineMenu); setRoutineMenu(null); }}>
-              <Icon name="copy" size={18} />{' '}{t('Duplicate')}</button>
-            <button className="menu-item" onClick={() => { setMoving(routineMenu); setRoutineMenu(null); }}>
-              <Icon name="folder" size={18} />{' '}{t('Move to folder')}</button>
-            <button className="menu-item" onClick={() => { moveRoutine(routineMenu, -1); setRoutineMenu(null); }}>
-              <Icon name="up" size={18} />{' '}{t('Move up')}</button>
-            <button className="menu-item" onClick={() => { moveRoutine(routineMenu, 1); setRoutineMenu(null); }}>
-              <Icon name="down" size={18} />{' '}{t('Move down')}</button>
-            <button className="menu-item danger" onClick={() => { setRoutineDelete(routineMenu); setRoutineMenu(null); }}>
-              <Icon name="trash" size={18} />{' '}{t('Delete workout')}</button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                go('r/' + routineMenu.id);
+                setRoutineMenu(null);
+              }}
+            >
+              <Icon name="edit" size={18} /> {t('Edit workout')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                duplicate(routineMenu);
+                setRoutineMenu(null);
+              }}
+            >
+              <Icon name="copy" size={18} /> {t('Duplicate')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                setMoving(routineMenu);
+                setRoutineMenu(null);
+              }}
+            >
+              <Icon name="folder" size={18} /> {t('Move to folder')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                moveRoutine(routineMenu, -1);
+                setRoutineMenu(null);
+              }}
+            >
+              <Icon name="up" size={18} /> {t('Move up')}
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                moveRoutine(routineMenu, 1);
+                setRoutineMenu(null);
+              }}
+            >
+              <Icon name="down" size={18} /> {t('Move down')}
+            </button>
+            <button
+              className="menu-item danger"
+              onClick={() => {
+                setRoutineDelete(routineMenu);
+                setRoutineMenu(null);
+              }}
+            >
+              <Icon name="trash" size={18} /> {t('Delete workout')}
+            </button>
           </div>
         )}
       </Sheet>
@@ -488,10 +624,7 @@ export function WorkoutTab() {
                     // Moved routines go to the end of their new folder.
                     update((s) => ({
                       ...s,
-                      routines: [
-                        ...s.routines.filter((r) => r.id !== moving.id),
-                        { ...moving, folderId: f.id },
-                      ],
+                      routines: [...s.routines.filter((r) => r.id !== moving.id), { ...moving, folderId: f.id }],
                     }));
                     setMoving(null);
                   }}
@@ -500,8 +633,15 @@ export function WorkoutTab() {
                 </button>
               );
             })}
-            <button className="menu-item" onClick={() => { setMoving(null); if (canAdd('folders', state.folders.length)) setFolderForm({ name: '' }); }}>
-              <Icon name="plus" size={18} />{' '}{t('New folder…')}</button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                setMoving(null);
+                if (canAdd('folders', state.folders.length)) setFolderForm({ name: '' });
+              }}
+            >
+              <Icon name="plus" size={18} /> {t('New folder…')}
+            </button>
           </div>
         )}
       </Sheet>
@@ -520,18 +660,16 @@ export function WorkoutTab() {
         >
           <label className="field">
             <span>{t('Share link')}</span>
-            <textarea
-              id="import-link"
-              rows={3}
-              placeholder={t('Paste a Foundry workout link')}
-              value={pasted}
-              onChange={(e) => setPasted(e.target.value)}
-            />
+            <textarea id="import-link" rows={3} placeholder={t('Paste a Foundry workout link')} value={pasted} onChange={(e) => setPasted(e.target.value)} />
           </label>
           {pasted && !pastedCode && <p className="field-error">{t('This is not a Foundry workout link.')}</p>}
           <div className="sheet-actions">
-            <button type="button" className="btn" onClick={() => setImporting(false)}>{t('Cancel')}</button>
-            <button type="submit" className="btn btn-primary" disabled={!pastedCode}>{t('Continue')}</button>
+            <button type="button" className="btn" onClick={() => setImporting(false)}>
+              {t('Cancel')}
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={!pastedCode}>
+              {t('Continue')}
+            </button>
           </div>
         </form>
       </Sheet>
@@ -549,32 +687,24 @@ export function WorkoutTab() {
   );
 }
 
-function RoutineRow({
-  r,
-  disabled,
-  onStart,
-  onMenu,
-}: {
-  r: Routine;
-  disabled: boolean;
-  onStart: () => void;
-  onMenu: () => void;
-}) {
+function RoutineRow({ r, disabled, onStart, onMenu }: { r: Routine; disabled: boolean; onStart: () => void; onMenu: () => void }) {
   const { exMap } = useStore();
   return (
     <li className="routine">
       <button className="routine-body" onClick={() => go((r.interval ? 'ti/' : 'rv/') + r.id)} aria-label={t('Open {name}', { name: r.name })}>
-        <span className="routine-name">{r.interval && <Icon name="timer" size={15} />} {r.name}</span>
+        <span className="routine-name">
+          {r.interval && <Icon name="timer" size={15} />} {r.name}
+        </span>
         <span className="muted small routine-ex">
-          {r.interval
-            ? planSummary(r.interval, t)
-            : r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ') || t('No exercises yet')}
+          {r.interval ? planSummary(r.interval, t) : r.exercises.map((we) => exerciseName(exMap, we.exerciseId)).join(', ') || t('No exercises yet')}
         </span>
       </button>
       <button className="icon-btn" aria-label={t('Options for {name}', { name: r.name })} onClick={onMenu}>
         <Icon name="dots" />
       </button>
-      <button className="btn btn-small btn-primary" disabled={disabled} onClick={onStart}>{t('Start')}</button>
+      <button className="btn btn-small btn-primary" disabled={disabled} onClick={onStart}>
+        {t('Start')}
+      </button>
     </li>
   );
 }

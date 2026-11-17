@@ -17,14 +17,26 @@ export function ProSheet() {
         <div className="form pro-sheet">
           <p>{t(PRO_COPY[feature])}</p>
           <ul className="pro-perks small">
-            <li><Icon name="check" size={16} /> {t('Adaptive targets and weekly check-ins')}</li>
-            <li><Icon name="check" size={16} /> {t('Unlimited workouts, folders and saved meals')}</li>
-            <li><Icon name="check" size={16} /> {t('Full history, advanced statistics, diet × strength')}</li>
-            <li><Icon name="check" size={16} /> {t('Head-to-head with friends, long leaderboards')}</li>
-            <li><Icon name="check" size={16} /> {t('Plan meals a month ahead, Excel export, custom colours')}</li>
+            <li>
+              <Icon name="check" size={16} /> {t('Adaptive targets and weekly check-ins')}
+            </li>
+            <li>
+              <Icon name="check" size={16} /> {t('Unlimited workouts, folders and saved meals')}
+            </li>
+            <li>
+              <Icon name="check" size={16} /> {t('Full history, advanced statistics, diet × strength')}
+            </li>
+            <li>
+              <Icon name="check" size={16} /> {t('Head-to-head with friends, long leaderboards')}
+            </li>
+            <li>
+              <Icon name="check" size={16} /> {t('Plan meals a month ahead, Excel export, custom colours')}
+            </li>
           </ul>
           {PRO_FREE_DURING_BETA ? (
-            <p className="muted small">{t('Subscriptions are not open yet. You are previewing the free version: turn it off in Settings → Subscription to get everything back.')}</p>
+            <p className="muted small">
+              {t('Subscriptions are not open yet. You are previewing the free version: turn it off in Settings → Subscription to get everything back.')}
+            </p>
           ) : null}
           <button className="btn btn-primary btn-wide" onClick={() => setFeature(null)}>
             {t('Got it')}

@@ -27,7 +27,19 @@ export function toRowKey(key: string): { kind: string; id: string } | null {
 export const fromRowKey = (r: { kind: string; id: string }) => (r.kind === 'doc' ? r.id : itemKey(r.kind, r.id));
 
 /** The v1 tombstone name of a local item key (cloud/merge.ts), to respect deletions made before v2. */
-const TOMB: Record<string, string> = { workout: 'w', routine: 'r', folder: 'f', exercise: 'x', food: 'food', log: 'log', meal: 'meal', weight: 'kg', checkin: 'ci', favorite: 'fav', incomplete: 'inc' };
+const TOMB: Record<string, string> = {
+  workout: 'w',
+  routine: 'r',
+  folder: 'f',
+  exercise: 'x',
+  food: 'food',
+  log: 'log',
+  meal: 'meal',
+  weight: 'kg',
+  checkin: 'ci',
+  favorite: 'fav',
+  incomplete: 'inc',
+};
 export function tombstoneKey(key: string): string {
   const bar = key.indexOf('|');
   return `${TOMB[key.slice(0, bar)] ?? key.slice(0, bar)}:${key.slice(bar + 1)}`;

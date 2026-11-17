@@ -36,7 +36,16 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
     setN((n) => ({
       ...n,
       log: n.log.map((e) =>
-        e.id === entry.id ? { ...e, meal, date: date || e.date, ...(date > dayKey() ? { planned: true } : {}), ...(entry.grams != null ? { grams: grams ?? e.grams } : {}), ...preview } : e,
+        e.id === entry.id
+          ? {
+              ...e,
+              meal,
+              date: date || e.date,
+              ...(date > dayKey() ? { planned: true } : {}),
+              ...(entry.grams != null ? { grams: grams ?? e.grams } : {}),
+              ...preview,
+            }
+          : e,
       ),
     }));
     onClose();
@@ -59,12 +68,7 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
             {(['kcal', 'protein', 'carbs', 'fat'] as const).map((k) => (
               <label key={k} className="field">
                 <span>{k === 'kcal' ? t('kcal') : t('{0} (g)', { 0: t(MACRO_LABEL[k]) })}</span>
-                <NumInput
-                  id={'edit-' + k}
-                  label={k}
-                  value={quick[k]}
-                  onChange={(v) => setQuick((q) => ({ ...q, [k]: v ?? 0 }))}
-                />
+                <NumInput id={'edit-' + k} label={k} value={quick[k]} onChange={(v) => setQuick((q) => ({ ...q, [k]: v ?? 0 }))} />
               </label>
             ))}
           </div>
@@ -87,8 +91,12 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
           <strong>{t('{0} kcal', { 0: preview.kcal })}</strong> · P {preview.protein} g · C {preview.carbs} g · F {preview.fat} g
         </p>
         <div className="sheet-actions">
-          <button className="btn btn-ghost-danger" onClick={remove}>{t('Delete')}</button>
-          <button className="btn btn-primary" onClick={save} disabled={entry.grams != null && !grams}>{t('Save')}</button>
+          <button className="btn btn-ghost-danger" onClick={remove}>
+            {t('Delete')}
+          </button>
+          <button className="btn btn-primary" onClick={save} disabled={entry.grams != null && !grams}>
+            {t('Save')}
+          </button>
         </div>
       </div>
     </Sheet>

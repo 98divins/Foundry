@@ -160,7 +160,7 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
   const hex = (cx: number, cy: number, r: number) => {
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
-      const a = Math.PI / 3 * i - Math.PI / 2;
+      const a = (Math.PI / 3) * i - Math.PI / 2;
       ctx[i ? 'lineTo' : 'moveTo'](cx + r * Math.cos(a), cy + r * Math.sin(a));
     }
     ctx.closePath();

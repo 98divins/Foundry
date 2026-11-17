@@ -49,18 +49,15 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
         title={existing ? t('Edit workout') : t('New workout')}
         onBack={() => back()}
         right={
-          <button className="btn btn-primary btn-small" onClick={save}>{t('Save')}</button>
+          <button className="btn btn-primary btn-small" onClick={save}>
+            {t('Save')}
+          </button>
         }
       />
       <main className="page">
         <label className="field">
           <span>{t('Workout name')}</span>
-          <input
-            id="routine-name"
-            value={draft.name}
-            placeholder={t('e.g. Upper A')}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-          />
+          <input id="routine-name" value={draft.name} placeholder={t('e.g. Upper A')} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
         </label>
         {state.folders.length > 0 && (
           <label className="field">
@@ -79,16 +76,17 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
             </select>
           </label>
         )}
-        <p className="muted small">{t('Set target reps per set, as a number or a range such as 8-12, and a weight if you like. During the workout the target shows in the reps field and the Previous column shows what you did last time. Use an exercise’s ⋯ menu to pair it with the next one as a superset.')}</p>
-        <WorkoutEditor
-          exercises={draft.exercises}
-          mode="routine"
-          before={Date.now()}
-          onChange={(exercises) => setDraft({ ...draft, exercises })}
-        />
+        <p className="muted small">
+          {t(
+            'Set target reps per set, as a number or a range such as 8-12, and a weight if you like. During the workout the target shows in the reps field and the Previous column shows what you did last time. Use an exercise’s ⋯ menu to pair it with the next one as a superset.',
+          )}
+        </p>
+        <WorkoutEditor exercises={draft.exercises} mode="routine" before={Date.now()} onChange={(exercises) => setDraft({ ...draft, exercises })} />
         {draft.exercises.length > 0 && <RoutineSummaryPanel routine={draft} />}
         {existing && (
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete workout')}</button>
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>
+            {t('Delete workout')}
+          </button>
         )}
       </main>
       <Confirm
