@@ -30,6 +30,8 @@ import { YearReviewCard } from './YearReview';
 import { ChallengesPanel } from './Challenges';
 import { useFeature } from '../features';
 import { DietStrengthCard, Phases } from '../components/DietStrength';
+import { PeriodPicker, PRESETS_LONG, usePeriod } from '../components/PeriodPicker';
+import { weeksIn } from '../period';
 
 const DAY = 86400000;
 const PR_LABEL: Record<PRKind, string> = {
@@ -53,14 +55,20 @@ export function Progress() {
   const recapsOn = useFeature('recaps');
   const challengesOn = useFeature('challenges');
 
-  const starts = useMemo(() => weekStarts(12), []);
+  // The chosen period drives the strength curve, the weekly chart and the records below.
+  const { period, setPeriod, range, name: periodLabel } = usePeriod(91);
+  const starts = useMemo(() => weeksIn(range), [range]);
   const training = useMemo(() => weeklyTraining(workouts, starts), [workouts, starts]);
   const index = useMemo(() => strengthIndexByWeek(workouts, starts), [workouts, starts]);
   const lifts = useMemo(() => liftTrends(workouts), [workouts]);
-  const prs = useMemo(() => recentPRs(workouts, computePRs(workouts), 30), [workouts]);
+  const prs = useMemo(
+    () => recentPRs(workouts, computePRs(workouts), Math.ceil((range.to - range.from) / DAY), range.to).filter((p) => p.date < range.to),
+    [workouts, range],
+  );
+  const prs30 = useMemo(() => recentPRs(workouts, computePRs(workouts), 30), [workouts]);
 
   const done = workouts.filter((w) => w.endedAt);
-  const thisWeek = training[training.length - 1];
+  const thisWeek = useMemo(() => weeklyTraining(workouts, weekStarts(1))[0], [workouts]);
   const streak = useMemo(() => weekStreak(workouts).weeks, [workouts]);
 
   // Sets per muscle: this week, or the average of the last 4 full weeks.
@@ -106,7 +114,7 @@ export function Progress() {
     <>
       <ProgressHeader />
       <main className="page">
-        <ProfileHeader workouts={done.length} records={prs.length} streak={streak} />
+        <ProfileHeader workouts={done.length} records={prs30.length} streak={streak} />
         {recapsOn && <YearReviewCard />}
 
         <h2 className="settings-group">{t('This week')}</h2>
@@ -116,6 +124,7 @@ export function Progress() {
         <p className="muted small center">{t('{d} training days and {s} sets so far this week.', { d: thisWeek.days, s: thisWeek.sets })}</p>
 
         <h2 className="settings-group">{t('Progress')}</h2>
+        <PeriodPicker id="progress" value={period} onChange={setPeriod} presets={PRESETS_LONG} />
 
         <section className="panel">
           <h2 className="panel-title">{t('Strength')}</h2>
@@ -232,8 +241,10 @@ export function Progress() {
         </section>
 
         <section className="panel">
-          <h2 className="panel-title">{t('Records, last 30 days')}</h2>
-          {!prs.length && <p className="muted small">{t('No new record in the last 30 days.')}</p>}
+          <h2 className="panel-title">
+            {t('Records')} · {periodLabel}
+          </h2>
+          {!prs.length && <p className="muted small">{t('No new record in this period.')}</p>}
           <ul className="pr-list">
             {prs.slice(0, 10).map((p) => (
               <li key={p.set.id}>
@@ -389,21 +400,20 @@ export function DietTraining() {
   const { state } = useStore();
   const { workouts, settings, nutrition } = state;
   const unit = settings.unit;
-  const starts = useMemo(() => weekStarts(12), []);
+  const { period, setPeriod, range } = usePeriod(91);
+  const starts = useMemo(() => weeksIn(range), [range]);
   const training = useMemo(() => weeklyTraining(workouts, starts), [workouts, starts]);
   const index = useMemo(() => strengthIndexByWeek(workouts, starts), [workouts, starts]);
   const diet = useMemo(() => weeklyDiet(nutrition, starts), [nutrition, starts]);
   const insights = useMemo(() => crossInsights(index, diet, nutrition.proteinPerKg), [index, diet, nutrition.proteinPerKg]);
   const weekLabel = (t: number) => new Date(t).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' });
   const hasDiet = diet.some((d) => d.loggedDays > 0);
-  const dietRows = starts
-    .map((t, i) => ({ t, d: diet[i], idx: index[i], tr: training[i] }))
-    .slice(-8)
-    .reverse();
+  const dietRows = starts.map((t, i) => ({ t, d: diet[i], idx: index[i], tr: training[i] })).reverse();
   return (
     <>
       <section className="panel">
         <h2 className="panel-title">{t('Diet × training')}</h2>
+        <PeriodPicker id="diet" value={period} onChange={setPeriod} presets={PRESETS_LONG} />
         {!hasDiet ? (
           <>
             <p className="muted small">

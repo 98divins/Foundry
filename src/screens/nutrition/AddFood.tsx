@@ -4,7 +4,7 @@ import { useFeature } from '../../features';
 import { BarcodeScanner } from '../../components/BarcodeScanner';
 import { Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { back } from '../../hooks';
-import { foodUsage, FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods, foodName, portionLabel } from '../../foods';
+import { foodUsage, FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods, foodName, itemName, portionLabel } from '../../foods';
 import {
   dayKey,
   entriesFromMeal,
@@ -45,7 +45,7 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
       foods: food && !food.id.startsWith('g-fr-') && !x.foods.some((f) => f.id === food.id) ? [...x.foods, food] : x.foods,
       log: [...x.log, { ...entry, id: uid(), date, meal, createdAt: Date.now(), ...(date > dayKey() ? { planned: true } : {}) }],
     }));
-    setAdded((a) => [...a, entry.name]);
+    setAdded((a) => [...a, itemName(entry)]);
   };
 
   return (

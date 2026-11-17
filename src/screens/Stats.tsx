@@ -19,6 +19,8 @@ import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { hasPro, requirePro } from '../pro';
 import { DietTraining } from './Progress';
+import { PeriodPicker, PRESETS_LONG, usePeriod } from '../components/PeriodPicker';
+import { dayKeyAt, previousRange, rangeOf, weeksIn, type Period } from '../period';
 import { loadRatio, weeklyLoad } from '../trainingLoad';
 import { useFeature } from '../features';
 import { exerciseName, useStore } from '../store';
@@ -112,23 +114,18 @@ function Sub({ title, children }: { title: string; children: React.ReactNode }) 
   );
 }
 
-const PERIODS = [
-  { value: '30', label: tk('30 days') },
-  { value: '90', label: tk('90 days') },
-  { value: '365', label: tk('1 year') },
-] as const;
-
 function Distribution() {
   const { state, exMap } = useStore();
-  const [days, setDays] = useState<'30' | '90' | '365'>('30');
-  const span = Number(days) * DAY;
-  const now = Date.now();
-  const cur = useMemo(() => groupSets(state.workouts, exMap, now - span, now + DAY), [state.workouts, exMap, span, now]);
-  const prev = useMemo(() => groupSets(state.workouts, exMap, now - 2 * span, now - span), [state.workouts, exMap, span, now]);
+  const { period, setPeriod, range } = usePeriod(30);
+  const cur = useMemo(() => groupSets(state.workouts, exMap, range.from, range.to), [state.workouts, exMap, range]);
+  const prev = useMemo(() => {
+    const p = previousRange(range);
+    return groupSets(state.workouts, exMap, p.from, p.to);
+  }, [state.workouts, exMap, range]);
   const total = MUSCLE_GROUPS.reduce((s, g) => s + cur[g], 0);
   return (
     <Sub title={t('Muscle balance')}>
-      <Segmented label={t('Period')} value={days} onChange={setDays} options={PERIODS.map((p) => ({ value: p.value, label: t(p.label) }))} />
+      <PeriodPicker id="balance" value={period} onChange={setPeriod} />
       <section className="panel">
         <RadarChart
           labels={MUSCLE_GROUPS.map((g) => t(GROUP_LABEL[g]))}
@@ -165,7 +162,11 @@ function Distribution() {
 function MusclesByWeek() {
   const { state, exMap } = useStore();
   const [start, setStart] = useState(() => weekStart(Date.now()));
-  const sets = useMemo(() => muscleSets(state.workouts, exMap, start, weekStart(start + 10.5 * DAY)), [state.workouts, exMap, start]);
+  const [dates, setDates] = useState<Period | null>(null);
+  const sets = useMemo(() => {
+    const r = dates ? rangeOf(dates) : { from: start, to: weekStart(start + 10.5 * DAY) };
+    return muscleSets(state.workouts, exMap, r.from, r.to);
+  }, [state.workouts, exMap, start, dates]);
   const rows = MUSCLES.filter((m) => m !== 'cardio').map((m) => [m, sets.get(m) ?? 0] as [Muscle, number]);
   const total = rows.reduce((s, [, n]) => s + n, 0);
   const max = Math.max(1, ...rows.map(([, n]) => n));
@@ -174,26 +175,41 @@ function MusclesByWeek() {
   const isThisWeek = start === weekStart(Date.now());
   return (
     <Sub title={t('Muscles week by week')}>
-      <div className="week-nav">
-        <button className="icon-btn" aria-label={t('Previous week')} onClick={() => setStart(weekStart(start - 3.5 * DAY))}>
-          <Icon name="back" />
-        </button>
-        <strong>
-          {new Date(start).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })} –{' '}
-          {new Date(start + 6 * DAY).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })}
-        </strong>
-        <button className="icon-btn" aria-label={t('Next week')} disabled={isThisWeek} onClick={() => setStart(weekStart(start + 10.5 * DAY))}>
-          <Icon name="chevron" />
-        </button>
-      </div>
-      <div className="week-days">
-        {days.map((d) => (
-          <span key={d} className={trained.has(dayKeyOf(d)) ? 'on' : ''}>
-            <span className="muted small">{new Date(d).toLocaleDateString(locale(), { weekday: 'narrow' })}</span>
-            <strong>{new Date(d).getDate()}</strong>
-          </span>
-        ))}
-      </div>
+      <Segmented<'week' | 'dates'>
+        label={t('Period')}
+        value={dates ? 'dates' : 'week'}
+        onChange={(v) => setDates(v === 'week' ? null : { kind: 'dates', from: dayKeyAt(start), to: dayKeyAt(Math.min(start + 6 * DAY, Date.now())) })}
+        options={[
+          { value: 'week', label: t('Week') },
+          { value: 'dates', label: t('Dates') },
+        ]}
+      />
+      {dates ? (
+        <PeriodPicker id="muscles" value={dates} onChange={setDates} presets={[]} />
+      ) : (
+        <>
+          <div className="week-nav">
+            <button className="icon-btn" aria-label={t('Previous week')} onClick={() => setStart(weekStart(start - 3.5 * DAY))}>
+              <Icon name="back" />
+            </button>
+            <strong>
+              {new Date(start).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })} –{' '}
+              {new Date(start + 6 * DAY).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })}
+            </strong>
+            <button className="icon-btn" aria-label={t('Next week')} disabled={isThisWeek} onClick={() => setStart(weekStart(start + 10.5 * DAY))}>
+              <Icon name="chevron" />
+            </button>
+          </div>
+          <div className="week-days">
+            {days.map((d) => (
+              <span key={d} className={trained.has(dayKeyOf(d)) ? 'on' : ''}>
+                <span className="muted small">{new Date(d).toLocaleDateString(locale(), { weekday: 'narrow' })}</span>
+                <strong>{new Date(d).getDate()}</strong>
+              </span>
+            ))}
+          </div>
+        </>
+      )}
       <section className="panel">
         <div className="heat-head">
           <span>{t('Muscle')}</span>
@@ -224,11 +240,8 @@ function TrainingLoad() {
   const unit = state.settings.unit;
   const rpeOn = useFeature('rpe');
   const [metric, setMetric] = useState<LoadMetric>('sets');
-  const starts = useMemo(() => {
-    const out = [weekStart(Date.now())];
-    while (out.length < 12) out.unshift(weekStart(out[0] - 3.5 * DAY));
-    return out;
-  }, []);
+  const { period, setPeriod, range } = usePeriod(91);
+  const starts = useMemo(() => weeksIn(range), [range]);
   const weeks = useMemo(() => weeklyLoad(state.workouts, starts), [state.workouts, starts]);
   const ratio = useMemo(() => loadRatio(state.workouts), [state.workouts]);
   const label = (ts: number) => new Date(ts).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' });
@@ -269,6 +282,7 @@ function TrainingLoad() {
       </section>
       <section className="panel">
         <h2 className="panel-title">{t('Per week')}</h2>
+        <PeriodPicker id="load" value={period} onChange={setPeriod} presets={PRESETS_LONG} />
         <Segmented label={t('Measure')} value={metric} onChange={setMetric} options={options} />
         <BarChart bars={weeks.map((w) => ({ label: label(w.start), value: value(w) }))} />
         <p className="muted small">
@@ -288,12 +302,11 @@ function TrainingLoad() {
 
 function MainExercises() {
   const { state, exMap } = useStore();
-  const [days, setDays] = useState<'30' | '90' | '365'>('30');
-  const now = Date.now();
-  const top = useMemo(() => topExercises(state.workouts, now - Number(days) * DAY, now + DAY), [state.workouts, days, now]);
+  const { period, setPeriod, range } = usePeriod(30);
+  const top = useMemo(() => topExercises(state.workouts, range.from, range.to), [state.workouts, range]);
   return (
     <Sub title={t('Main exercises')}>
-      <Segmented label={t('Period')} value={days} onChange={setDays} options={PERIODS.map((p) => ({ value: p.value, label: t(p.label) }))} />
+      <PeriodPicker id="main" value={period} onChange={setPeriod} />
       {!top.length && (
         <div className="empty-card">
           <p>{t('No workout in this period yet.')}</p>
@@ -333,10 +346,13 @@ function MonthReport() {
   const { state, exMap } = useStore();
   const unit = state.settings.unit;
   const [offset, setOffset] = useState(0);
+  // A calendar month, or any dates (compared with the same number of days before).
+  const [dates, setDates] = useState<Period | null>(null);
   const now = Date.now();
-  const from = monthStart(now, offset);
-  const to = monthStart(now, offset + 1);
-  const prevFrom = monthStart(now, offset - 1);
+  const r = dates ? rangeOf(dates) : null;
+  const from = r ? r.from : monthStart(now, offset);
+  const to = r ? r.to : monthStart(now, offset + 1);
+  const prevFrom = r ? previousRange(r).from : monthStart(now, offset - 1);
   const cur = periodSummary(state.workouts, from, to);
   const prev = periodSummary(state.workouts, prevFrom, from);
   const g = groupSets(state.workouts, exMap, from, to);
@@ -359,15 +375,28 @@ function MonthReport() {
 
   return (
     <Sub title={t('Monthly report')}>
-      <div className="week-nav">
-        <button className="icon-btn" aria-label={t('Previous month')} onClick={() => setOffset(offset - 1)}>
-          <Icon name="back" />
-        </button>
-        <strong className="month-title">{title}</strong>
-        <button className="icon-btn" aria-label={t('Next month')} disabled={offset >= 0} onClick={() => setOffset(offset + 1)}>
-          <Icon name="chevron" />
-        </button>
-      </div>
+      <Segmented<'month' | 'dates'>
+        label={t('Period')}
+        value={dates ? 'dates' : 'month'}
+        onChange={(v) => setDates(v === 'month' ? null : { kind: 'dates', from: dayKeyAt(from), to: dayKeyAt(Math.min(to, now) - 1) })}
+        options={[
+          { value: 'month', label: t('Month') },
+          { value: 'dates', label: t('Dates') },
+        ]}
+      />
+      {dates ? (
+        <PeriodPicker id="report" value={dates} onChange={setDates} presets={[]} />
+      ) : (
+        <div className="week-nav">
+          <button className="icon-btn" aria-label={t('Previous month')} onClick={() => setOffset(offset - 1)}>
+            <Icon name="back" />
+          </button>
+          <strong className="month-title">{title}</strong>
+          <button className="icon-btn" aria-label={t('Next month')} disabled={offset >= 0} onClick={() => setOffset(offset + 1)}>
+            <Icon name="chevron" />
+          </button>
+        </div>
+      )}
 
       <div className="stats-row">
         <Stat
@@ -411,35 +440,39 @@ function MonthReport() {
           }
         />
       </div>
-      <p className="muted small">{t('Arrows compare with the month before.')}</p>
+      <p className="muted small">{dates ? t('Arrows compare with the same number of days just before.') : t('Arrows compare with the month before.')}</p>
 
-      <section className="panel">
-        <h2 className="panel-title">{t('Training days per month')}</h2>
-        <BarChart bars={bars} />
-      </section>
+      {!dates && (
+        <section className="panel">
+          <h2 className="panel-title">{t('Training days per month')}</h2>
+          <BarChart bars={bars} />
+        </section>
+      )}
 
-      <section className="panel">
-        <h2 className="panel-title">{t('Workout days')}</h2>
-        <p className="streak-line">
-          <Icon name="flame" size={20} /> {tp(streak.weeks, '{n} week streak', '{n} weeks streak')}
-        </p>
-        <div className="month-cal">
-          {weekdayNames.map((d, i) => (
-            <span key={'h' + i} className="muted small">
-              {d}
-            </span>
-          ))}
-          {cells.map((c, i) =>
-            c == null ? (
-              <span key={'b' + i} />
-            ) : (
-              <span key={c} className={trained.has(dayKeyOf(c)) ? 'on' : ''}>
-                {new Date(c).getDate()}
+      {!dates && (
+        <section className="panel">
+          <h2 className="panel-title">{t('Workout days')}</h2>
+          <p className="streak-line">
+            <Icon name="flame" size={20} /> {tp(streak.weeks, '{n} week streak', '{n} weeks streak')}
+          </p>
+          <div className="month-cal">
+            {weekdayNames.map((d, i) => (
+              <span key={'h' + i} className="muted small">
+                {d}
               </span>
-            ),
-          )}
-        </div>
-      </section>
+            ))}
+            {cells.map((c, i) =>
+              c == null ? (
+                <span key={'b' + i} />
+              ) : (
+                <span key={c} className={trained.has(dayKeyOf(c)) ? 'on' : ''}>
+                  {new Date(c).getDate()}
+                </span>
+              ),
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="panel">
         <h2 className="panel-title">{t('Muscle balance')}</h2>

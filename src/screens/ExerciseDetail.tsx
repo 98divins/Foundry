@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { PeriodPicker, usePeriod } from '../components/PeriodPicker';
 import { PhotoField } from '../components/Photo';
 import { LineChart } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
@@ -52,6 +53,8 @@ export function ExerciseDetail({ id }: { id: string }) {
   const kind: ExerciseKind = ex?.kind ?? 'weight';
   const [metric, setMetric] = useState<Metric>(METRICS[kind][0]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Records stay all-time; the chart and the recent sessions follow the chosen period.
+  const { period, setPeriod, range } = usePeriod(36500);
 
   if (!ex) {
     return (
@@ -78,9 +81,10 @@ export function ExerciseDetail({ id }: { id: string }) {
   const isLoad = metric === '1rm' || metric === 'weight' || metric === 'volume';
   const isTime = metric === 'duration' || metric === 'time';
   const toChart = (v: number) => (isLoad ? toDisplay(v, unit) : isTime ? v / 60 : metric === 'distance' ? kmToDisplay(v) : v);
-  const points = sessions.map((s) => ({ x: s.date, y: toChart(pick[metric](s)) }));
+  const shown = sessions.filter((s) => s.date >= range.from && s.date < range.to);
+  const points = shown.map((s) => ({ x: s.date, y: toChart(pick[metric](s)) }));
   const fmtAxis = (v: number) => (isTime ? fmtClock(v * 60) : v >= 10000 ? `${fmtNum(v / 1000)}k` : fmtNum(v));
-  const recent = [...sessions].reverse().slice(0, 12);
+  const recent = [...shown].reverse().slice(0, 12);
 
   return (
     <>
@@ -118,6 +122,16 @@ export function ExerciseDetail({ id }: { id: string }) {
         </div>
 
         <section className="panel">
+          <PeriodPicker
+            id="exercise"
+            value={period}
+            onChange={setPeriod}
+            presets={[
+              { days: 91, label: '3 mo' },
+              { days: 365, label: '1 yr' },
+              { days: 36500, label: 'All' },
+            ]}
+          />
           {METRICS[kind].length > 1 && (
             <Segmented<Metric>
               label={t('Chart metric')}
