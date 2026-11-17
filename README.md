@@ -1,86 +1,97 @@
 # Foundry
 
-A personal workout log that runs in the browser and installs on your phone (PWA).
-Log sets as you train, follow a rest timer, and track records and progress per exercise.
-All data stays on your device.
+A strength training and nutrition app for people who lift: log workouts, follow your diet, and see how
+the two line up. It runs in the browser and installs on a phone as a PWA (French and English).
 
-## Features
+Live: <https://98divins.github.io/Foundry/> · Proprietary, all rights reserved (see `LICENSE`).
 
-- **Live workouts**: add exercises, log weight × reps per set, tick sets as you go. Each set shows what you did last time; tick an empty set to reuse those numbers.
-- **Set types**: normal, warm-up (left out of stats), drop set, failure.
-- **Rest timer**: starts automatically when you tick a set, ±15 s, skip, beep and vibration when it ends. The screen stays awake during a workout.
-- **Explore programs**: Full Body (3 days), Upper / Lower (4 days) and Push / Pull / Legs, copied into your routines in one tap.
-- **During a workout**: replace an exercise for this session only (sets already done stay on the original), change a set's type or remove it from its number, and see when a rest ended while you were away.
-- **Routines and folders**: reusable templates with target rep ranges (e.g. 8-12), supersets and notes, grouped in folders (e.g. “Upper/Lower x2”). Each routine has a summary: exercises, sets, estimated time and sets per muscle.
-- **Share links**: copy a link to a routine or a whole folder; opening it (or pasting it in the app) adds the routines on that device (Push / Pull / Legs included as a starting point). Start one in a single tap, or save any finished workout as a routine.
-- **History**: every workout with duration, volume and records. Edit a past workout or log one after the fact.
-- **Records**: heaviest set, best estimated 1RM (Epley), best set volume, most reps for bodyweight moves. A record is flagged when it beats all earlier workouts.
-- **Progress**: per-exercise charts (est. 1RM, heaviest, volume, reps), workouts per week, working sets per muscle over the last 30 days.
-- **Exercise library**: 450 exercises with English and French names (choose in Progress → Settings), searchable without accents and filterable by muscle and equipment, plus your own custom ones. 376 have start and end photos from [Free Exercise DB](https://github.com/yuhonas/free-exercise-db) (public domain), loaded from a CDN and cached for offline use.
-- **Tracking types**: weight × reps, bodyweight reps with optional added weight, assisted reps (the assistance never counts as volume), timed holds (plank, dead hang…) and cardio (distance and time).
-- **kg or lb**: weights are stored in kg and converted for display.
-- **Your data**: JSON backup and restore, CSV export, and **CSV import from a Hevy export** (Hevy → Settings → Export & Import Data → Export workouts). Unknown exercise names become custom exercises; workouts already present are skipped.
+## What it does
 
-## Progress
+**Training**
+- Live workouts with a rest timer, set types (warm-up, drop, failure), supersets, notes and a
+  "Previous" column; last time's best set as a hint, generated warm-up sets, a plate calculator,
+  notes pinned to an exercise and an optional RPE per set.
+- Saved workouts and folders, ready-made programs, interval timers (HIIT, Tabata, run/walk).
+- 450 exercises (English and French names, photos from Free Exercise DB) plus custom ones with
+  your own photo.
+- History, records, per-exercise charts, strength index, muscle balance, training load
+  (weekly sets, tonnage, time and the 7-day / 28-day ratio).
+- Import from Hevy or Strong (CSV); export to CSV, Excel and a JSON backup.
 
-- **Strength**: estimated-1RM trend for your most trained lifts (with change over the last 8 weeks) and a strength index: each lift's best of the week as a % of your first session, averaged.
-- **Training per week**: sets, workouts or volume over 12 weeks.
-- **Sets per muscle**: this week or the 4-week average, against a 10–20 sets guideline.
-- **Records** of the last 30 days.
-- **Diet × training**: a weekly table of calories, protein per kg, weight change, sets and strength index, and plain-language observations once there are about 5 weeks of data on both sides.
+**Nutrition**
+- Six meal slots, French food list, Open Food Facts search and barcode scan, custom foods, saved
+  meals (with photos, shareable with the community), meal planning on other days.
+- Search ranks the foods you usually eat at this meal first; one tap adds your usual amount.
+- Weight trend, adaptive expenditure and weekly targets, with safeguards (no loss target under
+  BMI 18.5, at most 1 % of body weight per week).
 
-## Nutrition
+**Diet × strength**
+- A weekly card (calorie gap, protein per kg, strength index change), phases (cut, maintenance,
+  bulk) compared with each other, and tips fired by explicit rules with minimum data, worded as
+  observations.
 
-- **Six meal slots**: breakfast, snacks after breakfast, lunch, snacks after lunch, dinner, snacks after dinner.
-- **Favourite foods** (star) listed first, and **saved meals** logged in one tap with a number of servings. Create them from scratch or with “Save as meal” on a slot. Logging copies the meal, so editing it later changes future logs only, unless you tick “also update the days where it is already logged”.
-- **Food log** by meal: search 150 common foods with French names (built in, works offline), 5 900 more basic foods in English, and branded products from Open Food Facts by name or **barcode** (camera or typed). Quick add for calories and macros, and your own foods from the label.
-- **Weight trend**: daily weigh-ins smoothed into a trend line, so water swings do not hide progress.
-- **Adaptive expenditure**: starts from Mifflin-St Jeor × activity, then learns from your data. Each day it compares the last 3 weeks of intake with the slope of your weight and moves 10 % toward what that implies (7 700 kcal per kg). Days marked as not fully logged are left out.
-- **Weekly check-in**: calories = expenditure + your chosen rate of weight change; protein per kg of trend weight, fat as a share of calories, carbs fill the rest. Never below 1 200 / 1 500 kcal.
+**Friends**
+- Usernames, friend requests, an activity feed with Respect and comments, a leaderboard and a
+  face-to-face comparison over a period or any dates, public profile pages, reports.
 
-Food data: USDA FoodData Central (public domain) via the [TempoLife food dataset](https://tempolife.app) (CC-BY-4.0), and [Open Food Facts](https://openfoodfacts.org) (ODbL).
-
-## Accounts and sync (Supabase)
-
-Optional. Without it, everything stays on the device (with backup files).
-
-1. Create a Supabase project (free tier), region in Europe.
-2. SQL Editor → run `supabase/schema.sql` once: one `user_state` row per user (the app data as JSON), Row Level Security so each user only reads and writes their own row, and `delete_my_account()` for in-app account deletion.
-3. For friends and leaderboards, also run `supabase/social.sql`: public profiles (username), friend requests, and a small training summary each person shares only with accepted friends.
-3. Authentication → URL Configuration: Site URL and Redirect URLs = the app's address (e.g. `https://98divins.github.io/Foundry/`), so confirmation and password-reset emails come back to the app.
-4. Put the Project URL and the publishable key in `src/cloud/config.ts` (both are public by design).
-
-Sync: after sign-in, a phone with data and an empty account uploads; a fresh phone downloads; if both hold data the user chooses which to keep. Changes upload 2 s after the last edit; on return to the app or the network, the newer side wins, and when both changed the user chooses. Offline edits are kept and sent later.
+Features still in test (levels and badges, challenges, gear, recaps, RPE) are off by default and
+can be turned on in Settings → Features in test (`src/features.ts`).
 
 ## Run it
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm test           # unit tests for records, stats and CSV import/export
-npm run build      # static site in dist/
+npm run dev          # http://localhost:5173
+npm test             # unit tests (Vitest)
+npm run e2e          # five user journeys + accessibility audit (Playwright, see below)
+npm run test:rls     # access rules of the Supabase tables, on a local PostgreSQL
+npm run lint         # ESLint
+npm run format       # Prettier (format:check in CI)
+npm run build        # type check + static site in dist/
+node scripts/perf.cjs   # start-up time with 5 years of fictional data (fails above 1 s)
 ```
 
-## Put it on your phone
+`npm run e2e` builds the app against a fake Supabase (`e2e/fake.ts` answers every request inside
+the browser), then runs: first launch, logging a workout, logging a food, building and starting a
+saved workout, offline use and a second device, and an axe audit (WCAG 2.1 AA) of nine screens in
+light and dark themes. Chromium comes from `npx playwright install chromium`.
 
-The build is a static site, so any static host works. With GitHub Pages:
+Every push to `main` runs the access-rule tests, the e2e journeys, lint, format check, unit tests
+and the build; the site is deployed to GitHub Pages only when all of them pass.
 
-1. In the repository settings, open **Pages** and set **Source** to **GitHub Actions**.
-2. Push to `main` (or run the *Deploy to GitHub Pages* workflow manually).
-3. Open the published URL on your phone and use **Add to Home Screen**.
+## How data is stored and synced
 
-Data is kept in the browser's local storage on that device. Export a backup from **Profile** before clearing browser data or switching phones.
+- **On the device**: IndexedDB (`src/db.ts`), one record per month and kind of item, written
+  300 ms after a change and when the app is hidden. The app works fully offline.
+- **Account (Supabase)**: required to use the app. Sync v2 keeps one row per item in
+  `user_items`, timed by the server; each device sends what changed and asks for what changed since
+  its last visit (`docs/SYNC_V2.md`). Older accounts still use one JSON copy (`user_state`) until
+  they move to v2.
+- **Photos** (meals, custom foods and exercises) go to a private storage bucket, shrunk on the
+  phone first; exercise and food photos are visible to their owner only, meal photos to friends.
+- Health data (weight, food) needs a separate consent; terms, privacy policy and the processing
+  register are in `src/legal.ts` and `docs/legal/`.
+
+Setting up Supabase (SQL files to run, in order, and dashboard settings): `supabase/README.md`.
+The project URL and publishable key live in `src/cloud/config.ts` (public by design; the access
+rules protect the data).
 
 ## Code map
 
 | Path | What it holds |
 | --- | --- |
-| `src/types.ts` | Data model (workouts, sets, routines, settings) |
-| `src/store.tsx` | App state, persistence, starter routines |
-| `src/utils.ts` | Volume, 1RM, records, sessions, formatting |
-| `src/csv.ts` | CSV parser, Hevy-format import, CSV export |
-| `src/exerciseData.ts` | The 450 exercises: names, muscle, equipment, tracking type, photo |
-| `src/exercises.ts` | Library helpers: labels in both languages, photo URLs, search |
-| `src/components/WorkoutEditor.tsx` | Set table used by live workouts, routines and edits |
-| `src/screens/` | One file per screen |
-| `public/sw.js` | Offline cache |
+| `src/types.ts`, `src/nutrition.ts` | Data model and nutrition engine (trend, expenditure, targets) |
+| `src/store.tsx`, `src/db.ts` | App state, IndexedDB storage |
+| `src/cloud/` | Supabase client, sync v1 and v2, social features, photos |
+| `src/analytics.ts`, `src/trainingLoad.ts`, `src/dietStrength.ts` | Statistics, training load, diet × strength |
+| `src/progression.ts`, `src/plates.ts` | Best set, warm-ups, plate calculator |
+| `src/foods.ts`, `src/foodsFr*.ts`, `src/csv.ts` | Food search and data, CSV import/export |
+| `src/features.ts`, `src/pro.ts` | Feature switches, free and Pro plans |
+| `src/i18n.ts`, `src/i18n.fr.ts` | Translations (English keys, French dictionary) |
+| `src/screens/`, `src/components/` | Screens and shared components |
+| `supabase/` | SQL (tables, access rules, admin views) and the access-rule tests |
+| `e2e/` | End-to-end journeys and the accessibility audit |
+| `docs/` | Plans, sync design, legal documents |
+
+Food data: USDA FoodData Central via TempoLife (CC-BY-4.0) and Open Food Facts (ODbL). Exercise
+photos: Free Exercise DB (public domain).
