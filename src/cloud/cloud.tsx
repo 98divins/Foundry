@@ -84,6 +84,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   const [meta, setMetaState] = useState<SyncMeta>(loadMeta);
   const metaRef = useRef(meta);
   const stateRef = useRef(state);
+  /** Set after the first state seen once signed in (the state the app started with is not an edit). */
+  const initialHydrated = useRef(false);
   stateRef.current = state;
   /** Set while the cloud copy is being written into the app, so it is not uploaded straight back. */
   const applyingRemote = useRef(false);
@@ -176,6 +178,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
    */
   const syncWith = useCallback(
     async (uid: string, first: boolean) => {
+      // Edits made on this device after this point must survive whatever the account holds.
+      const startedAt = Date.now();
       for (let attempt = 0; attempt < 4; attempt++) {
         const head = await fetchRemote(uid, false);
         const meta = metaRef.current;
@@ -208,12 +212,15 @@ export function CloudProvider({ children }: { children: ReactNode }) {
         }
         const remote = await fetchRemote(uid, true);
         if (!remote?.data) continue;
-        if (action === 'download') {
+        // An edit made on this device while the account's copy was downloading must not be lost:
+        // merge it in instead of replacing (found by the e2e journey 05).
+        const editedMeanwhile = (metaRef.current.lastChangeAt ?? 0) >= startedAt;
+        if (action === 'download' && !editedMeanwhile) {
           applyRemote(uid, remote.data, remote.updated_at);
           return;
         }
         // Both changed: keep everything from both, then save the result to the account.
-        const localNewer = (meta.lastChangeAt ?? 0) > Date.parse(remote.updated_at);
+        const localNewer = editedMeanwhile || (metaRef.current.lastChangeAt ?? 0) > Date.parse(remote.updated_at);
         const merged = mergeStates(stateRef.current, parseBackup(JSON.stringify(remote.data)), localNewer);
         applyRemote(uid, merged, remote.updated_at, true);
         if (await upload(uid)) return;
@@ -426,9 +433,17 @@ export function CloudProvider({ children }: { children: ReactNode }) {
 
   // Every change: mark it unsent at once, upload 2 s after the last one.
   useEffect(() => {
-    if (!user || !ready.current) return;
+    if (!user) return;
     if (applyingRemote.current) {
       applyingRemote.current = false;
+      return;
+    }
+    // Before the first sync is done, an edit is only recorded: the first sync sees it (it merges
+    // instead of replacing) and sends it. Without this, an edit made in the first seconds after
+    // signing in was lost (found by the e2e journey 05).
+    if (!ready.current) {
+      if (initialHydrated.current) setMeta({ ...metaRef.current, dirty: true, lastChangeAt: Date.now() });
+      initialHydrated.current = true;
       return;
     }
     changeSeq.current++;
