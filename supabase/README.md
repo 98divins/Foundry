@@ -18,9 +18,10 @@ in this order (a new project runs them all; an existing one runs the ones it doe
 | 11 | `stats_bounds.sql` | Plausible values only in shared stats |
 | 12 | `community_limits.sql` | 30 new shared foods per member per day |
 | 13 | `shared_meals_author.sql` | Shared meal author taken from the profile |
-| 14 | `admin.sql` | Private view `admin.users` |
+| 14 | `admin.sql` | Private view `admin.users` (counts only) and `admin.account_for_email()` for support |
 | 15 | `adoption.sql` | Private adoption views (`admin.adoption`, `cohorts`, `features`, `daily`) |
 | 16 | `admin_reports.sql` | Private view `admin.reports` (reports to review) |
+| 17 | `retention.sql` | `admin.purge_expired()` (run monthly) and `admin.inactive_accounts` |
 
 The access rules are tested on a local PostgreSQL by `npm run test:rls` (`tests/rls.sql`), in CI
 before every deploy. Never run the files in `tests/` on the real project.
