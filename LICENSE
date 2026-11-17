@@ -1,0 +1,11 @@
+Copyright (c) 2026 the Foundry authors. All rights reserved.
+
+This repository and everything in it (source code, designs, texts, data compilations and assets
+created for Foundry) is proprietary. It is published for viewing only.
+
+No permission is granted to copy, modify, merge, publish, distribute, sublicense, sell, host or
+otherwise use any part of it, in whole or in part, without the prior written consent of the
+copyright holder.
+
+Third-party components keep their own licences (see package.json dependencies and the "Sources
+and licences" section of the app).
