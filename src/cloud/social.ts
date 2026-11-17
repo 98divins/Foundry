@@ -195,13 +195,12 @@ export interface SharedMeal {
   updated_at: string;
 }
 
-/** Publish (or update) one of the user's meals for other members. */
-export async function shareMeal(uid: string, meal: { id: string; name: string; items: import('../nutrition').MealItem[] }, author: string) {
+/** Publish (or update) one of the user's meals for other members. The server sets the author from the profile. */
+export async function shareMeal(uid: string, meal: { id: string; name: string; items: import('../nutrition').MealItem[] }) {
   const tot = meal.items.reduce((a, i) => ({ kcal: a.kcal + i.kcal, protein: a.protein + i.protein, carbs: a.carbs + i.carbs, fat: a.fat + i.fat }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
   const { error } = await (await sb()).from('shared_meals').upsert({
     user_id: uid,
     meal_id: meal.id,
-    author: author.slice(0, 40),
     name: meal.name.slice(0, 80),
     items: meal.items.slice(0, 40).map(({ foodId, name, brand, grams, kcal, protein, carbs, fat }) => ({ foodId, name, brand, grams, kcal, protein, carbs, fat })),
     kcal: Math.round(tot.kcal),

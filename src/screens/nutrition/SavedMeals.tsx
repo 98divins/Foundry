@@ -4,7 +4,7 @@ import { Confirm, Header, Icon, NumInput, Segmented, Sheet } from '../../compone
 import { ideaItems, MEAL_IDEAS, type IdeaTag, type MealIdea } from '../../mealIdeas';
 import { back, go } from '../../hooks';
 import { applyMealToLog, entriesFromMeal, mealTotals, scaleFood, type Food, type MealItem, type SavedMeal } from '../../nutrition';
-import { useNutrition, useStore } from '../../store';
+import { useNutrition } from '../../store';
 import { useCloud } from '../../cloud/cloud';
 import { loadSharedMeals, shareMeal, SocialNotReady, unshareMeal, type SharedMeal } from '../../cloud/social';
 import { fmtNum, uid } from '../../utils';
@@ -252,7 +252,6 @@ export function MealEditor({ id }: { id: string }) {
   const { n, setN } = useNutrition();
   const [addingMeal, setAddingMeal] = useState(false);
   const cloud = useCloud();
-  const { state } = useStore();
   const sm = n.savedMeals.find((m) => m.id === id);
   const [draft, setDraft] = useState<SavedMeal | null>(sm ?? null);
   const [adding, setAdding] = useState(false);
@@ -290,8 +289,7 @@ export function MealEditor({ id }: { id: string }) {
     setRetro(false);
     // Keep the community copy in step with the meal.
     if (cloud.user) {
-      const author = state.profile?.name?.trim() || t('A member');
-      const job = next.shared ? shareMeal(cloud.user.id, next, author) : sm?.shared ? unshareMeal(cloud.user.id, next.id) : null;
+      const job = next.shared ? shareMeal(cloud.user.id, next) : sm?.shared ? unshareMeal(cloud.user.id, next.id) : null;
       job?.catch((e: Error) => setSaved(t('Saved on your account, but sharing failed: {e}', { e: e.message })));
     }
   };

@@ -149,6 +149,13 @@ select t.ok(t.seen($$select 1 from public.community_foods$$) = 1, 'community foo
 select t.rows($$update public.community_foods set kcal = 1 where id = 'f-alice'$$, 0, 'community foods: nobody changes another member''s food');
 select t.fails($$insert into public.community_foods (id, user_id, name, kcal) values ('f-x', 'aaaaaaaa-0000-0000-0000-00000000000a', 'x', 1)$$, 'community foods: nobody adds in someone else''s name');
 
+/* ---------- shared meals: the author comes from the profile ---------- */
+select t.login(:bob);
+insert into public.shared_meals (user_id, meal_id, author, name, items) values (auth.uid(), 'b1', 'Alice', 'Pasta', '[{"name":"pasta"}]');
+select t.ok((select author from public.shared_meals where meal_id = 'b1') = 'Bob', 'shared meals: a made-up author name is replaced by the profile name');
+update public.profiles set display_name = 'Bobby' where user_id = auth.uid();
+select t.ok((select author from public.shared_meals where meal_id = 'b1') = 'Bobby', 'shared meals: renaming yourself updates your shared meals');
+
 /* ---------- community foods: at most 30 new ones a day per member ---------- */
 select t.login(:bob);
 do $$ begin for i in 1..30 loop insert into public.community_foods (id, user_id, name, kcal) values ('bob-' || i, auth.uid(), 'Food ' || i, 100); end loop; end $$;
