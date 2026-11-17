@@ -8,13 +8,16 @@ import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
 import { sendFeedback } from '../cloud/social';
 import { LegalBody } from '../components/Legal';
+import { legalDoc, type LegalKind } from '../legal';
+import { LEGAL_DRAFT, missingLegalFields } from '../legalConfig';
+import { hasHealthConsent, withdrawHealthConsent } from '../healthConsent';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
 import { hasPro, PLANS, PRO_FREE_DURING_BETA, previewingFree, requirePro, setPreviewFree, type PlanId } from '../pro';
 import { LogoutButton } from '../components/LogoutButton';
 import { FriendsSettings } from './Friends';
 
-type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'friends' | 'privacy' | 'terms' | 'contact';
+type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'friends' | 'privacy' | 'privacy-settings' | 'community' | 'notice' | 'sources' | 'terms' | 'contact';
 
 function Row({ icon, label, value, onClick }: { icon: IconName; label: string; value?: string; onClick: () => void }) {
   return (
@@ -75,8 +78,11 @@ export function SettingsHub() {
         </ul>
         <h2 className="settings-group">{t('Legal')}</h2>
         <ul className="settings-list">
-          <Row icon="lock" label={t('Privacy policy')} onClick={() => open('privacy')} />
+          <Row icon="lock" label={t('Privacy')} onClick={() => open('privacy-settings')} />
           <Row icon="info" label={t('Terms of use')} onClick={() => open('terms')} />
+          <Row icon="users" label={t('Community rules')} onClick={() => open('community')} />
+          <Row icon="info" label={t('Legal notice')} onClick={() => open('notice')} />
+          <Row icon="info" label={t('Sources and licences')} onClick={() => open('sources')} />
         </ul>
         {c.user && (
           <LogoutButton className="btn btn-ghost-danger btn-wide settings-logout" />
@@ -121,11 +127,16 @@ export function SettingsPage({ page }: { page?: string }) {
         </Sub>
       );
     case 'terms':
+    case 'community':
+    case 'notice':
+    case 'sources':
       return (
-        <Sub title={t('Terms of use')}>
-          <LegalBody kind="terms" />
+        <Sub title={legalDoc(page as LegalKind).title}>
+          <LegalBody kind={page as LegalKind} />
         </Sub>
       );
+    case 'privacy-settings':
+      return <PrivacyPage />;
     default:
       return <SettingsHub />;
   }
@@ -572,6 +583,9 @@ function FaqPage() {
 function AboutPage() {
   return (
     <Sub title={t('About')}>
+      {(LEGAL_DRAFT || missingLegalFields().length > 0) && (
+        <p className="legal-draft small">{t('Private beta: the legal texts are being finalised and will be reviewed before the public launch.')}</p>
+      )}
       <div className="about-head">
         <Logo size={56} />
         <strong className="brand">{t('Foundry')}</strong>
@@ -640,6 +654,50 @@ function SubscriptionPage() {
           <input id="preview-free" type="checkbox" className="switch" checked={free} onChange={(e) => { setPreviewFree(e.target.checked); setFree(e.target.checked); }} />
         </label>
       </section>
+    </Sub>
+  );
+}
+
+/** Settings → Privacy: the policy, the health-data consent (withdraw = erase), export and deletion. */
+function PrivacyPage() {
+  const { state, update } = useStore();
+  const [confirm, setConfirm] = useState(false);
+  const [done, setDone] = useState(false);
+  const consent = hasHealthConsent(state.settings);
+  return (
+    <Sub title={t('Privacy')}>
+      <ul className="settings-list">
+        <Row icon="lock" label={t('Privacy policy')} onClick={() => go('settings/privacy')} />
+        <Row icon="download" label={t('Export my data')} onClick={() => go('settings/data')} />
+        <Row icon="user" label={t('Delete my account')} onClick={() => go('settings/account')} />
+      </ul>
+      <h2 className="settings-group">{t('Health data')}</h2>
+      <section className="panel">
+        {consent ? (
+          <>
+            <p className="small">{t('You agreed that Foundry processes your weight, measurements and food intake. Withdrawing erases them, on this phone and in your account. Your training stays.')}</p>
+            <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirm(true)}>{t('Withdraw my consent and erase my nutrition and weight data')}</button>
+          </>
+        ) : (
+          <>
+            <p className="small">{done ? t('Done: your nutrition and weight data were erased.') : t('You have not agreed to the processing of health data: nutrition is switched off.')}</p>
+            <button className="btn btn-wide" onClick={() => go('n')}>{t('Turn on nutrition')}</button>
+          </>
+        )}
+      </section>
+      <Confirm
+        open={confirm}
+        title={t('Erase your nutrition and weight data?')}
+        message={t('Your food log, weigh-ins, nutrition profile, targets and weekly check-ins are erased for good. Saved meals and your own foods stay. Export your data first if you may need it.')}
+        confirmLabel={t('Withdraw and erase')}
+        danger
+        onConfirm={() => {
+          update((s) => withdrawHealthConsent(s));
+          setConfirm(false);
+          setDone(true);
+        }}
+        onClose={() => setConfirm(false)}
+      />
     </Sub>
   );
 }

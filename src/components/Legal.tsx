@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useCloud } from '../cloud/cloud';
 import { t } from '../i18n';
-import { LEGAL_DRAFT, LEGAL_VERSION, privacyPolicy, termsOfUse, type LegalDoc } from '../legal';
+import { LEGAL_DRAFT, LEGAL_VERSION, legalDoc, type LegalKind } from '../legal';
 import { useStore } from '../store';
 import { Sheet } from './ui';
 import { LogoutButton } from './LogoutButton';
 
-export type LegalKind = 'privacy' | 'terms';
-const doc = (k: LegalKind): LegalDoc => (k === 'privacy' ? privacyPolicy() : termsOfUse());
+export type { LegalKind };
+const doc = legalDoc;
 
 export function LegalBody({ kind }: { kind: LegalKind }) {
   const d = doc(kind);
@@ -44,17 +44,20 @@ export function ConsentCheckbox({ checked, onChange }: { checked: boolean; onCha
       <label className="toggle-line consent">
         <input id="consent" type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
         <span className="small">
-          {t('I accept the')}{' '}
+          {t('I am 16 or over and I accept the')}{' '}
           <button type="button" className="link-btn" onClick={() => setOpen('terms')}>
             {t('terms of use')}
-          </button>{' '}
-          {t('and the')}{' '}
-          <button type="button" className="link-btn" onClick={() => setOpen('privacy')}>
-            {t('privacy policy')}
           </button>
-          {t(', and I agree that Foundry processes my health data (weight, food intake, body measurements) to run the app. I am 16 or over.')}
+          .
         </span>
       </label>
+      <p className="muted small consent-info">
+        {t('How your data is used:')}{' '}
+        <button type="button" className="link-btn" onClick={() => setOpen('privacy')}>
+          {t('privacy policy')}
+        </button>
+        . {t('Your weight and what you eat are only used if you agree to it, when you first use nutrition.')}
+      </p>
       <LegalSheet kind={open} onClose={() => setOpen(null)} />
     </>
   );

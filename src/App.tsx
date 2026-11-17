@@ -25,6 +25,8 @@ import { StreakToast } from './components/StreakToast';
 import { StatsPublisher } from './components/StatsPublisher';
 import { ProSheet } from './components/ProSheet';
 import { LevelsPage } from './screens/Levels';
+import { HealthConsentScreen } from './components/HealthConsent';
+import { hasHealthConsent } from './healthConsent';
 import { IntervalEditor, IntervalRun } from './screens/IntervalTimer';
 import { parseKey, RecapHub, RecapPage, YearReviewPage } from './screens/YearReview';
 import { LevelUpToast } from './components/LevelUpToast';
@@ -103,7 +105,8 @@ export function App() {
       screen = <ActiveWorkout />;
       break;
     case 'n':
-      if (nutritionDay) screen = <NutritionHome key={param ?? 'today'} date={param ?? dayKey()} />;
+      if (!hasHealthConsent(state.settings)) screen = <HealthConsentScreen />;
+      else if (nutritionDay) screen = <NutritionHome key={param ?? 'today'} date={param ?? dayKey()} />;
       else if (param === 'add') screen = <AddFood key={extra + extra2} date={extra ?? dayKey()} meal={(extra2 ?? 'snacks') as Meal} />;
       else if (param === 'weight') screen = <WeightPage />;
       else if (param === 'insights') screen = <InsightsPage />;

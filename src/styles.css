@@ -4568,3 +4568,17 @@ a.btn.disabled {
   width: 22px;
   height: 22px;
 }
+.consent-info {
+  margin: 4px 0 0 30px;
+}
+.health-consent {
+  align-items: stretch;
+}
+.health-consent > svg {
+  align-self: center;
+  color: var(--accent);
+}
+.health-consent h2 {
+  text-align: center;
+  margin: 0;
+}

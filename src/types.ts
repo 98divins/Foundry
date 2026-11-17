@@ -139,6 +139,8 @@ export interface Settings {
   appLang?: 'fr' | 'en';
   /** When the user accepted the terms, privacy policy and health-data processing, and which version. */
   consent?: { at: number; version: string };
+  /** Separate consent for health data (healthConsent.ts). */
+  healthConsent?: { at: number; version: string; withdrawn?: boolean };
   /** Share a training summary with accepted friends (default on). */
   shareStats?: boolean;
   /** Custom accent colour (hex). Absent = Foundry cobalt. */
