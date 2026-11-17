@@ -185,6 +185,34 @@ select t.rows($$insert into public.public_stats (user_id, stats) values (auth.ui
 select t.rows($$insert into public.shared_meals (user_id, meal_id, name, items) values (auth.uid(), 'm1', 'Bowl 2', '[{"name":"rice"}]') on conflict (user_id, meal_id) do update set user_id = excluded.user_id, meal_id = excluded.meal_id, name = excluded.name$$, 1, 'identity: the app''s shared meal upsert still works');
 select t.rows($$update public.user_state set data = '{"workouts":[1]}', updated_at = now() where user_id = auth.uid()$$, 1, 'identity: syncing your own data still works');
 
+/* ---------- sync v2: user_items (owner only, server time) and entitlements ---------- */
+select t.login(:bob);
+select t.rows($$insert into public.user_items (kind, id, data) values ('workout', 'w1', '{"name":"Push"}')$$, 1, 'items: you write your own items');
+select t.ok((select updated_at > now() - interval '1 minute' from public.user_items where id = 'w1'), 'items: the server sets the time');
+select t.rows($$insert into public.user_items (kind, id, data, updated_at) values ('workout', 'w2', '{}', '2000-01-01') on conflict do nothing$$, 1, 'items: a time sent by the phone ...');
+select t.ok((select updated_at > '2001-01-01' from public.user_items where id = 'w2'), '... is replaced by the server time');
+select t.rows($$update public.user_items set deleted = true, data = '{"secret":1}' where id = 'w2'$$, 1, 'items: a deletion is kept as a marker');
+select t.ok((select data is null from public.user_items where id = 'w2'), 'items: a deleted item keeps no data');
+select t.rows($$delete from public.user_items where id = 'w1'$$, 0, 'items: rows are never deleted by the app (deletions are markers)');
+select t.fails($$update public.user_items set kind = 'routine' where id = 'w1'$$, 'items: an item keeps its kind and id');
+select t.fails($$insert into public.user_items (user_id, kind, id, data) values ('aaaaaaaa-0000-0000-0000-00000000000a', 'workout', 'x', '{}')$$, 'items: nobody writes items for someone else');
+select t.login(:carol);
+select t.ok(t.seen($$select 1 from public.user_items$$) = 0, 'items: nobody reads another account''s items');
+select t.rows($$update public.user_items set data = '{}' where id = 'w1'$$, 0, 'items: nobody changes another account''s items');
+select t.fails($$insert into public.entitlements (user_id, plan) values (auth.uid(), 'pro')$$, 'entitlements: members cannot give themselves Pro');
+reset role;
+insert into public.entitlements (user_id, plan, source) values (:carol, 'pro', 'manual');
+set role authenticated;
+select t.login(:carol);
+select t.fails($$update public.entitlements set expires_at = '2100-01-01' where user_id = auth.uid()$$, 'entitlements: members cannot extend their access');
+select t.ok((select plan from public.entitlements where user_id = auth.uid()) = 'pro', 'entitlements: members read their own access');
+select t.login(:bob);
+select t.ok(t.seen($$select 1 from public.entitlements$$) = 0, 'entitlements: nobody reads another account''s access');
+-- Old single-block copy frozen once the account moved to sync v2.
+select t.rows($$update public.user_state set data = '{"v":1}' where user_id = auth.uid()$$, 1, 'sync v1: still writable before the move');
+insert into public.user_items (kind, id, data) values ('meta', 'migrated', '{}');
+select t.fails($$update public.user_state set data = '{"v":2}' where user_id = auth.uid()$$, 'sync v1: frozen after the move (an old app cannot overwrite)');
+
 /* ---------- feedback and reports: write-only ---------- */
 select t.ok(t.seen($$select 1 from public.feedback$$) = 0, 'feedback: nobody reads messages');
 select t.fails($$insert into public.feedback (user_id, email, kind, message) values (auth.uid(), 'someone@else.invalid', 'idea', 'x')$$, 'feedback: the email must be your own');

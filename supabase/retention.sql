@@ -18,6 +18,11 @@ begin
   delete from public.content_reports where created_at < now() - interval '12 months';
   get diagnostics n = row_count;
   what := 'reports older than 12 months'; deleted := n; return next;
+  if to_regclass('public.user_items') is not null then
+    delete from public.user_items where deleted and updated_at < now() - interval '180 days';
+    get diagnostics n = row_count;
+    what := 'sync deletion markers older than 180 days'; deleted := n; return next;
+  end if;
 end;
 $$;
 revoke all on function admin.purge_expired() from public, anon, authenticated;
