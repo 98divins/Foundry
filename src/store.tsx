@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { diffSize, diffState, joinState, openDb, readAll, splitState, writeDiff, writeDoc, type Split } from './db';
 import { recordDeletions } from './cloud/merge';
 import { displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
@@ -26,16 +27,65 @@ function load(): State {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState();
-    const saved = JSON.parse(raw) as Partial<State>;
-    const base = defaultState();
-    return {
-      ...base,
-      ...saved,
-      settings: { ...base.settings, ...saved.settings },
-      nutrition: { ...base.nutrition, ...saved.nutrition },
-    } as State;
+    return fromSaved(JSON.parse(raw) as Partial<State>);
   } catch {
     return defaultState();
+  }
+}
+
+function fromSaved(saved: Partial<State>): State {
+  const base = defaultState();
+  return {
+    ...base,
+    ...saved,
+    settings: { ...base.settings, ...saved.settings },
+    nutrition: { ...base.nutrition, ...saved.nutrition },
+  } as State;
+}
+
+/* ---------- Where the state lives on this device (docs/SYNC_V2.md, 3.1) ---------- */
+
+/** The old localStorage copy is kept, read-only, this long after moving to IndexedDB (to go back). */
+const LEGACY_DAYS = 30;
+const MIGRATED = 'meta:migrated';
+
+export interface Boot {
+  state: State;
+  db: IDBDatabase | null;
+}
+
+/**
+ * Load the state before the app renders: from IndexedDB, moving the localStorage copy there the
+ * first time; from localStorage when IndexedDB is not available.
+ */
+export async function bootState(): Promise<Boot> {
+  const db = await openDb();
+  if (!db) return { state: load(), db: null };
+  try {
+    const { items, docs } = await readAll(db);
+    const meta = docs.get(MIGRATED) as { at: number } | undefined;
+    if (meta) {
+      docs.delete(MIGRATED);
+      if (Date.now() - meta.at > LEGACY_DAYS * 86400000) forgetLegacyCopy();
+      return { state: joinState(items, docs, defaultState()), db };
+    }
+    // First launch with IndexedDB: copy everything over, all or nothing, then mark it done.
+    const state = load();
+    const sp = splitState(state);
+    await writeDiff(db, { put: [...sp.items], del: [], docs: [...sp.docs] });
+    await writeDoc(db, MIGRATED, { at: Date.now(), from: 'localStorage' });
+    return { state, db };
+  } catch {
+    return { state: load(), db: null };
+  }
+}
+
+/** Remove the old localStorage copy (after the grace period, or on log out so no data stays behind). */
+export function forgetLegacyCopy() {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* ignore */
   }
 }
 
@@ -62,18 +112,63 @@ interface Ctx {
 
 const StoreContext = createContext<Ctx | null>(null);
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<State>(load);
+export function StoreProvider({ children, boot }: { children: ReactNode; boot?: Boot }) {
+  const [state, setState] = useState<State>(() => boot?.state ?? load());
   const [saveError, setSaveError] = useState(false);
+  const db = useRef<IDBDatabase | null>(boot?.db ?? null);
+  // What IndexedDB holds: the next write only sends the difference.
+  const written = useRef<Split | null>(boot?.db ? splitState(boot.state) : null);
+  const latest = useRef(state);
+  latest.current = state;
+  const timer = useRef<number>();
 
-  useEffect(() => {
+  const flush = useCallback(() => {
+    clearTimeout(timer.current);
+    const s = latest.current;
+    if (db.current && written.current) {
+      const next = splitState(s);
+      const d = diffState(written.current, next);
+      if (!diffSize(d)) return;
+      written.current = next;
+      writeDiff(db.current, d).then(
+        () => setSaveError(false),
+        () => {
+          // IndexedDB failed: keep the data safe in localStorage instead, and say so if that fails too.
+          db.current = null;
+          written.current = null;
+          try {
+            localStorage.setItem(KEY, JSON.stringify(latest.current));
+          } catch {
+            setSaveError(true);
+          }
+        },
+      );
+      return;
+    }
     try {
-      localStorage.setItem(KEY, JSON.stringify(state));
+      localStorage.setItem(KEY, JSON.stringify(s));
       setSaveError(false);
     } catch {
       setSaveError(true);
     }
-  }, [state]);
+  }, []);
+
+  useEffect(() => {
+    // Writes are grouped: a burst of changes (ticking sets) becomes one small write.
+    clearTimeout(timer.current);
+    timer.current = window.setTimeout(flush, db.current ? 300 : 0);
+  }, [state, flush]);
+
+  useEffect(() => {
+    // Leaving the app (switching app, locking the phone): write now.
+    const now = () => document.visibilityState === 'hidden' && flush();
+    document.addEventListener('visibilitychange', now);
+    addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', now);
+      removeEventListener('pagehide', flush);
+    };
+  }, [flush]);
 
   useEffect(() => {
     // Ask the browser not to evict our data under storage pressure.

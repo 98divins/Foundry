@@ -8,20 +8,23 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { StoreProvider } from './store';
+import { bootState, StoreProvider } from './store';
 import { CloudProvider } from './cloud/cloud';
 import './styles.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <StoreProvider>
-      <CloudProvider>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
-      </CloudProvider>
-    </StoreProvider>
-  </StrictMode>,
+// The saved data is read before the first render (IndexedDB is asynchronous).
+bootState().then((boot) =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <StoreProvider boot={boot}>
+        <CloudProvider>
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
+        </CloudProvider>
+      </StoreProvider>
+    </StrictMode>,
+  ),
 );
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

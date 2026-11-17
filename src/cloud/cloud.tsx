@@ -1,6 +1,6 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { defaultState, parseBackup, useStore } from '../store';
+import { forgetLegacyCopy, defaultState, parseBackup, useStore } from '../store';
 import type { State } from '../types';
 import { appUrl, cloudConfigured, SUPABASE_KEY, SUPABASE_URL } from './config';
 import { mergeStates } from './merge';
@@ -329,6 +329,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   /** Accounts are required: once signed out, this device keeps no one's data. */
   const clearDevice = () => {
     setMeta(emptyMeta());
+    forgetLegacyCopy();
     replace(defaultState());
   };
 
