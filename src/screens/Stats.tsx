@@ -1,20 +1,9 @@
 import { useMemo, useState } from 'react';
-import {
-  MUSCLE_GROUPS,
-  dayKeyOf,
-  groupSets,
-  monthStart,
-  muscleSets,
-  periodSummary,
-  topExercises,
-  trainedDaySet,
-  weekStreak,
-  type MuscleGroup,
-} from '../analytics';
+import { MUSCLE_GROUPS, dayKeyOf, groupSets, monthStart, periodSummary, topExercises, trainedDaySet, weekStreak, type MuscleGroup } from '../analytics';
 import { BarChart, RadarChart } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon, Segmented, Stat } from '../components/ui';
-import { muscleLabel, MUSCLES } from '../exercises';
+import { areaLabel } from '../exercises';
 import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { hasPro, requirePro } from '../pro';
@@ -24,18 +13,11 @@ import { dayKeyAt, previousRange, rangeOf, weeksIn, type Period } from '../perio
 import { loadRatio, weeklyLoad } from '../trainingLoad';
 import { useFeature } from '../features';
 import { exerciseName, useStore } from '../store';
-import type { Muscle } from '../types';
 import { fmtDuration, fmtVolume, weekStart } from '../utils';
 
 const DAY = 86400000;
-export const GROUP_LABEL: Record<MuscleGroup, string> = {
-  chest: tk('Chest'),
-  back: tk('Back'),
-  core: tk('Core'),
-  shoulders: tk('Shoulders'),
-  arms: tk('Arms'),
-  legs: tk('Lower body'),
-};
+/** Body area names (exercises.ts), kept under this name for older imports. */
+export const groupLabel = (g: MuscleGroup) => areaLabel(g);
 
 export type StatsPageId = 'diet' | 'load' | 'distribution' | 'muscles' | 'exercises' | 'month';
 
@@ -127,11 +109,7 @@ function Distribution() {
     <Sub title={t('Muscle balance')}>
       <PeriodPicker id="balance" value={period} onChange={setPeriod} />
       <section className="panel">
-        <RadarChart
-          labels={MUSCLE_GROUPS.map((g) => t(GROUP_LABEL[g]))}
-          current={MUSCLE_GROUPS.map((g) => cur[g])}
-          previous={MUSCLE_GROUPS.map((g) => prev[g])}
-        />
+        <RadarChart labels={MUSCLE_GROUPS.map((g) => groupLabel(g))} current={MUSCLE_GROUPS.map((g) => cur[g])} previous={MUSCLE_GROUPS.map((g) => prev[g])} />
         <p className="legend small">
           <span className="dot cur" /> {t('This period')} <span className="dot prev" /> {t('Period before')}
         </p>
@@ -142,7 +120,7 @@ function Distribution() {
             const d = cur[g] - prev[g];
             return (
               <li key={g}>
-                <span>{t(GROUP_LABEL[g])}</span>
+                <span>{groupLabel(g)}</span>
                 <span className="muted small">{total ? Math.round((cur[g] / total) * 100) : 0} %</span>
                 <strong>{cur[g]}</strong>
                 <span className={'delta ' + (d > 0 ? 'up' : d < 0 ? 'down' : '')}>
@@ -165,9 +143,9 @@ function MusclesByWeek() {
   const [dates, setDates] = useState<Period | null>(null);
   const sets = useMemo(() => {
     const r = dates ? rangeOf(dates) : { from: start, to: weekStart(start + 10.5 * DAY) };
-    return muscleSets(state.workouts, exMap, r.from, r.to);
+    return groupSets(state.workouts, exMap, r.from, r.to);
   }, [state.workouts, exMap, start, dates]);
-  const rows = MUSCLES.filter((m) => m !== 'cardio').map((m) => [m, sets.get(m) ?? 0] as [Muscle, number]);
+  const rows = MUSCLE_GROUPS.map((g) => [g, sets[g]] as [MuscleGroup, number]);
   const total = rows.reduce((s, [, n]) => s + n, 0);
   const max = Math.max(1, ...rows.map(([, n]) => n));
   const days = [0, 1, 2, 3, 4, 5, 6].map((i) => start + i * DAY + 3600000);
@@ -222,7 +200,7 @@ function MusclesByWeek() {
           </li>
           {rows.map(([m, n]) => (
             <li key={m} style={{ ['--heat' as string]: String(n / max) }} className={n ? '' : 'zero'}>
-              <span>{muscleLabel(m)}</span>
+              <span>{groupLabel(m)}</span>
               <strong>{n}</strong>
             </li>
           ))}
@@ -476,7 +454,7 @@ function MonthReport() {
 
       <section className="panel">
         <h2 className="panel-title">{t('Muscle balance')}</h2>
-        <RadarChart labels={MUSCLE_GROUPS.map((x) => t(GROUP_LABEL[x]))} current={MUSCLE_GROUPS.map((x) => g[x])} previous={MUSCLE_GROUPS.map((x) => gp[x])} />
+        <RadarChart labels={MUSCLE_GROUPS.map((x) => groupLabel(x))} current={MUSCLE_GROUPS.map((x) => g[x])} previous={MUSCLE_GROUPS.map((x) => gp[x])} />
         <p className="legend small">
           <span className="dot cur" /> {title} <span className="dot prev" /> {new Date(prevFrom).toLocaleDateString(locale(), { month: 'long' })}
         </p>

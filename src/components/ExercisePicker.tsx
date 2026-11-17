@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { EQUIPMENT, KIND_LABEL, MUSCLES, equipmentLabel, fold, muscleLabel } from '../exercises';
+import { AREAS, EQUIPMENT, KIND_LABEL, areaLabel, areaOf, equipmentLabel, fold, muscleLabel, type BodyArea } from '../exercises';
 import { useStore } from '../store';
-import type { Equipment, Exercise, ExerciseKind, Muscle } from '../types';
+import type { Equipment, Exercise, ExerciseKind } from '../types';
 import { uid } from '../utils';
 import { ExerciseImage } from './ExerciseImage';
 import { Icon, Sheet } from './ui';
@@ -10,7 +10,8 @@ import { canAdd } from '../pro';
 
 export interface ExerciseFilter {
   query: string;
-  muscle: Muscle | 'all';
+  /** Body area shown in the filter. */
+  muscle: BodyArea | 'all';
   equipment: Equipment | 'all';
 }
 
@@ -23,7 +24,7 @@ export function useFilteredExercises({ query, muscle, equipment }: ExerciseFilte
     const words = fold(query).split(/\s+/).filter(Boolean);
     return exercises
       .filter((e) => {
-        if (muscle !== 'all' && e.muscle !== muscle && !(muscle === 'upper_back' && e.muscle === 'back')) return false;
+        if (muscle !== 'all' && areaOf(e.muscle) !== muscle) return false;
         if (equipment !== 'all' && e.equipment !== equipment) return false;
         if (!words.length) return true;
         const hay = fold(`${e.name} ${e.nameFr ?? ''}`);
@@ -59,12 +60,12 @@ export function ExerciseFilters({ value, onChange, idPrefix }: { value: Exercise
           id={idPrefix + '-muscle'}
           aria-label={t('Muscle')}
           value={value.muscle}
-          onChange={(e) => onChange({ ...value, muscle: e.target.value as Muscle | 'all' })}
+          onChange={(e) => onChange({ ...value, muscle: e.target.value as BodyArea | 'all' })}
         >
           <option value="all">{t('All muscles')}</option>
-          {MUSCLES.map((m) => (
+          {AREAS.map((m) => (
             <option key={m} value={m}>
-              {muscleLabel(m, lang)}
+              {areaLabel(m)}
             </option>
           ))}
         </select>
@@ -115,7 +116,7 @@ export function ExercisePicker({
   replacing?: Exercise;
 }) {
   const customCount = useStore().state.customExercises.length;
-  const startFilter = replacing ? { ...emptyFilter, muscle: replacing.muscle } : emptyFilter;
+  const startFilter: ExerciseFilter = replacing ? { ...emptyFilter, muscle: areaOf(replacing.muscle) } : emptyFilter;
   const [filter, setFilter] = useState<ExerciseFilter>(startFilter);
   const [picked, setPicked] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
@@ -210,7 +211,7 @@ export function CreateExercise({
   const { update, exercises } = useStore();
   const lang = getLang();
   const [name, setName] = useState(initialName);
-  const [muscle, setMuscle] = useState<Muscle>('chest');
+  const [muscle, setMuscle] = useState<BodyArea>('chest');
   const [equipment, setEquipment] = useState<Equipment>('barbell');
   const [kind, setKind] = useState<ExerciseKind>('weight');
   const clash = exercises.some((e) => fold(e.name) === fold(name.trim()) || (e.nameFr && fold(e.nameFr) === fold(name.trim())));
@@ -235,11 +236,11 @@ export function CreateExercise({
           {clash && <span className="field-error">{t('An exercise with this name already exists.')}</span>}
         </label>
         <label className="field">
-          <span>{t('Primary muscle')}</span>
-          <select id="new-ex-muscle" value={muscle} onChange={(e) => setMuscle(e.target.value as Muscle)}>
-            {MUSCLES.map((m) => (
+          <span>{t('Body area')}</span>
+          <select id="new-ex-muscle" value={muscle} onChange={(e) => setMuscle(e.target.value as BodyArea)}>
+            {AREAS.map((m) => (
               <option key={m} value={m}>
-                {muscleLabel(m, lang)}
+                {areaLabel(m)}
               </option>
             ))}
           </select>

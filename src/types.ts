@@ -23,8 +23,11 @@ export type Muscle =
   | 'full_body'
   | 'cardio'
   | 'other'
-  /** Used by the first library; still valid for custom exercises made then. */
-  | 'back';
+  /** Body areas, used by custom exercises (and 'back' by the first library). */
+  | 'back'
+  | 'legs'
+  | 'arms'
+  | 'core';
 export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweight' | 'kettlebell' | 'band' | 'plate' | 'suspension' | 'other';
 /**
  * weight: load × reps. bodyweight: reps, optional added load. assisted: reps, the load is the help

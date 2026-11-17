@@ -76,13 +76,13 @@ describe('supersets', () => {
 });
 
 describe('summary', () => {
-  it('counts sets per muscle and estimates time from rest', () => {
+  it('counts sets per body area and estimates time from rest', () => {
     const sum = routineSummary([block('bench_bb', [s(8), s(8)], 150), block('pull_up', [s(6), { ...s(10), type: 'warmup' }], 90)], exMap);
     expect(sum).toMatchObject({ exercises: 2, sets: 4 });
     expect(sum.seconds).toBe(2 * (45 + 150) + 2 * (45 + 90));
     expect(sum.muscles).toEqual([
       ['chest', 2],
-      ['lats', 1],
+      ['back', 1], // pull-ups count for the back area
     ]);
   });
 });

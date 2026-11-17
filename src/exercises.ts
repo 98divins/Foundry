@@ -77,6 +77,9 @@ const MUSCLE_EN: Record<Muscle, string> = {
   cardio: 'Cardio',
   other: 'Other',
   back: 'Back',
+  legs: 'Legs',
+  arms: 'Arms',
+  core: 'Abs',
 };
 const MUSCLE_FR: Record<Muscle, string> = {
   chest: 'Pectoraux',
@@ -100,6 +103,9 @@ const MUSCLE_FR: Record<Muscle, string> = {
   cardio: 'Cardio',
   other: 'Autre',
   back: 'Dos',
+  legs: 'Jambes',
+  arms: 'Bras',
+  core: 'Abdos',
 };
 
 export const EQUIPMENT: Equipment[] = ['barbell', 'dumbbell', 'machine', 'cable', 'bodyweight', 'kettlebell', 'band', 'plate', 'suspension', 'other'];
@@ -129,7 +135,67 @@ const EQUIPMENT_FR: Record<Equipment, string> = {
 };
 
 /** Muscle and equipment names follow the app language (the second argument is kept for older calls). */
-export const muscleLabel = (m: Muscle, _lang?: NameLang) => (getLang() === 'fr' ? MUSCLE_FR : MUSCLE_EN)[m] ?? m;
+/**
+ * Body areas shown everywhere in the app (exercise lists, filters, statistics): the detailed muscle
+ * stays in the data but people see one of six areas, plus full body, cardio and other.
+ */
+export type BodyArea = 'legs' | 'back' | 'chest' | 'core' | 'shoulders' | 'arms' | 'full_body' | 'cardio' | 'other';
+export const AREAS: BodyArea[] = ['legs', 'back', 'chest', 'core', 'shoulders', 'arms', 'full_body', 'cardio', 'other'];
+const AREA_OF: Record<Muscle, BodyArea> = {
+  chest: 'chest',
+  upper_back: 'back',
+  lats: 'back',
+  lower_back: 'back',
+  traps: 'back',
+  back: 'back',
+  shoulders: 'shoulders',
+  biceps: 'arms',
+  triceps: 'arms',
+  forearms: 'arms',
+  arms: 'arms',
+  abs: 'core',
+  core: 'core',
+  quads: 'legs',
+  hamstrings: 'legs',
+  glutes: 'legs',
+  calves: 'legs',
+  adductors: 'legs',
+  abductors: 'legs',
+  legs: 'legs',
+  neck: 'other',
+  full_body: 'full_body',
+  cardio: 'cardio',
+  other: 'other',
+};
+export const areaOf = (m: Muscle): BodyArea => AREA_OF[m] ?? 'other';
+const AREA_FR: Record<BodyArea, string> = {
+  legs: 'Jambes',
+  back: 'Dos',
+  chest: 'Pectoraux',
+  core: 'Abdos',
+  shoulders: 'Épaules',
+  arms: 'Bras',
+  full_body: 'Corps entier',
+  cardio: 'Cardio',
+  other: 'Autre',
+};
+const AREA_EN: Record<BodyArea, string> = {
+  legs: 'Legs',
+  back: 'Back',
+  chest: 'Chest',
+  core: 'Abs',
+  shoulders: 'Shoulders',
+  arms: 'Arms',
+  full_body: 'Full body',
+  cardio: 'Cardio',
+  other: 'Other',
+};
+export const areaLabel = (a: BodyArea) => (getLang() === 'fr' ? AREA_FR : AREA_EN)[a];
+
+/** What people see for a muscle: its body area. */
+export const muscleLabel = (m: Muscle, _lang?: NameLang) => areaLabel(areaOf(m));
+/** The detailed muscle name (kept for exports and data checks). */
+export const detailedMuscleLabel = (m: Muscle) => (getLang() === 'fr' ? MUSCLE_FR : MUSCLE_EN)[m] ?? m;
 export const equipmentLabel = (e: Equipment, _lang?: NameLang) => (getLang() === 'fr' ? EQUIPMENT_FR : EQUIPMENT_EN)[e] ?? e;
 
 export const KIND_LABEL: Record<ExerciseKind, string> = {

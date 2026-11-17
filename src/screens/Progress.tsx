@@ -3,10 +3,11 @@ import {
   crossInsights,
   strengthBreakdown,
   liftTrends,
-  muscleSets,
+  groupSets,
+  MUSCLE_GROUPS,
+  type MuscleGroup,
   recentPRs,
   strengthIndexByWeek,
-  volumeStatus,
   weeklyDiet,
   weeklyTraining,
   weekStarts,
@@ -17,12 +18,12 @@ import { BarChart, LineChart, Sparkline } from '../components/Charts';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { Header, Icon, Segmented } from '../components/ui';
 import { Avatar } from './Settings';
-import { muscleLabel } from '../exercises';
+import { areaLabel } from '../exercises';
 import { go } from '../hooks';
 import { exerciseName, useStore } from '../store';
-import type { Muscle, PRKind } from '../types';
+import type { PRKind } from '../types';
 import { computePRs, exerciseKind, fmtDate, fmtEstimate, fmtSet, fmtVolume, toDisplay, weekStart } from '../utils';
-import { locale, t, tk, getLang } from '../i18n';
+import { locale, t, tk } from '../i18n';
 import { gearCount } from '../gear';
 import { useProgression } from './Levels';
 import { BADGES } from '../levels';
@@ -49,7 +50,6 @@ export function Progress() {
   const { state, exMap } = useStore();
   const { workouts, settings } = state;
   const unit = settings.unit;
-  const lang = getLang();
   const [metric, setMetric] = useState<WeekMetric>('sets');
   const [muscleRange, setMuscleRange] = useState<'week' | 'avg'>('avg');
   const recapsOn = useFeature('recaps');
@@ -71,20 +71,17 @@ export function Progress() {
   const thisWeek = useMemo(() => weeklyTraining(workouts, weekStarts(1))[0], [workouts]);
   const streak = useMemo(() => weekStreak(workouts).weeks, [workouts]);
 
-  // Sets per muscle: this week, or the average of the last 4 full weeks.
+  // Sets per body area: this week, or the average of the last 4 full weeks (whatever period is chosen above).
   const muscles = useMemo(() => {
     const now = Date.now();
-    const m =
-      muscleRange === 'week'
-        ? muscleSets(workouts, exMap, weekStart(now), now + DAY)
-        : muscleSets(workouts, exMap, starts[starts.length - 5], starts[starts.length - 1]);
+    const last5 = weekStarts(5);
+    const g = muscleRange === 'week' ? groupSets(workouts, exMap, weekStart(now), now + DAY) : groupSets(workouts, exMap, last5[0], last5[4]);
     const div = muscleRange === 'week' ? 1 : 4;
-    return [...m.entries()]
-      .map(([k, v]) => [k, Math.round((v / div) * 10) / 10] as [Muscle, number])
+    return MUSCLE_GROUPS.map((k) => [k, Math.round((g[k] / div) * 10) / 10] as [MuscleGroup, number])
       .filter(([, v]) => v > 0)
       .sort((a, b) => b[1] - a[1]);
-  }, [workouts, exMap, starts, muscleRange]);
-  const maxMuscle = Math.max(20, ...muscles.map((m) => m[1]));
+  }, [workouts, exMap, muscleRange]);
+  const maxMuscle = Math.max(1, ...muscles.map((m) => m[1]));
 
   const weekLabel = (t: number) => new Date(t).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' });
   const bars = training.map((w) => ({
@@ -220,24 +217,18 @@ export function Progress() {
             ]}
           />
           {!muscles.length && <p className="muted small">{t('No working sets in this period.')}</p>}
-          <ul className="muscle-bars graded">
-            {muscles.map(([m, n]) => {
-              const status = volumeStatus(n);
-              return (
-                <li key={m}>
-                  <span className="muscle-name">{muscleLabel(m, lang)}</span>
-                  <span className="muscle-track">
-                    <span className="muscle-zone" style={{ left: `${(10 / maxMuscle) * 100}%`, width: `${(10 / maxMuscle) * 100}%` }} />
-                    <span className={'muscle-fill ' + status} style={{ width: `${(n / maxMuscle) * 100}%` }} />
-                  </span>
-                  <span className="muscle-n">{n}</span>
-                </li>
-              );
-            })}
+          <ul className="muscle-bars">
+            {muscles.map(([m, n]) => (
+              <li key={m}>
+                <span className="muscle-name">{areaLabel(m)}</span>
+                <span className="muscle-track">
+                  <span className="muscle-fill" style={{ width: `${(n / maxMuscle) * 100}%` }} />
+                </span>
+                <span className="muscle-n">{n}</span>
+              </li>
+            ))}
           </ul>
-          <p className="muted small">
-            {t('The two marks show 10 and 20 hard sets a week, a common range for muscle growth: green inside, grey below, orange above. Primary muscle only.')}
-          </p>
+          <p className="muted small">{t('Working sets per body area, counted on the main muscle of each exercise.')}</p>
         </section>
 
         <section className="panel">

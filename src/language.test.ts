@@ -56,14 +56,35 @@ describe('exercise library in both languages', () => {
       expect(names.filter((n, i) => names.indexOf(n) !== i)).toEqual([]);
     }
   });
-  it('muscles and equipment have distinct names in each language', async () => {
-    const { MUSCLES, EQUIPMENT, muscleLabel, equipmentLabel } = await import('./exercises');
+  it('body areas and equipment have distinct names in each language', async () => {
+    const { AREAS, EQUIPMENT, areaLabel, equipmentLabel } = await import('./exercises');
     for (const l of ['fr', 'en'] as const) {
       setLang(l);
-      const m = MUSCLES.map((x) => muscleLabel(x));
+      const m = AREAS.map((x) => areaLabel(x));
       const e = EQUIPMENT.map((x) => equipmentLabel(x));
       expect(new Set(m).size).toBe(m.length);
       expect(new Set(e).size).toBe(e.length);
     }
+  });
+});
+
+describe('body areas', () => {
+  it('every muscle belongs to one of the six areas (or full body, cardio, other), shown in both languages', async () => {
+    const { MUSCLES, AREAS, areaOf, areaLabel, muscleLabel, LIBRARY } = await import('./exercises');
+    for (const m of MUSCLES) expect(AREAS).toContain(areaOf(m));
+    for (const e of LIBRARY) expect(AREAS).toContain(areaOf(e.muscle));
+    setLang('fr');
+    expect(['legs', 'back', 'chest', 'core', 'shoulders', 'arms'].map((a) => areaLabel(a as never))).toEqual([
+      'Jambes',
+      'Dos',
+      'Pectoraux',
+      'Abdos',
+      'Épaules',
+      'Bras',
+    ]);
+    expect(muscleLabel('lats')).toBe('Dos');
+    expect(muscleLabel('quads')).toBe('Jambes');
+    setLang('en');
+    expect(muscleLabel('upper_back')).toBe('Back');
   });
 });

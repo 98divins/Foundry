@@ -5,6 +5,7 @@
  */
 import { addDays, dayKey, dayTotals, fitSlope, weightTrend, type NutritionState } from './nutrition';
 import type { Exercise, Muscle, PRKind, SetEntry, Workout } from './types';
+import { areaOf } from './exercises';
 import { countsForStats, epley, exerciseKind, finished, setVolume, weekStart } from './utils';
 import { t } from './i18n';
 
@@ -332,33 +333,18 @@ export function weekStreak(workouts: Workout[], now = Date.now()): { weeks: numb
   return { weeks, thisWeekDone };
 }
 
-export type MuscleGroup = 'chest' | 'back' | 'shoulders' | 'arms' | 'core' | 'legs';
-export const MUSCLE_GROUPS: MuscleGroup[] = ['chest', 'back', 'core', 'shoulders', 'arms', 'legs'];
-const GROUP_OF: Partial<Record<Muscle, MuscleGroup>> = {
-  chest: 'chest',
-  upper_back: 'back',
-  lats: 'back',
-  lower_back: 'back',
-  traps: 'back',
-  back: 'back',
-  shoulders: 'shoulders',
-  biceps: 'arms',
-  triceps: 'arms',
-  forearms: 'arms',
-  abs: 'core',
-  quads: 'legs',
-  hamstrings: 'legs',
-  glutes: 'legs',
-  calves: 'legs',
-  adductors: 'legs',
-  abductors: 'legs',
+export type MuscleGroup = 'legs' | 'back' | 'chest' | 'core' | 'shoulders' | 'arms';
+export const MUSCLE_GROUPS: MuscleGroup[] = ['legs', 'back', 'chest', 'core', 'shoulders', 'arms'];
+const groupOfMuscle = (m: Muscle): MuscleGroup | undefined => {
+  const a = areaOf(m);
+  return (MUSCLE_GROUPS as string[]).includes(a) ? (a as MuscleGroup) : undefined;
 };
 
 /** Working sets per muscle group between two times (full-body moves and cardio left out). */
 export function groupSets(workouts: Workout[], exMap: Map<string, Exercise>, from: number, to: number): Record<MuscleGroup, number> {
   const out = Object.fromEntries(MUSCLE_GROUPS.map((g) => [g, 0])) as Record<MuscleGroup, number>;
   for (const [m, n] of muscleSets(workouts, exMap, from, to)) {
-    const g = GROUP_OF[m];
+    const g = groupOfMuscle(m);
     if (g) out[g] += n;
   }
   return out;

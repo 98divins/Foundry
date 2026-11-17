@@ -1,4 +1,5 @@
 import type { Exercise, Muscle, Routine, RoutineFolder, SetEntry, WorkoutExercise } from './types';
+import { areaOf } from './exercises';
 import { uid } from './utils';
 import { t } from './i18n';
 
@@ -88,7 +89,8 @@ export function routineSummary(exercises: WorkoutExercise[], exMap: Map<string, 
   let seconds = 0;
   const muscles = new Map<Muscle, number>();
   for (const we of exercises) {
-    const muscle = exMap.get(we.exerciseId)?.muscle ?? 'other';
+    // Counted per body area (legs, back, chest…), as shown everywhere in the app.
+    const muscle = areaOf(exMap.get(we.exerciseId)?.muscle ?? 'other') as Muscle;
     for (const s of we.sets) {
       sets++;
       seconds += (s.duration ?? WORK_SECONDS) + we.restSec;
