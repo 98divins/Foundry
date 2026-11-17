@@ -7,6 +7,11 @@ import { mergeStates } from './merge';
 import { belongsToOtherAccount, emptyMeta, hasData, loadMeta, loginAction, refreshAction, saveMeta, type SyncMeta } from './sync';
 import { t } from '../i18n';
 
+import { prepareSignOut } from './signOut';
+
+/** signOut() result when changes are not on the account yet. */
+export const UNSAVED = 'unsaved-changes';
+
 export type SyncStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error';
 
 interface CloudCtx {
@@ -27,7 +32,8 @@ interface CloudCtx {
   changeEmail: (email: string) => Promise<string | null>;
   setNewPassword: (password: string) => Promise<string | null>;
   /** Returns an error when unsent changes cannot be uploaded (offline): signing out would lose them. */
-  signOut: () => Promise<string | null>;
+  /** Returns an error message, UNSAVED when pending changes could not be sent (ask, then call again with force), or null. */
+  signOut: (force?: boolean) => Promise<string | null>;
   deleteAccount: () => Promise<string | null>;
   syncNow: () => Promise<void>;
 }
@@ -373,15 +379,11 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       if (!e) setRecovering(false);
       return e ? explain(e.message) : null;
     },
-    signOut: async () => {
+    signOut: async (force = false) => {
       const sb = await getClient();
-      // Send anything pending first; with no connection, keep the session rather than lose changes.
-      if (user && metaRef.current.dirty) {
-        try {
-          await upload(user.id);
-        } catch {
-          return t('You have changes that are not saved to your account yet. Connect to the internet, then log out.');
-        }
+      // Merge and send anything pending first; if it still is not on the account, ask before losing it.
+      if (user && !force && (await prepareSignOut(() => metaRef.current.dirty, () => runSync(user.id, false))) === 'unsaved') {
+        return UNSAVED;
       }
       await sb?.auth.signOut();
       clearDevice();

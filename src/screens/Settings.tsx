@@ -11,6 +11,7 @@ import { LegalBody } from '../components/Legal';
 import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
 import { hasPro, PLANS, PRO_FREE_DURING_BETA, previewingFree, requirePro, setPreviewFree, type PlanId } from '../pro';
+import { LogoutButton } from '../components/LogoutButton';
 
 type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'privacy' | 'terms' | 'contact';
 
@@ -38,7 +39,6 @@ export function SettingsHub() {
   const { state } = useStore();
   const c = useCloud();
   const { s } = useSetting();
-  const [msg, setMsg] = useState('');
   const open = (p: Page) => go('settings/' + p);
   return (
     <>
@@ -74,15 +74,8 @@ export function SettingsHub() {
           <Row icon="info" label={t('Terms of use')} onClick={() => open('terms')} />
         </ul>
         {c.user && (
-          <button
-            className="btn btn-ghost-danger btn-wide settings-logout"
-            onClick={async () => {
-              const e = await c.signOut();
-              if (e) setMsg(e);
-            }}
-          >{t('Log out')}</button>
+          <LogoutButton className="btn btn-ghost-danger btn-wide settings-logout" />
         )}
-        {msg && <p className="field-error center">{msg}</p>}
       </main>
     </>
   );

@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { LEGAL_DRAFT, LEGAL_VERSION, privacyPolicy, termsOfUse, type LegalDoc } from '../legal';
 import { useStore } from '../store';
 import { Sheet } from './ui';
+import { LogoutButton } from './LogoutButton';
 
 export type LegalKind = 'privacy' | 'terms';
 const doc = (k: LegalKind): LegalDoc => (k === 'privacy' ? privacyPolicy() : termsOfUse());
@@ -80,9 +81,7 @@ export function ConsentGate() {
         >
           {t('Accept and continue')}
         </button>
-        <button className="btn btn-wide" onClick={() => c.signOut()}>
-          {t('Log out')}
-        </button>
+        <LogoutButton className="btn btn-wide" />
       </div>
     </Sheet>
   );
