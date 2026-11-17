@@ -38,15 +38,18 @@ export function loadGenericFoods(): Promise<Food[]> {
   return genericPromise;
 }
 
-/** Every word must appear (accents and case ignored); names starting with the first word rank first. */
-export function searchFoods(list: Food[], query: string, limit = 40): Food[] {
+/**
+ * Every word must appear (accents and case ignored); names starting with the first word rank first.
+ * `rank` (higher first) comes before the text order: favourites and foods the person eats.
+ */
+export function searchFoods(list: Food[], query: string, limit = 40, rank?: (f: Food) => number): Food[] {
   const words = fold(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const scored: [number, Food][] = [];
   for (const f of list) {
     const hay = fold(`${f.name} ${f.brand ?? ''}`);
     if (!words.every((w) => hay.includes(w))) continue;
-    const score = (hay.startsWith(words[0]) ? 0 : 1) + hay.length / 1000;
+    const score = (hay.startsWith(words[0]) ? 0 : 1) + hay.length / 1000 - (rank ? rank(f) : 0) * 10;
     scored.push([score, f]);
   }
   return scored
@@ -137,4 +140,32 @@ export async function offSearch(query: string): Promise<Food[]> {
     `https://fr.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=25&fields=${OFF_FIELDS}`,
   )) as { products?: OffProduct[] } | null;
   return (data?.products ?? []).map(foodFromOff).filter((f): f is Food => !!f);
+}
+
+/* ---------- What the person eats (plan 4.4) ---------- */
+
+const DAY_MS = 86400000;
+
+/**
+ * How likely each food is to be logged now: every past entry counts, recent ones more (half-life
+ * about 3 weeks), entries at the same meal more than at other meals, and entries logged near this
+ * time of day a little more. Returns food id → score (0 when never logged).
+ */
+export function foodUsage(
+  log: { foodId?: string; meal: string; createdAt: number }[],
+  meal: string,
+  now = Date.now(),
+): Map<string, number> {
+  const out = new Map<string, number>();
+  const hour = new Date(now).getHours();
+  for (const e of log) {
+    if (!e.foodId) continue;
+    const age = Math.max(0, (now - e.createdAt) / DAY_MS);
+    let w = Math.pow(0.5, age / 21);
+    w *= e.meal === meal ? 1 : 0.3;
+    const h = Math.abs(new Date(e.createdAt).getHours() - hour);
+    if (Math.min(h, 24 - h) <= 2) w *= 1.3;
+    out.set(e.foodId, (out.get(e.foodId) ?? 0) + w);
+  }
+  return out;
 }

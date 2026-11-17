@@ -3,6 +3,7 @@ import { go } from '../hooks';
 import { t } from '../i18n';
 import { BADGES, progression } from '../levels';
 import { useStore } from '../store';
+import { useFeature } from '../features';
 
 const KEY = 'foundry:seen-level';
 
@@ -14,6 +15,7 @@ export function LevelUpToast() {
   const { state } = useStore();
   const p = useMemo(() => progression(state), [state]);
   const [msg, setMsg] = useState<string | null>(null);
+  const on = useFeature('levels');
   const timer = useRef<number>();
   useEffect(() => {
     let seen: { level: number; badges: string[] } | null = null;
@@ -43,7 +45,7 @@ export function LevelUpToast() {
       /* ignore */
     }
   }, [p.level, p.badges.join()]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!msg) return null;
+  if (!msg || !on) return null;
   return (
     <button className="streak-toast lit level-toast" onClick={() => { setMsg(null); go('levels'); }}>
       <span className="level-num" style={{ '--rank': p.rank.color, width: 28, height: 28, fontSize: 13 } as React.CSSProperties}>{p.level}</span>

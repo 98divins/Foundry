@@ -22,6 +22,7 @@ import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { requirePro } from '../pro';
 import { LevelChip } from '../components/Level';
+import { useFeature } from '../features';
 import { ActivityFeed } from './Feed';
 import { ChallengesPanel } from './Challenges';
 import { exerciseName, useStore } from '../store';
@@ -183,7 +184,8 @@ export function FriendsHome({ initialView, manage }: { initialView?: 'feed' | 'c
   const [msg, setMsg] = useState('');
   const [editing, setEditing] = useState(false);
   const mine = useMemo(() => buildPublicStats(state), [state]);
-  const [view, setView] = useState<'feed' | 'challenges' | 'board'>(initialView ?? 'feed');
+  const challengesOn = useFeature('challenges');
+  const [view, setView] = useState<'feed' | 'challenges' | 'board'>(initialView === 'challenges' && !challengesOn ? 'feed' : initialView ?? 'feed');
 
   const accepted = friends.filter((f) => f.status === 'accepted');
   const incoming = friends.filter((f) => f.status === 'incoming');
@@ -363,7 +365,7 @@ export function FriendsHome({ initialView, manage }: { initialView?: 'feed' | 'c
               onChange={setView}
               options={[
                 { value: 'feed', label: t('Activity') },
-                { value: 'challenges', label: t('Challenges') },
+                ...(challengesOn ? [{ value: 'challenges' as const, label: t('Challenges') }] : []),
                 { value: 'board', label: t('Leaderboard') },
               ]}
             />

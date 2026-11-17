@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useCloud } from '../cloud/cloud';
 import { publishActivity, unpublishActivity } from '../cloud/social';
 import { progression } from '../levels';
+import { featureOn } from '../features';
 import { feedChanges } from '../feedPosts';
 import { exerciseName, useStore } from '../store';
 import { computePRs, workoutSetCount, workoutVolume } from '../utils';
@@ -23,6 +24,7 @@ export function ActivityPublisher() {
   const c = useCloud();
   const uid = c.user?.id;
   const sharing = state.settings.shareStats !== false;
+  const levelsOn = featureOn(state.settings, 'levels');
   const p = useMemo(() => progression(state), [state]);
   const busy = useRef(false);
 
@@ -71,7 +73,7 @@ export function ActivityPublisher() {
           await unpublishActivity(uid, 'w-' + wid);
           s.workouts = s.workouts.filter((x) => x !== wid);
         }
-        if (!first) {
+        if (!first && levelsOn) {
           if (p.level > s.level) await publishActivity(uid, 'level-' + p.level, { kind: 'level', level: p.level });
           for (const b of p.badges.filter((x) => !s.badges.includes(x))) await publishActivity(uid, 'badge-' + b, { kind: 'badge', badge: b });
         }

@@ -1,4 +1,6 @@
 import { applyAccent } from './theme';
+import { featureOn } from './features';
+import { FeatureOff } from './screens/Features';
 import { useEffect } from 'react';
 import { Icon, type IconName } from './components/ui';
 import { go, useNow, useRoute } from './hooks';
@@ -154,10 +156,10 @@ export function App() {
         param === 'challenges' ? <FriendsHome key="ch" initialView="challenges" /> : param === 'list' ? <FriendsHome key="list" manage /> : param ? <FriendCompare key={param} id={param} /> : <FriendsHome />;
       break;
     case 'recap':
-      screen = param && extra ? <RecapPage key={param + extra} kind={param as 'week' | 'month' | 'year'} start={parseKey(extra)} /> : <RecapHub />;
+      screen = !featureOn(state.settings, 'recaps') ? <FeatureOff /> : param && extra ? <RecapPage key={param + extra} kind={param as 'week' | 'month' | 'year'} start={parseKey(extra)} /> : <RecapHub />;
       break;
     case 'year':
-      screen = <YearReviewPage key={param} year={Number(param) || new Date().getFullYear()} />;
+      screen = !featureOn(state.settings, 'recaps') ? <FeatureOff /> : <YearReviewPage key={param} year={Number(param) || new Date().getFullYear()} />;
       break;
     case 'ti':
       screen = <IntervalEditor key={param + (extra ?? '')} id={param ?? 'new'} folderId={extra} />;
@@ -166,10 +168,10 @@ export function App() {
       screen = <IntervalRun key={param} id={param ?? ''} />;
       break;
     case 'levels':
-      screen = <LevelsPage />;
+      screen = featureOn(state.settings, 'levels') ? <LevelsPage /> : <FeatureOff />;
       break;
     case 'gear':
-      screen = <GearPage />;
+      screen = featureOn(state.settings, 'gear') ? <GearPage /> : <FeatureOff />;
       break;
     case 'u':
       screen = <MemberProfile key={param} username={decodeURIComponent(param ?? '')} />;

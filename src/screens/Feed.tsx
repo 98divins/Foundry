@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useFeature } from '../features';
 import { addComment, deleteComment, giveRespect, loadFeed, SocialNotReady, type FeedItem, type PublicProfile } from '../cloud/social';
 import { BadgeMedal, LevelChip } from '../components/Level';
 import { ReportSheet, useHidden, type ReportTarget } from '../components/ReportSheet';
@@ -40,6 +41,8 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
   const [draft, setDraft] = useState('');
   const [err, setErr] = useState('');
   const hidden = useHidden();
+  const levelsOn = useFeature('levels');
+  const commentsOn = useFeature('comments');
   const [reporting, setReporting] = useState<ReportTarget | null>(null);
 
   const reload = useCallback(async () => {
@@ -87,7 +90,8 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
   };
 
   if (notReady) return null;
-  const shown = (items ?? []).slice(0, limit);
+  // Level and badge posts only show when levels are on (features.ts).
+  const shown = (items ?? []).filter((a) => levelsOn || (a.data.kind !== 'level' && a.data.kind !== 'badge')).slice(0, limit);
   return (
     <section className="panel feed">
       <h2 className="panel-title">{t('Activity')}</h2>
@@ -154,15 +158,17 @@ export function ActivityFeed({ uid, people, levels }: { uid: string; people: Map
                   {t('Respect')}
                   {a.respects.length > 0 && <span className="feed-count">{a.respects.length}</span>}
                 </button>
+                {commentsOn && (
                 <button className="feed-respect" onClick={() => { setOpen(open === a.id ? null : a.id); setDraft(''); }}>
                   <Icon name="note" size={16} />
                   {a.comments.length ? tp(a.comments.length, '{n} comment', '{n} comments') : t('Comment')}
                 </button>
+                )}
               </div>
               {mine && a.respects.length > 0 && (
                 <p className="muted small">{t('Respect from {names}', { names: a.respects.map(name).join(', ') })}</p>
               )}
-              {open === a.id && (
+              {commentsOn && open === a.id && (
                 <div className="feed-comments">
                   {a.comments.filter((c) => !hidden('comment', c.id)).map((c) => (
                     <p key={c.id} className="small feed-comment">

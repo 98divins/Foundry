@@ -16,8 +16,9 @@ import { t, detectLang, locale, type AppLang } from '../i18n';
 import { hasPro, PLANS, PRO_FREE_DURING_BETA, previewingFree, requirePro, setPreviewFree, type PlanId } from '../pro';
 import { LogoutButton } from '../components/LogoutButton';
 import { FriendsSettings } from './Friends';
+import { FeaturesPage } from './Features';
 
-type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'friends' | 'privacy' | 'privacy-settings' | 'community' | 'notice' | 'sources' | 'terms' | 'contact';
+type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'friends' | 'privacy' | 'privacy-settings' | 'community' | 'notice' | 'sources' | 'terms' | 'contact' | 'features';
 
 function Row({ icon, label, value, onClick }: { icon: IconName; label: string; value?: string; onClick: () => void }) {
   return (
@@ -63,6 +64,7 @@ export function SettingsHub() {
           <Row icon="dumbbell" label={t('Workouts')} onClick={() => open('workouts')} />
           <Row icon="ruler" label={t('Units')} value={`${s.unit} · ${s.distanceUnit ?? 'km'} · ${s.heightUnit ?? 'cm'}`} onClick={() => open('units')} />
           <Row icon="globe" label={t('Language')} value={(s.appLang ?? detectLang()) === 'fr' ? 'Français' : 'English'} onClick={() => open('language')} />
+          <Row icon="flame" label={t('Features in test')} onClick={() => open('features')} />
           <Row icon="moon" label={t('Theme')} value={t({ system: 'System', light: 'Light', dark: 'Dark' }[s.theme ?? 'system']) + (s.accent || s.pureBlack ? ' · ' + t('Custom') : '')} onClick={() => open('theme')} />
         </ul>
         <h2 className="settings-group">{t('Data')}</h2>
@@ -120,6 +122,8 @@ export function SettingsPage({ page }: { page?: string }) {
       return <SubscriptionPage />;
     case 'friends':
       return <FriendsSettings />;
+    case 'features':
+      return <FeaturesPage />;
     case 'privacy':
       return (
         <Sub title={t('Privacy policy')}>

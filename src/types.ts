@@ -151,6 +151,8 @@ export interface Settings {
   accent?: string;
   /** Pure black background in dark mode (OLED). */
   pureBlack?: boolean;
+  /** Feature switches set by this person (features.ts); absent = the feature's default. */
+  features?: Partial<Record<string, boolean>>;
 }
 
 export interface RestTimer {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useFeature } from '../features';
 import { useCloud } from '../cloud/cloud';
 import { loadProfilePage, myProfile, profileLink, publishAvatar, publishGear, smallAvatar, SocialNotReady, type ProfilePage, type PublicProfile } from '../cloud/social';
 import { Header, Icon, Sheet } from '../components/ui';
@@ -198,6 +199,8 @@ function CenterCard({ avatar, name, count, sub, level }: { avatar: React.ReactNo
 
 /** A member's profile page: identity, gear, and the training summary they share. */
 export function MemberProfile({ username }: { username: string }) {
+  const gearOn = useFeature('gear');
+  const levelsOn = useFeature('levels');
   const { state, exMap } = useStore();
   const [p, setP] = useState<ProfilePage | null | undefined>(undefined);
   const [err, setErr] = useState('');
@@ -231,7 +234,8 @@ export function MemberProfile({ username }: { username: string }) {
         {p && !hidden('profile', p.username) && (
           <>
             <GearBoard
-              gear={p.gear}
+              gear={gearOn ? p.gear : {}}
+              hideEmpty={!gearOn}
               center={
                 <CenterCard
                   avatar={p.avatar ? <img className="avatar" src={p.avatar} alt="" width={84} height={84} /> : <AnonAvatar size={84} />}
@@ -243,7 +247,7 @@ export function MemberProfile({ username }: { username: string }) {
               }
             />
             {p.bio && <p className="center">{p.bio}</p>}
-            {!!p.stats?.badges?.length && (
+            {levelsOn && !!p.stats?.badges?.length && (
               <section className="panel">
                 <h2 className="panel-title">{t('Badges')}</h2>
                 <ul className="badge-row">

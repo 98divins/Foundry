@@ -1,9 +1,11 @@
 import { BADGES, rankOf, type BadgeDef } from '../levels';
 import { t } from '../i18n';
+import { useFeature } from '../features';
 
 /** "Lv 12 · Cast iron", in the rank's colour. */
 export function LevelChip({ level, short }: { level: number; short?: boolean }) {
   const r = rankOf(level);
+  if (!useFeature('levels')) return null;
   return (
     <span className="level-chip" style={{ '--rank': r.color } as React.CSSProperties} title={t(r.name)}>
       {t('Lv {n}', { n: level })}

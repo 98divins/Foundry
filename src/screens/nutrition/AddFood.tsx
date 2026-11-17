@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFeature } from '../../features';
 import { BarcodeScanner } from '../../components/BarcodeScanner';
 import { Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { back } from '../../hooks';
-import { FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods } from '../../foods';
+import { foodUsage, FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods } from '../../foods';
 import {
   dayKey,
   entriesFromMeal,
@@ -79,7 +80,7 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
           </div>
         )}
 
-        {mode === 'search' && <SearchFoods foods={n.foods} log={n.log} favorites={n.favorites} onPick={setPicked} onCreate={() => setMode('create')} />}
+        {mode === 'search' && <SearchFoods foods={n.foods} log={n.log} favorites={n.favorites} meal={meal} onPick={setPicked} onCreate={() => setMode('create')} />}
         {mode === 'meals' && (
           <SavedMealsList
             onLog={(sm, servings) => {
@@ -143,12 +144,15 @@ export function SearchFoods({
   foods,
   log,
   favorites,
+  meal,
   onPick,
   onCreate,
 }: {
   foods: Food[];
   log: FoodEntry[];
   favorites: string[];
+  /** The meal being filled: foods often logged at this meal come first. */
+  meal?: Meal;
   onPick: (f: Food) => void;
   onCreate?: () => void;
 }) {
@@ -180,9 +184,22 @@ export function SearchFoods({
   }, [local, favorites]);
   const isFav = (f: Food) => favorites.includes(f.id);
 
-  const results = query.trim() ? searchFoods(local, query) : [];
-  // Favourites first among matches.
-  results.sort((a, b) => Number(isFav(b)) - Number(isFav(a)));
+  // Foods this person logs at this meal and time of day (features.ts: smartFoodOrder).
+  const smart = useFeature('smartFoodOrder') && !!meal;
+  const usage = useMemo(() => (smart && meal ? foodUsage(log, meal) : new Map<string, number>()), [smart, log, meal]);
+  const often = useMemo(() => {
+    if (!smart) return [];
+    const byId = new Map(local.map((f) => [f.id, f]));
+    return [...usage.entries()]
+      .filter(([id, u]) => u >= 0.5 && byId.has(id) && !favorites.includes(id))
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([id]) => byId.get(id)!);
+  }, [smart, usage, local, favorites]);
+  const rank = (f: Food) => (isFav(f) ? 100 : 0) + Math.min(usage.get(f.id) ?? 0, 50);
+
+  // Favourites, then foods eaten here, then the best text match.
+  const results = query.trim() ? searchFoods(local, query, 40, rank) : [];
   const more = query.trim() && generic ? searchFoods(generic, query, 30).filter((f) => !results.includes(f)) : [];
   // Foods created by other members, searched as you type (after a short pause).
   const [community, setCommunity] = useState<{ q: string; foods: Food[] } | null>(null);
@@ -195,6 +212,7 @@ export function SearchFoods({
     return () => clearTimeout(id);
   }, [query, local]);
   const hidden = useHidden();
+  const recentShown = recent.filter((f) => !often.includes(f));
   const communityShown = (community && community.q === query.trim() ? community.foods : []).filter((f) => !hidden('food', f.id));
 
   const loadMore = async () => {
@@ -256,12 +274,22 @@ export function SearchFoods({
           </ul>
         </>
       )}
-      {!query.trim() && (
+      {!query.trim() && often.length > 0 && (
+        <>
+          <h3 className="list-title">{t('Often at this meal')}</h3>
+          <ul className="food-list">
+            {often.map((f) => (
+              <FoodRow key={f.id} food={f} onPick={onPick} />
+            ))}
+          </ul>
+        </>
+      )}
+      {!query.trim() && (recentShown.length > 0 || !often.length) && (
         <>
           <h3 className="list-title">{t('Recent')}</h3>
-          {recent.length ? (
+          {recentShown.length ? (
             <ul className="food-list">
-              {recent.map((f) => (
+              {recentShown.map((f) => (
                 <FoodRow key={f.id} food={f} onPick={onPick} favorite={isFav(f)} />
               ))}
             </ul>

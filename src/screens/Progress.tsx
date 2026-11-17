@@ -27,6 +27,7 @@ import { useProgression } from './Levels';
 import { BADGES } from '../levels';
 import { YearReviewCard } from './YearReview';
 import { ChallengesPanel } from './Challenges';
+import { useFeature } from '../features';
 
 const DAY = 86400000;
 const PR_LABEL: Record<PRKind, string> = {
@@ -47,6 +48,8 @@ export function Progress() {
   const lang = settings.exerciseLang;
   const [metric, setMetric] = useState<WeekMetric>('sets');
   const [muscleRange, setMuscleRange] = useState<'week' | 'avg'>('avg');
+  const recapsOn = useFeature('recaps');
+  const challengesOn = useFeature('challenges');
 
   const starts = useMemo(() => weekStarts(12), []);
   const training = useMemo(() => weeklyTraining(workouts, starts), [workouts, starts]);
@@ -104,11 +107,11 @@ export function Progress() {
       <ProgressHeader />
       <main className="page">
         <ProfileHeader workouts={done.length} records={prs.length} streak={streak} />
-        <YearReviewCard />
+        {recapsOn && <YearReviewCard />}
 
         <h2 className="settings-group">{t('This week')}</h2>
         <GoalsCard />
-        <ChallengesPanel compact />
+        {challengesOn && <ChallengesPanel compact />}
         <p className="muted small center">{t('{d} training days and {s} sets so far this week.', { d: thisWeek.days, s: thisWeek.sets })}</p>
 
         <h2 className="settings-group">{t('Progress')}</h2>
@@ -227,6 +230,7 @@ export function Progress() {
 function ProfileHeader({ workouts, records, streak }: { workouts: number; records: number; streak: number }) {
   const { state } = useStore();
   const p = useProgression();
+  const levelsOn = useFeature('levels');
   const pct = p.level >= 50 ? 100 : Math.round((p.intoLevel / p.levelSize) * 100);
   return (
     <section className="panel profile-head">
@@ -237,6 +241,7 @@ function ProfileHeader({ workouts, records, streak }: { workouts: number; record
           <span className="muted small">{state.profile?.bio || t('Edit profile')}</span>
         </span>
       </button>
+      {levelsOn && (
       <button className="profile-head-level" onClick={() => go('levels')} aria-label={t('Level and badges')}>
         <span className="level-num" style={{ '--rank': p.rank.color } as React.CSSProperties}>{p.level}</span>
         <span className="profile-head-xp">
@@ -245,6 +250,7 @@ function ProfileHeader({ workouts, records, streak }: { workouts: number; record
         </span>
         <Icon name="chevron" size={18} />
       </button>
+      )}
       <span className="profile-card-stats">
         <span>
           <strong>{workouts}</strong>
@@ -267,12 +273,14 @@ function ProfileHeader({ workouts, records, streak }: { workouts: number; record
 function MySpace() {
   const { state } = useStore();
   const n = gearCount(state.profile?.gear);
-  const rows: { icon: 'chart' | 'share' | 'trophy' | 'dumbbell'; label: string; text: string; to: string }[] = [
+  const on: Record<string, boolean> = { recap: useFeature('recaps'), levels: useFeature('levels'), gear: useFeature('gear') };
+  type R = { icon: 'chart' | 'share' | 'trophy' | 'dumbbell'; label: string; text: string; to: string };
+  const rows = ([
     { icon: 'chart', label: t('Detailed statistics'), text: t('Diet × training, muscle balance, main exercises, monthly report.'), to: 'stats' },
     { icon: 'share', label: t('My recaps'), text: t('Your week, month or year in a story, with an image to share.'), to: 'recap' },
     { icon: 'trophy', label: t('Level and badges'), text: t('How you earn XP, ranks and every badge.'), to: 'levels' },
     { icon: 'dumbbell', label: t('My gear'), text: n ? t('{0} / 13 slots', { 0: n }) : t('Belt, gloves, shoes, shaker… show what you train with.'), to: 'gear' },
-  ];
+  ] as R[]).filter((r) => on[r.to] !== false);
   return (
     <>
       <h2 className="settings-group">{t('My space')}</h2>
