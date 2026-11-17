@@ -81,7 +81,6 @@ export function ExerciseDetail({ id }: { id: string }) {
   const points = sessions.map((s) => ({ x: s.date, y: toChart(pick[metric](s)) }));
   const fmtAxis = (v: number) => (isTime ? fmtClock(v * 60) : v >= 10000 ? `${fmtNum(v / 1000)}k` : fmtNum(v));
   const recent = [...sessions].reverse().slice(0, 12);
-  const otherName = lang === 'fr' ? ex.name : ex.nameFr;
 
   return (
     <>
@@ -96,7 +95,6 @@ export function ExerciseDetail({ id }: { id: string }) {
         <p className="muted small">
           {muscleLabel(ex.muscle, lang)} · {equipmentLabel(ex.equipment, lang)}
           {ex.custom && t(' · Custom')}
-          {otherName && otherName !== label && <> · {otherName}</>}
         </p>
         {ex.custom && (
           <PhotoField

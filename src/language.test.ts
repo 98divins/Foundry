@@ -45,3 +45,25 @@ describe('one language for the whole app', () => {
     }
   });
 });
+
+describe('exercise library in both languages', () => {
+  it('every exercise has a French and an English name, and no two share one', async () => {
+    const { LIBRARY } = await import('./exercises');
+    const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    for (const lang of ['name', 'nameFr'] as const) {
+      const names = LIBRARY.map((e) => fold(e[lang] ?? ''));
+      expect(names.filter((n) => !n)).toEqual([]);
+      expect(names.filter((n, i) => names.indexOf(n) !== i)).toEqual([]);
+    }
+  });
+  it('muscles and equipment have distinct names in each language', async () => {
+    const { MUSCLES, EQUIPMENT, muscleLabel, equipmentLabel } = await import('./exercises');
+    for (const l of ['fr', 'en'] as const) {
+      setLang(l);
+      const m = MUSCLES.map((x) => muscleLabel(x));
+      const e = EQUIPMENT.map((x) => equipmentLabel(x));
+      expect(new Set(m).size).toBe(m.length);
+      expect(new Set(e).size).toBe(e.length);
+    }
+  });
+});

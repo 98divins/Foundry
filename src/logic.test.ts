@@ -92,7 +92,7 @@ describe('exercise kinds', () => {
   it('library covers the full list with unique ids', () => {
     expect(LIBRARY.length).toBe(451);
     expect(new Set(LIBRARY.map((e) => e.id)).size).toBe(LIBRARY.length);
-    expect(LIBRARY.find((e) => e.id === 'bench_bb')?.nameFr).toBe('Développé Couché (Barre)');
+    expect(LIBRARY.find((e) => e.id === 'bench_bb')?.nameFr).toBe('Développé couché (barre)');
     expect(LIBRARY.find((e) => e.name === 'Plank')?.kind).toBe('duration');
     expect(LIBRARY.find((e) => e.name === 'Running')?.kind).toBe('cardio');
     expect(LIBRARY.find((e) => e.name === 'Pull Up (Assisted)')?.kind).toBe('assisted');
