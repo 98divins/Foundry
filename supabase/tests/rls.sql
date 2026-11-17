@@ -149,6 +149,16 @@ select t.ok(t.seen($$select 1 from public.community_foods$$) = 1, 'community foo
 select t.rows($$update public.community_foods set kcal = 1 where id = 'f-alice'$$, 0, 'community foods: nobody changes another member''s food');
 select t.fails($$insert into public.community_foods (id, user_id, name, kcal) values ('f-x', 'aaaaaaaa-0000-0000-0000-00000000000a', 'x', 1)$$, 'community foods: nobody adds in someone else''s name');
 
+/* ---------- stats: plausible values only ---------- */
+select t.login(:alice);
+select t.rows($$update public.public_stats set stats = '{"v":1,"week":0,"weekDays":4,"weekWorkouts":5,"weekSets":80,"weekVolume":24000,"weekMinutes":300,"avgDays4w":3.5,"streak":12,"prs30":6,"strength4w":2.5,"totalWorkouts":180,"lastWorkoutAt":null,"lifts":{},"level":14,"periods":{"30":{"days":14,"sets":330,"volume":95000,"prs":6,"strength":2.5,"goals":75,"cardio":120,"cardioKm":20}}}' where user_id = auth.uid()$$, 1, 'stats: a heavy but real week is accepted');
+\set sample `cat supabase/tests/sample_stats.json`
+select t.rows(format($$update public.public_stats set stats = %L where user_id = auth.uid()$$, :'sample'), 1, 'stats: what the app publishes for a real-looking account is accepted');
+select t.fails($$update public.public_stats set stats = '{"v":1,"weekDays":9}' where user_id = auth.uid()$$, 'stats: more than 7 training days in a week is refused');
+select t.fails($$update public.public_stats set stats = '{"v":1,"streak":5000}' where user_id = auth.uid()$$, 'stats: an impossible streak is refused');
+select t.fails($$update public.public_stats set stats = '{"v":1,"periods":{"30":{"days":45}}}' where user_id = auth.uid()$$, 'stats: 45 training days in 30 days is refused');
+select t.fails($$update public.public_stats set stats = '{"v":1,"level":"99"}' where user_id = auth.uid()$$, 'stats: numbers must be numbers');
+
 /* ---------- identity columns never change, even on your own rows ---------- */
 select t.login(:alice);
 select t.fails($$update public.shared_meals set meal_id = 'other' where user_id = auth.uid()$$, 'identity: a shared meal keeps its id');

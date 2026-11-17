@@ -150,6 +150,13 @@ Quatre onglets : **Séance · Nutrition · Amis · Profil**.
 - **Face-à-face** avec un ami : score, période, régularité, 1RM estimés au squat, développé couché, soulevé de terre et développé militaire.
 - **Vie privée** : seul un résumé chiffré est partagé, uniquement avec les amis acceptés ; partage désactivable.
 
+### Classements : confiance et limites
+
+- Les statistiques partagées (`public_stats`) sont **calculées sur le téléphone** puis envoyées : un membre peut donc envoyer des chiffres faux. Ce risque est accepté **tant que les classements ne concernent que des amis acceptés**.
+- Le serveur refuse les valeurs **impossibles** (contrainte `public_stats_plausible`, `supabase/stats_bounds.sql`) : plus de 7 jours par semaine, plus de jours d'entraînement que de jours dans la période, série de semaines ou volume absurdes, champs non numériques. Il ne prouve pas que les chiffres sont vrais.
+- **Pas de classement public ni de défi ouvert à des inconnus** tant que ces statistiques ne sont pas recalculées côté serveur à partir des séances.
+- Les règles d'accès et ces bornes sont vérifiées par `npm run test:rls` (`supabase/tests/rls.sql`), lancé dans la CI avant chaque déploiement.
+
 ## 9. Réglages
 
 - Compte : profil (photo, nom, bio), e-mail, mot de passe, synchronisation, suppression du compte.
