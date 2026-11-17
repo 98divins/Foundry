@@ -24,7 +24,6 @@ import { ReportSheet, useHidden } from '../../components/ReportSheet';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { fmtDay } from './NutritionHome';
-import { CopyMealButton } from './CopyMeal';
 import { lastPortion } from '../../mealCopy';
 import { t } from '../../i18n';
 
@@ -82,9 +81,6 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
           </div>
         )}
 
-        {mode === 'search' && !n.log.some((e) => e.date === date && e.meal === meal) && (
-          <CopyMealButton date={date} meal={meal} onCopied={(names) => setAdded((a) => [...a, ...names])} />
-        )}
         {mode === 'search' && (
           <SearchFoods
             foods={n.foods}

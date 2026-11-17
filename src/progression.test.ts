@@ -1,41 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { roundLoad, suggestNext, warmupSets, withWarmups } from './progression';
+import { bestLastSet, fillWithBest, roundLoad, warmupSets, withWarmups } from './progression';
 import type { SetEntry } from './types';
 
 let n = 0;
 const set = (weight: number | null, reps: number | null, extra: Partial<SetEntry> = {}): SetEntry => ({ id: 's' + ++n, type: 'normal', weight, reps, done: true, ...extra });
-const target = (reps: number, repsMax: number | null) => set(null, null, { done: false, target: { reps, repsMax } });
 
-describe('progression suggestion (4.3)', () => {
-  it('top of the range on every set: suggests the next weight', () => {
-    const s = suggestNext([set(80, 12), set(80, 12), set(80, 12)], [target(8, 12)], 'kg')!;
-    expect(s).toMatchObject({ type: 'increase', last: 80, weight: 82.5, reps: 8 });
+describe('best set from last time (4.3)', () => {
+  it('the heaviest working set, most reps at that weight; warm-ups and drops ignored', () => {
+    const prev = [set(60, 10, { type: 'warmup' }), set(100, 8), set(106, 7), set(106, 8), set(80, 15, { type: 'drop' })];
+    expect(bestLastSet(prev)).toEqual({ weight: 106, reps: 8 });
+    expect(bestLastSet([set(null, 12), set(0, 10)])).toBeNull();
+    expect(bestLastSet([])).toBeNull();
   });
-
-  it('not there yet: same weight, aim for the top on every set', () => {
-    const s = suggestNext([set(80, 8), set(80, 8), set(80, 7)], [target(8, 8)], 'kg')!;
-    expect(s).toEqual({ type: 'match', last: 80, lastReps: [8, 8, 7], weight: 80, aim: 8 });
-  });
-
-  it('only counts working sets at the top weight', () => {
-    const prev = [set(40, 10, { type: 'warmup' }), set(60, 12), set(80, 10), set(80, 10), set(60, 15, { type: 'drop' })];
-    expect(suggestNext(prev, [target(8, 10)], 'kg')).toMatchObject({ type: 'increase', lastReps: [10, 10], weight: 82.5 });
-  });
-
-  it('without a target: match the best set, then add a rep once every set matches', () => {
-    expect(suggestNext([set(50, 10), set(50, 9)], [], 'kg')).toMatchObject({ type: 'match', aim: 10 });
-    expect(suggestNext([set(50, 10), set(50, 10)], [], 'kg')).toMatchObject({ type: 'match', aim: 11 });
-  });
-
-  it('steps by 5 lb for people who lift in pounds', () => {
-    const s = suggestNext([set(100 * 0.45359237, 5)], [target(5, null)], 'lb')!;
-    expect(s.type).toBe('increase');
-    expect(s.weight / 0.45359237).toBeCloseTo(105);
-  });
-
-  it('nothing to suggest without a usable last session', () => {
-    expect(suggestNext([], [target(8, 12)], 'kg')).toBeNull();
-    expect(suggestNext([set(null, 12), set(0, 10)], [], 'kg')).toBeNull();
+  it('fills only empty working sets', () => {
+    const today = [set(20, 10, { type: 'warmup', done: false }), set(null, null, { done: false }), set(100, null, { done: false }), set(null, null, { done: true })];
+    const out = fillWithBest(today, { weight: 106, reps: 8 });
+    expect(out.map((s) => [s.weight, s.reps])).toEqual([[20, 10], [106, 8], [100, null], [null, null]]);
   });
 });
 

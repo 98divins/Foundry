@@ -150,6 +150,24 @@ function ProfileSetup({ uid, onSaved, initial, bare }: { uid: string; onSaved: (
   );
 }
 
+/** Settings → Profile: the username and the name friends see, editable in place. */
+export function PublicIdentity() {
+  const uid = useCloud().user?.id;
+  const [me, setMe] = useState<PublicProfile | null | undefined>(undefined);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    if (uid) myProfile(uid).then(setMe, () => setMe(null));
+  }, [uid]);
+  if (!uid || me === undefined) return null;
+  return (
+    <>
+      <h2 className="settings-group">{t('Seen by your friends')}</h2>
+      <ProfileSetup key={me?.username ?? 'new'} uid={uid} initial={me} bare onSaved={(p) => { setMe(p); setSaved(true); }} />
+      {saved && <p className="ok-line">{t('Saved.')}</p>}
+    </>
+  );
+}
+
 function NotReady() {
   return (
     <div className="empty-card">

@@ -15,34 +15,21 @@ export function roundLoad(kg: number, unit: Unit): number {
   return Math.round(kg / step) * step;
 }
 
-export type Suggestion =
-  /** Every working set reached the top of the target last time: go up. */
-  | { type: 'increase'; last: number; lastReps: number[]; weight: number; reps: number | null }
-  /** Not there yet: same weight, aim for these reps on each set. */
-  | { type: 'match'; last: number; lastReps: number[]; weight: number; aim: number };
-
 const working = (s: SetEntry) => (s.type === 'normal' || s.type === 'failure') && !!s.reps && s.weight != null && s.weight > 0;
 
 /**
- * From last session's sets and today's target: if every set at the top weight reached the top of the
- * target range (or, with no target, the same reps on each set), suggest the next weight; otherwise
- * recall the target ("last time 80 × 8, 8, 7: aim for 8, 8, 8").
+ * Last session's best working set: the heaviest, then the most reps at that weight. Shown as a
+ * reference ("last time, best set: 106 kg × 8"); it does not push for more.
  */
-export function suggestNext(prev: SetEntry[], today: SetEntry[], unit: Unit): Suggestion | null {
-  const work = prev.filter(working);
-  if (!work.length) return null;
-  const last = Math.max(...work.map((s) => s.weight!));
-  const lastReps = work.filter((s) => s.weight === last).map((s) => s.reps!);
-  const target = today.find((s) => s.target)?.target ?? null;
-  const top = target ? (target.repsMax ?? target.reps) : null;
-  if (top != null) {
-    if (lastReps.every((r) => r >= top)) return { type: 'increase', last, lastReps, weight: last + weightStep(unit), reps: target!.reps };
-    return { type: 'match', last, lastReps, weight: last, aim: top };
-  }
-  const best = Math.max(...lastReps);
-  // No target: once every set hits the same reps, add one; else match the best set on every set.
-  if (lastReps.length > 1 && lastReps.every((r) => r === best)) return { type: 'match', last, lastReps, weight: last, aim: best + 1 };
-  return { type: 'match', last, lastReps, weight: last, aim: best };
+export function bestLastSet(prev: SetEntry[]): { weight: number; reps: number } | null {
+  let best: SetEntry | null = null;
+  for (const s of prev.filter(working)) if (!best || s.weight! > best.weight! || (s.weight === best.weight && s.reps! > best.reps!)) best = s;
+  return best ? { weight: best.weight!, reps: best.reps! } : null;
+}
+
+/** Fills the empty working sets (no weight and no reps yet) with that set. */
+export function fillWithBest(sets: SetEntry[], best: { weight: number; reps: number }): SetEntry[] {
+  return sets.map((s) => (!s.done && s.type !== 'warmup' && s.type !== 'drop' && s.weight == null && s.reps == null ? { ...s, weight: best.weight, reps: best.reps } : s));
 }
 
 /**

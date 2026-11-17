@@ -5,8 +5,9 @@ import { defaultState } from './store';
 describe('feature switches', () => {
   it('features in test are off by default during the beta, stable ones on', () => {
     const s = defaultState().settings;
-    for (const id of ['gear', 'levels', 'challenges', 'recaps', 'comments'] as const) expect(featureOn(s, id)).toBe(false);
+    for (const id of ['gear', 'levels', 'challenges', 'recaps'] as const) expect(featureOn(s, id)).toBe(false);
     expect(featureOn(s, 'smartFoodOrder')).toBe(true);
+    expect(featureOn(s, 'comments')).toBe(true);
     expect(FEATURES.filter((f) => f.inTest).every((f) => !f.default)).toBe(true);
   });
 

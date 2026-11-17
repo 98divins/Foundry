@@ -9,7 +9,7 @@ import { fmtRepRange, linkWithNext, parseRepRange, supersetSlots, unlink, type S
 import { Icon, NumInput, Sheet, TimeInput } from './ui';
 import { t } from '../i18n';
 import { useFeature } from '../features';
-import { suggestNext, warmupSets, withWarmups } from '../progression';
+import { bestLastSet, fillWithBest, warmupSets, withWarmups } from '../progression';
 import { BARS, platesPerSide } from '../plates';
 
 export type EditorMode = 'live' | 'edit' | 'routine';
@@ -199,15 +199,13 @@ function ExerciseCard({
   const timed = kind === 'duration' || kind === 'cardio';
   const progressionOn = useFeature('progression');
   const rpeOn = useFeature('rpe');
-  // What to aim for today (4.3), shown until the first working set is done.
-  const suggest = progressionOn && mode === 'live' && kind === 'weight' ? suggestNext(prev, we.sets, unit) : null;
+  // Last time's best set (4.3), shown until the first working set is done.
+  const best = progressionOn && mode === 'live' && kind === 'weight' ? bestLastSet(prev) : null;
   const started = we.sets.some((s) => s.done && s.type !== 'warmup');
-  const fmtW = (kg: number) => `${fmtNum(toDisplay(kg, unit))} ${unit}`;
-  const applySuggestion = (kg: number) =>
-    onChange({ ...we, sets: we.sets.map((s) => (!s.done && s.type !== 'warmup' && s.type !== 'drop' ? { ...s, weight: kg } : s)) });
+  const canFill = we.sets.some((s) => !s.done && s.type !== 'warmup' && s.type !== 'drop' && s.weight == null && s.reps == null);
   // Warm-ups are built from the first working weight: typed, suggested, or last time's.
   const workWeight =
-    we.sets.find((s) => s.type !== 'warmup' && s.weight)?.weight ?? suggest?.weight ?? Math.max(0, ...prev.filter((s) => s.type !== 'warmup').map((s) => s.weight ?? 0));
+    we.sets.find((s) => s.type !== 'warmup' && s.weight)?.weight ?? best?.weight ?? Math.max(0, ...prev.filter((s) => s.type !== 'warmup').map((s) => s.weight ?? 0));
   const warmups = kind === 'weight' && workWeight ? warmupSets(workWeight, unit, uid) : [];
   // RPE (optional): asked for the last set done.
   const rpeSet = rpeOn && mode !== 'routine' ? [...we.sets].reverse().find((s) => s.done) : undefined;
@@ -308,15 +306,11 @@ function ExerciseCard({
           <Icon name="timer" size={15} />{' '}{t('Rest')}{' '}{we.restSec ? fmtClock(we.restSec) : t('off')}
         </button>
       )}
-      {suggest && !started && (
+      {best && !started && (
         <div className="aim" role="note">
-          <span>
-            {suggest.type === 'increase'
-              ? t('Last time {w} × {reps}: target reached. Try {next}.', { w: fmtW(suggest.last), reps: suggest.lastReps.join(', '), next: fmtW(suggest.weight) })
-              : t('Last time {w} × {reps}: aim for {aim}.', { w: fmtW(suggest.last), reps: suggest.lastReps.join(', '), aim: suggest.lastReps.map(() => suggest.aim).join(', ') })}
-          </span>
-          {suggest.type === 'increase' && (
-            <button className="btn btn-small" onClick={() => applySuggestion(suggest.weight)}>{t('Use {w}', { w: fmtW(suggest.weight) })}</button>
+          <span>{t('Last time, best set: {w} × {reps}', { w: `${fmtNum(toDisplay(best.weight, unit))} ${unit}`, reps: best.reps })}</span>
+          {canFill && (
+            <button className="btn btn-small" onClick={() => onChange({ ...we, sets: fillWithBest(we.sets, best) })}>{t('Use it')}</button>
           )}
         </div>
       )}
@@ -534,7 +528,7 @@ function ExerciseCard({
       {plating && (
         <PlateSheet
           unit={unit}
-          start={toDisplay(we.sets.find((s) => !s.done && s.type !== 'warmup' && s.weight)?.weight ?? suggest?.weight ?? workWeight ?? 0, unit)}
+          start={toDisplay(we.sets.find((s) => !s.done && s.type !== 'warmup' && s.weight)?.weight ?? best?.weight ?? workWeight ?? 0, unit)}
           onClose={() => setPlating(false)}
         />
       )}

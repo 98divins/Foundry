@@ -15,7 +15,7 @@ import { ACCENTS, DEFAULT_ACCENT } from '../theme';
 import { t, detectLang, locale, type AppLang } from '../i18n';
 import { hasPro, PLANS, PRO_FREE_DURING_BETA, previewingFree, requirePro, setPreviewFree, type PlanId } from '../pro';
 import { LogoutButton } from '../components/LogoutButton';
-import { FriendsSettings } from './Friends';
+import { FriendsSettings, PublicIdentity } from './Friends';
 import { FeaturesPage } from './Features';
 
 type Page = 'profile' | 'account' | 'workouts' | 'units' | 'language' | 'theme' | 'data' | 'guide' | 'faq' | 'about' | 'subscription' | 'friends' | 'privacy' | 'privacy-settings' | 'community' | 'notice' | 'sources' | 'terms' | 'contact' | 'features';
@@ -237,7 +237,8 @@ function ProfilePage() {
         <span>{t('Bio')}</span>
         <textarea id="profile-bio" rows={3} value={p.bio} placeholder={t('Describe yourself')} onChange={(e) => setP({ bio: e.target.value })} />
       </label>
-      <p className="muted small">{t('Sex, age, height and activity used for your calorie targets are in Nutrition → Plan. Your profile is private for now; it will be what friends see once social features arrive.')}</p>
+      <PublicIdentity />
+      <p className="muted small">{t('Sex, age, height and activity used for your calorie targets are in Nutrition → Plan.')}</p>
     </Sub>
   );
 }

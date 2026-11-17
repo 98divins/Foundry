@@ -27,7 +27,6 @@ import { locale, t, tp } from '../../i18n';
 import { canAdd, requirePro } from '../../pro';
 import { bmi, MIN_BMI } from '../../safeguards';
 
-import { CopyMealButton } from './CopyMeal';
 
 export function fmtDay(key: string): string {
   const today = dayKey();
@@ -361,7 +360,6 @@ function MealSection({
         <button className="btn btn-small" onClick={onAdd} aria-label={t('Add food to {meal}', { meal: t(MEAL_LABEL[meal]) })}>
           <Icon name="plus" size={16} />{' '}{t('Add')}</button>
       </div>
-      {!entries.length && <CopyMealButton date={date} meal={meal} />}
       {expanded && blocks.length > 0 && (
         <ul className="entries">
           {blocks.map((b) =>

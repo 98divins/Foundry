@@ -4594,7 +4594,7 @@ a.btn.disabled {
   line-height: 1.3;
 }
 
-/* Faster logging (4.4): one-tap add with the usual amount, copy a previous meal. */
+/* Faster logging (4.4): one-tap add with the usual amount. */
 .food-row-quick {
   display: flex;
   align-items: stretch;
@@ -4623,25 +4623,6 @@ a.btn.disabled {
 .quick-add:active {
   background: var(--accent);
   color: var(--accent-ink);
-}
-.copy-meal {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 6px 0 12px;
-  padding: 12px 14px;
-  min-height: 44px;
-  border: 1px dashed var(--line);
-  border-radius: 12px;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-.copy-meal svg {
-  color: var(--accent);
-  flex: none;
 }
 
 /* Workout parity (4.3): what to aim for, effort per set. */
