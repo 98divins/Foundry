@@ -298,7 +298,12 @@ export interface BoardRow<P> {
 
 /** Rank people by a metric, highest first; equal values share a rank; no data goes last. */
 export function rankBoard<P>(people: { person: P; stats: PublicStats | null }[], m: BoardMetric, period: BoardPeriod = 'week', now = Date.now()): BoardRow<P>[] {
-  const rows = people.map((p) => ({ person: p.person, value: metricValue(p.stats, m, period, now) }));
+  return rankBy(people, (st) => metricValue(st, m, period, now));
+}
+
+/** Ranks people by any value, highest first; equal values share a rank, missing values come last. */
+export function rankBy<P>(people: { person: P; stats: PublicStats | null }[], value: (s: PublicStats | null) => number | null): BoardRow<P>[] {
+  const rows = people.map((p) => ({ person: p.person, value: value(p.stats) }));
   rows.sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
   let rank = 0;
   let last: number | null | undefined;
@@ -309,6 +314,33 @@ export function rankBoard<P>(people: { person: P; stats: PublicStats | null }[],
     }
     return { ...r, rank };
   });
+}
+
+/** Metrics that can be totalled over any dates (from the shared per-day summary). */
+export const RANGE_METRICS: BoardMetric[] = ['days', 'sets', 'volume', 'cardio', 'prs'];
+
+/** A metric over chosen dates (inclusive); null when not shared or not available over dates. */
+export function rangeMetric(s: PublicStats | null | undefined, m: BoardMetric, from: number, to: number): number | null {
+  const r = rangeTotals(s?.days, from, to);
+  if (!r) return null;
+  return m === 'days' ? r.days : m === 'sets' ? r.sets : m === 'volume' ? r.volume : m === 'cardio' ? r.cardio : m === 'prs' ? r.records : null;
+}
+
+/** The shortest standard period that reaches back to `from` (for figures only kept per period). */
+export function coveringPeriod(from: number, now = Date.now()): BoardPeriod {
+  const days = (now - from) / 86400000;
+  return days < 7 ? 'week' : days <= 30 ? '30' : days <= 182 ? '182' : '365';
+}
+
+/**
+ * Face-to-face score: one point per compared figure won (higher is better); ties and figures one
+ * side does not share count for nobody.
+ */
+export function compareScore(pairs: [number | null | undefined, number | null | undefined][]): [number, number] {
+  let a = 0;
+  let b = 0;
+  for (const [x, y] of pairs) if (x != null && y != null && x !== y) x > y ? a++ : b++;
+  return [a, b];
 }
 
 /** Average training days per week over a period (null when not shared). */

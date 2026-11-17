@@ -108,3 +108,28 @@ describe('head-to-head periods', () => {
     expect(daysPerWeek(null, '30')).toBeNull();
   });
 });
+
+describe('comparisons over dates', () => {
+  it('ranks by any value, ties share a rank, missing last', async () => {
+    const { rankBy } = await import('./socialStats');
+    const rows = rankBy([{ person: 'a', stats: null }, { person: 'b', stats: null }, { person: 'c', stats: null }, { person: 'd', stats: null }], () => null);
+    expect(rows.every((r) => r.value == null)).toBe(true);
+    const v: Record<string, number | null> = { a: 3, b: 5, c: 3, d: null };
+    const people = Object.keys(v).map((k) => ({ person: k, stats: { k } as never }));
+    const ranked = rankBy(people, (s) => v[(s as unknown as { k: string }).k]);
+    expect(ranked.map((r) => [r.person, r.rank])).toEqual([['b', 1], ['a', 2], ['c', 2], ['d', 4]]);
+  });
+  it('the score counts figures won, not ties or missing ones', async () => {
+    const { compareScore } = await import('./socialStats');
+    expect(compareScore([[1, 1], [20, 33], [0, 0], [15, 20], [6127, 5449], [1, 0], [70, 54]])).toEqual([3, 2]);
+    expect(compareScore([[5, null], [null, 3]])).toEqual([0, 0]);
+  });
+  it('picks the shortest period reaching back to a date', async () => {
+    const { coveringPeriod } = await import('./socialStats');
+    const now = Date.UTC(2026, 10, 17);
+    expect(coveringPeriod(now - 3 * 86400000, now)).toBe('week');
+    expect(coveringPeriod(now - 20 * 86400000, now)).toBe('30');
+    expect(coveringPeriod(now - 100 * 86400000, now)).toBe('182');
+    expect(coveringPeriod(now - 300 * 86400000, now)).toBe('365');
+  });
+});

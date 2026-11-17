@@ -28,7 +28,7 @@ import { ChallengesPanel } from './Challenges';
 import { exerciseName, useStore } from '../store';
 import { daysPerWeek, liftsFor, rangeTotals } from '../socialStats';
 import { dayKey } from '../nutrition';
-import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
+import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, compareScore, coveringPeriod, metricValue, RANGE_METRICS, rangeMetric, rankBoard, rankBy, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
 
 const METRICS: { id: BoardMetric; label: string; hint: string; weekHint?: string }[] = [
@@ -41,6 +41,29 @@ const METRICS: { id: BoardMetric; label: string; hint: string; weekHint?: string
   { id: 'cardio', label: tk('Cardio'), hint: tk('Minutes of cardio: running, cycling, rowing, walking…'), weekHint: tk('Minutes of cardio this week: running, cycling, rowing, walking…') },
   { id: 'strength', label: tk('Progress'), hint: tk('Strength index change: fair between beginners and experienced lifters.'), weekHint: tk('Strength index change over 4 weeks: fair between beginners and experienced lifters.') },
 ];
+
+type Range = { from: string; to: string };
+const noonOf = (d: string) => new Date(d + 'T12:00').getTime();
+const defaultRange = (): Range => ({ from: dayKey(new Date(Date.now() - 13 * 86400000)), to: dayKey() });
+const rangeName = (r: Range) =>
+  `${new Date(r.from + 'T12:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' })} – ${new Date(r.to + 'T12:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}`;
+
+/** From / to date fields (any dates in the last 12 months). */
+function RangeFields({ id, value, onChange }: { id: string; value: Range; onChange: (r: Range) => void }) {
+  const min = dayKey(new Date(Date.now() - 364 * 86400000));
+  return (
+    <div className="date-range">
+      <label className="field">
+        <span>{t('From')}</span>
+        <input id={id + '-from'} type="date" value={value.from} min={min} max={value.to} onChange={(e) => e.target.value && onChange({ ...value, from: e.target.value })} />
+      </label>
+      <label className="field">
+        <span>{t('To')}</span>
+        <input id={id + '-to'} type="date" value={value.to} min={value.from} max={dayKey()} onChange={(e) => e.target.value && onChange({ ...value, to: e.target.value })} />
+      </label>
+    </div>
+  );
+}
 
 const PERIOD_LABEL: Record<BoardPeriod, string> = { week: tk('This week'), '30': tk('1 month'), '182': tk('6 months'), '365': tk('1 year') };
 
@@ -208,13 +231,14 @@ export function FriendsHome({ initialView, manage }: { initialView?: 'feed' | 'c
   const accepted = friends.filter((f) => f.status === 'accepted');
   const incoming = friends.filter((f) => f.status === 'incoming');
   const outgoing = friends.filter((f) => f.status === 'outgoing');
-  const board = me
-    ? rankBoard<{ p: PublicProfile; me: boolean; level?: number }>(
-        [{ person: { p: me, me: true, level: mine.level }, stats: mine }, ...accepted.map((f) => ({ person: { p: f.profile, me: false, level: f.stats?.level }, stats: f.stats }))],
-        metric,
-        period,
-      )
+  const [boardRange, setBoardRange] = useState<Range | null>(null);
+  const people = me
+    ? [{ person: { p: me, me: true, level: mine.level }, stats: mine }, ...accepted.map((f) => ({ person: { p: f.profile, me: false, level: f.stats?.level }, stats: f.stats as PublicStats | null }))]
     : [];
+  const board = boardRange
+    ? rankBy(people, (st) => rangeMetric(st, metric, noonOf(boardRange.from), noonOf(boardRange.to)))
+    : rankBoard<{ p: PublicProfile; me: boolean; level?: number }>(people, metric, period);
+  const shownMetrics = boardRange ? METRICS.filter((m) => RANGE_METRICS.includes(m.id)) : METRICS;
 
   const addByName = async () => {
     if (!uid) return;
@@ -398,9 +422,24 @@ export function FriendsHome({ initialView, manage }: { initialView?: 'feed' | 'c
             {view === 'board' && (
             <section className="panel">
               <h2 className="panel-title">{t('Leaderboard')}</h2>
-              <Segmented<BoardPeriod> label={t('Period')} value={period} onChange={(p) => (p === 'week' || p === '30' || requirePro('longLeaderboard')) && setPeriod(p)} options={BOARD_PERIODS.map((p) => ({ value: p, label: t(PERIOD_LABEL[p]) }))} />
+              <Segmented<BoardPeriod | 'custom'>
+                label={t('Period')}
+                value={boardRange ? 'custom' : period}
+                onChange={(p) => {
+                  if (p === 'custom') {
+                    if (!requirePro('longLeaderboard')) return;
+                    setBoardRange(boardRange ?? defaultRange());
+                    if (!RANGE_METRICS.includes(metric)) setMetric('days');
+                  } else if (p === 'week' || p === '30' || requirePro('longLeaderboard')) {
+                    setBoardRange(null);
+                    setPeriod(p);
+                  }
+                }}
+                options={[...BOARD_PERIODS.map((p) => ({ value: p as BoardPeriod | 'custom', label: t(PERIOD_LABEL[p]) })), { value: 'custom', label: t('Dates') }]}
+              />
+              {boardRange && <RangeFields id="board" value={boardRange} onChange={setBoardRange} />}
               <div className="chips" role="tablist" aria-label={t('Leaderboard')}>
-                {METRICS.map((m) => (
+                {shownMetrics.map((m) => (
                   <button key={m.id} role="tab" aria-selected={metric === m.id} className={'chip' + (metric === m.id ? ' on' : '')} onClick={() => setMetric(m.id)}>
                     {t(m.label)}
                   </button>
@@ -408,7 +447,7 @@ export function FriendsHome({ initialView, manage }: { initialView?: 'feed' | 'c
               </div>
               <p className="muted small">{(() => {
                 const m = METRICS.find((x) => x.id === metric)!;
-                return t(period === 'week' && m.weekHint ? m.weekHint : m.hint);
+                return t(!boardRange && period === 'week' && m.weekHint ? m.weekHint : m.hint);
               })()}</p>
               <ol className="board">
                 {board.map((r) => (
@@ -472,29 +511,51 @@ export function FriendCompare({ id }: { id: string }) {
   const f = friends.find((x) => x.profile.user_id === id);
   const theirs: PublicStats | null = f?.stats ?? null;
   const [period, setPeriod] = useState<BoardPeriod>('week');
-  const [custom, setCustom] = useState<{ from: string; to: string } | null>(null);
+  const [custom, setCustom] = useState<Range | null>(null);
   const v = (s: PublicStats | null, m: BoardMetric) => metricValue(s, m, period);
-  const periodName = custom
-    ? `${new Date(custom.from + 'T12:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' })} – ${new Date(custom.to + 'T12:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}`
-    : t(PERIOD_LABEL[period]);
+  const periodName = custom ? rangeName(custom) : t(PERIOD_LABEL[period]);
   // Chosen dates: totals from the shared per-day summary.
-  const rangeOf = (s: PublicStats | null) =>
-    custom ? rangeTotals(s?.days, new Date(custom.from + 'T12:00').getTime(), new Date(custom.to + 'T12:00').getTime()) : null;
+  const rangeOf = (s: PublicStats | null) => (custom ? rangeTotals(s?.days, noonOf(custom.from), noonOf(custom.to)) : null);
   const mineRange = rangeOf(mine);
   const theirRange = rangeOf(theirs);
   const perWeek = (s: PublicStats | null, r: ReturnType<typeof rangeOf>) => {
     if (!custom) return daysPerWeek(s, period);
     if (!r) return null;
-    const weeks = Math.max(1, (new Date(custom.to + 'T12:00').getTime() - new Date(custom.from + 'T12:00').getTime()) / 86400000 + 1) / 7;
+    const weeks = Math.max(1, (noonOf(custom.to) - noonOf(custom.from)) / 86400000 + 1) / 7;
     return Math.round((r.days / weeks) * 10) / 10;
   };
-  const score = (() => {
-    const pairs: [number | null, number | null][] = (['days', 'goals', 'sets', 'volume', 'cardio', 'streak', 'prs', 'strength'] as BoardMetric[]).map((m) => [v(mine, m), v(theirs, m)]);
-    let a = 0;
-    let b = 0;
-    for (const [x, y] of pairs) if (x != null && y != null && x !== y) x > y ? a++ : b++;
-    return [a, b];
-  })();
+  // The figures of the main card, for the chosen period or dates; the score counts the ones won.
+  type Fig = { key: string; label: string; a: number | null | undefined; b: number | null | undefined; fmt?: (x: number) => string };
+  const sameWeek = theirs && theirs.week === mine.week;
+  const figures: Fig[] = custom
+    ? [
+        { key: 'days', label: t('Training days'), a: mineRange?.days, b: theirRange?.days },
+        { key: 'sets', label: t('Sets'), a: mineRange?.sets, b: theirRange?.sets },
+        { key: 'volume', label: t('Volume'), a: mineRange?.volume, b: theirRange?.volume, fmt: (x) => fmtVolume(x, unit) },
+        { key: 'cardio', label: t('Cardio'), a: mineRange?.cardio, b: theirRange?.cardio, fmt: (x) => fmtDuration(x * 60000) },
+        { key: 'records', label: t('Records'), a: mineRange?.records, b: theirRange?.records },
+      ]
+    : [
+        { key: 'days', label: t('Training days'), a: v(mine, 'days'), b: v(theirs, 'days') },
+        { key: 'goals', label: t('Goals met'), a: v(mine, 'goals'), b: v(theirs, 'goals'), fmt: (x) => `${x} %` },
+        { key: 'cardio', label: t('Cardio'), a: v(mine, 'cardio'), b: v(theirs, 'cardio'), fmt: (x) => fmtDuration(x * 60000) },
+        {
+          key: 'km',
+          label: t('Cardio distance'),
+          a: period === 'week' ? (mine.weekCardioKm ?? null) : (mine.periods?.[period]?.cardioKm ?? null),
+          b: theirs ? (period === 'week' ? (sameWeek ? (theirs.weekCardioKm ?? null) : 0) : (theirs.periods?.[period]?.cardioKm ?? null)) : null,
+          fmt: (x) => fmtKm(x),
+        },
+        { key: 'sets', label: t('Sets'), a: v(mine, 'sets'), b: v(theirs, 'sets') },
+        { key: 'volume', label: t('Volume'), a: v(mine, 'volume'), b: v(theirs, 'volume'), fmt: (x) => fmtVolume(x, unit) },
+        { key: 'prs', label: t('Records'), a: v(mine, 'prs'), b: v(theirs, 'prs') },
+        period === 'week'
+          ? { key: 'time', label: t('Time'), a: mine.weekMinutes, b: theirs ? (sameWeek ? theirs.weekMinutes : 0) : null, fmt: (x) => fmtDuration(x * 60000) }
+          : { key: 'strength', label: t('Strength progress'), a: v(mine, 'strength'), b: v(theirs, 'strength'), fmt: (x) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) }) },
+      ];
+  const score = compareScore(figures.map((f) => [f.a, f.b]));
+  // Best lifts are kept per period: over dates, use the shortest period that covers them.
+  const liftPeriod = custom ? coveringPeriod(noonOf(custom.from)) : period;
 
   return (
     <>
@@ -519,6 +580,7 @@ export function FriendCompare({ id }: { id: string }) {
                 {theirs?.level != null && <LevelChip level={theirs.level} />}
               </span>
             </section>
+            <p className="muted small center">{t('Score: one point per figure won in “{period}” below. Ties and figures not shared count for nobody.', { period: periodName })}</p>
             <button className="btn btn-wide" onClick={() => go('u/' + f.profile.username)}>
               {t('See profile and gear')}
             </button>
@@ -536,60 +598,16 @@ export function FriendCompare({ id }: { id: string }) {
               }}
               options={[...BOARD_PERIODS.map((p) => ({ value: p as BoardPeriod | 'custom', label: t(PERIOD_LABEL[p]) })), { value: 'custom', label: t('Dates') }]}
             />
-            {custom ? (
-              <section className="panel">
-                <h2 className="panel-title">{t('Chosen dates')}</h2>
-                <div className="date-range">
-                  <label className="field">
-                    <span>{t('From')}</span>
-                    <input id="cmp-from" type="date" value={custom.from} max={custom.to} onChange={(e) => e.target.value && setCustom({ ...custom, from: e.target.value })} />
-                  </label>
-                  <label className="field">
-                    <span>{t('To')}</span>
-                    <input id="cmp-to" type="date" value={custom.to} min={custom.from} max={dayKey()} onChange={(e) => e.target.value && setCustom({ ...custom, to: e.target.value })} />
-                  </label>
-                </div>
-                {(() => {
-                  const a = new Date(custom.from + 'T12:00').getTime();
-                  const b = new Date(custom.to + 'T12:00').getTime();
-                  const x = rangeTotals(mine.days, a, b);
-                  const y = rangeTotals(theirs?.days, a, b);
-                  return (
-                    <>
-                      <ul className="cmp-list">
-                        <Row label={t('Training days')} a={x?.days} b={y?.days} />
-                        <Row label={t('Sets')} a={x?.sets} b={y?.sets} />
-                        <Row label={t('Volume')} a={x?.volume} b={y?.volume} fmt={(v) => fmtVolume(v, unit)} />
-                        <Row label={t('Cardio')} a={x?.cardio} b={y?.cardio} fmt={(v) => fmtDuration(v * 60000)} />
-                        <Row label={t('Records')} a={x?.records} b={y?.records} />
-                      </ul>
-                      {!y && <p className="muted small">{t('{name} needs the latest version of the app to compare over any dates.', { name: nameOf(f.profile) })}</p>}
-                      <p className="muted small">{t('Any dates within the last 12 months.')}</p>
-                    </>
-                  );
-                })()}
-              </section>
-            ) : (
+            {custom && <RangeFields id="cmp" value={custom} onChange={setCustom} />}
             <section className="panel">
-              <h2 className="panel-title">{t(PERIOD_LABEL[period])}</h2>
+              <h2 className="panel-title">{periodName}</h2>
               <ul className="cmp-list">
-                <Row label={t('Training days')} a={v(mine, 'days')} b={v(theirs, 'days')} />
-                <Row label={t('Goals met')} a={v(mine, 'goals')} b={v(theirs, 'goals')} fmt={(x) => `${x} %`} />
-                <Row label={t('Cardio')} a={v(mine, 'cardio')} b={v(theirs, 'cardio')} fmt={(x) => fmtDuration(x * 60000)} />
-                <Row
-                  label={t('Cardio distance')}
-                  a={period === 'week' ? (mine.weekCardioKm ?? null) : (mine.periods?.[period]?.cardioKm ?? null)}
-                  b={theirs ? (period === 'week' ? (theirs.week === mine.week ? (theirs.weekCardioKm ?? null) : 0) : (theirs.periods?.[period]?.cardioKm ?? null)) : null}
-                  fmt={(x) => fmtKm(x)}
-                />
-                <Row label={t('Sets')} a={v(mine, 'sets')} b={v(theirs, 'sets')} />
-                <Row label={t('Volume')} a={v(mine, 'volume')} b={v(theirs, 'volume')} fmt={(x) => fmtVolume(x, unit)} />
-                <Row label={t('Records')} a={v(mine, 'prs')} b={v(theirs, 'prs')} />
-                {period !== 'week' && <Row label={t('Strength progress')} a={v(mine, 'strength')} b={v(theirs, 'strength')} fmt={(x) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) })} />}
-                {period === 'week' && <Row label={t('Time')} a={mine.weekMinutes} b={theirs ? (theirs.week === mine.week ? theirs.weekMinutes : 0) : null} fmt={(x) => fmtDuration(x * 60000)} />}
+                {figures.map((fg) => (
+                  <Row key={fg.key} label={fg.label} a={fg.a ?? null} b={fg.b ?? null} fmt={fg.fmt} />
+                ))}
               </ul>
+              {custom && !theirRange && <p className="muted small">{t('{name} needs the latest version of the app to compare over any dates.', { name: nameOf(f.profile) })}</p>}
             </section>
-            )}
 
             <section className="panel">
               <h2 className="panel-title">{t('Consistency')} · {periodName}</h2>
@@ -601,16 +619,13 @@ export function FriendCompare({ id }: { id: string }) {
             </section>
 
             <section className="panel">
-              <h2 className="panel-title">{t('Big lifts (est. 1RM)')} · {periodName}</h2>
-              {custom ? (
-                <p className="muted small">{t('Best lifts are compared over a set period: choose this week, 1 month, 6 months or 1 year.')}</p>
-              ) : (
-                <ul className="cmp-list">
-                  {BIG_LIFTS.map((l) => (
-                    <Row key={l} label={exerciseName(exMap, l)} a={liftsFor(mine, period)?.[l] ?? null} b={liftsFor(theirs, period)?.[l] ?? null} fmt={(x) => fmtEstimate(x, unit)} />
-                  ))}
-                </ul>
-              )}
+              <h2 className="panel-title">{t('Big lifts (est. 1RM)')} · {custom ? t(PERIOD_LABEL[liftPeriod]) : periodName}</h2>
+              <ul className="cmp-list">
+                {BIG_LIFTS.map((l) => (
+                  <Row key={l} label={exerciseName(exMap, l)} a={liftsFor(mine, liftPeriod)?.[l] ?? null} b={liftsFor(theirs, liftPeriod)?.[l] ?? null} fmt={(x) => fmtEstimate(x, unit)} />
+                ))}
+              </ul>
+              {custom && <p className="muted small">{t('Best lifts are kept per period: shown over {period}, which covers your dates.', { period: t(PERIOD_LABEL[liftPeriod]) })}</p>}
               <p className="muted small">{t('Estimated from your best set (weight × reps). Train for yourself first: everyone starts somewhere.')}</p>
             </section>
 
