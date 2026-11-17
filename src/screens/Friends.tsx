@@ -31,7 +31,7 @@ import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, typ
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
 
 const METRICS: { id: BoardMetric; label: string; hint: string; weekHint?: string }[] = [
-  { id: 'days', label: tk('Training days'), hint: tk('Days with a workout. Three routines on one day count once.') },
+  { id: 'days', label: tk('Training days'), hint: tk('Days with a workout. Three workouts on one day count once.') },
   { id: 'goals', label: tk('Goals'), hint: tk('Share of weeks where each person met their own goals: fair whatever the level.'), weekHint: tk('How far along each person is with their own goals this week.') },
   { id: 'sets', label: tk('Sets'), hint: tk('Working sets.') },
   { id: 'volume', label: tk('Volume'), hint: tk('Weight × reps lifted.') },

@@ -26,8 +26,8 @@ export function ShareResult({ shared, onClose }: { shared: { url: string; copied
     <div className="share-box" role="status">
       <p>
         {shared.copied
-          ? t('Link copied. Anyone who opens it can add these routines to their Foundry.')
-          : t('Copy this link to share these routines:')}
+          ? t('Link copied. Anyone who opens it can add these workouts to their Foundry.')
+          : t('Copy this link to share these workouts:')}
       </p>
       {!shared.copied && (
         <textarea id="share-url" readOnly rows={3} value={shared.url} onFocus={(e) => e.currentTarget.select()} />

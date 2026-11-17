@@ -17,7 +17,7 @@ export function RoutineSummaryPanel({ routine }: { routine: Pick<Routine, 'exerc
   const max = Math.max(1, ...sum.muscles.map((m) => m[1]));
   return (
     <section className="panel">
-      <h2 className="panel-title">{t('Routine summary')}</h2>
+      <h2 className="panel-title">{t('Workout summary')}</h2>
       <div className="summary-stats">
         <Stat label={t('Exercises')} value={sum.exercises} />
         <Stat label={t('Sets')} value={sum.sets} />
@@ -56,9 +56,9 @@ export function RoutineView({ id }: { id: string }) {
   if (!r) {
     return (
       <>
-        <Header title={t('Routine')} onBack={() => back()} />
+        <Header title={t('Workout')} onBack={() => back()} />
         <main className="page">
-          <p className="muted">{t('This routine no longer exists.')}</p>
+          <p className="muted">{t('This workout no longer exists.')}</p>
         </main>
       </>
     );
@@ -78,13 +78,13 @@ export function RoutineView({ id }: { id: string }) {
             disabled={!!state.active || !r.exercises.length}
             onClick={() => startWorkout(update, r)}
           >
-            <Icon name="play" size={16} />{' '}{t('Start routine')}</button>
+            <Icon name="play" size={16} />{' '}{t('Start workout')}</button>
           <button className="btn" onClick={() => go('r/' + r.id)}>
             <Icon name="edit" size={16} />{' '}{t('Edit')}</button>
           <button className="btn" onClick={() => share(undefined, [r])}>
             <Icon name="link" size={16} />{' '}{t('Copy link')}</button>
         </div>
-        {state.active && <p className="muted small">{t('Finish the workout in progress to start this routine.')}</p>}
+        {state.active && <p className="muted small">{t('Finish the workout in progress to start this workout.')}</p>}
         <ShareResult shared={shared} onClose={clear} />
 
         <div className="routine-layout">

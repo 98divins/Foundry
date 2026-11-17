@@ -78,7 +78,7 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
       ],
     }));
     setMenu(false);
-    setToast(t('Saved “{name}” as a routine.', { name: w.name }));
+    setToast(t('Saved “{name}” as a workout.', { name: w.name }));
     setTimeout(() => setToast(''), 2500);
   };
 
@@ -181,7 +181,7 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
           <button className="menu-item" onClick={() => { setMenu(false); go('edit/' + w.id); }}>
             <Icon name="edit" size={18} />{' '}{t('Edit workout')}</button>
           <button className="menu-item" onClick={saveAsRoutine}>
-            <Icon name="copy" size={18} />{' '}{t('Save as routine')}</button>
+            <Icon name="copy" size={18} />{' '}{t('Save as workout')}</button>
           <button className="menu-item danger" onClick={() => { setMenu(false); setConfirmDelete(true); }}>
             <Icon name="trash" size={18} />{' '}{t('Delete workout')}</button>
         </div>

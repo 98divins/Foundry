@@ -46,7 +46,7 @@ export function IntervalEditor({ id, folderId }: { id: string; folderId?: string
   return (
     <>
       <Header
-        title={existing ? t('Edit intervals') : t('New interval routine')}
+        title={existing ? t('Edit intervals') : t('New interval workout')}
         onBack={() => back('')}
         right={<button className="btn btn-primary btn-small" onClick={() => save() && back('')}>{t('Save')}</button>}
       />
@@ -241,7 +241,7 @@ export function IntervalRun({ id }: { id: string }) {
     return (
       <>
         <Header title={t('Timer')} onBack={() => back('')} />
-        <main className="page"><p className="muted">{t('This routine no longer exists.')}</p></main>
+        <main className="page"><p className="muted">{t('This workout no longer exists.')}</p></main>
       </>
     );
   }

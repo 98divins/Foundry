@@ -26,16 +26,16 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
   if (id !== 'new' && !existing) {
     return (
       <>
-        <Header title={t('Routine')} onBack={() => back()} />
+        <Header title={t('Workout')} onBack={() => back()} />
         <main className="page">
-          <p className="muted">{t('This routine no longer exists.')}</p>
+          <p className="muted">{t('This workout no longer exists.')}</p>
         </main>
       </>
     );
   }
 
   const save = () => {
-    const r = { ...draft, name: draft.name.trim() || t('Untitled routine'), updatedAt: Date.now() };
+    const r = { ...draft, name: draft.name.trim() || t('Untitled workout'), updatedAt: Date.now() };
     update((s) => ({
       ...s,
       routines: existing ? s.routines.map((x) => (x.id === r.id ? r : x)) : [...s.routines, r],
@@ -46,7 +46,7 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
   return (
     <>
       <Header
-        title={existing ? t('Edit routine') : t('New routine')}
+        title={existing ? t('Edit workout') : t('New workout')}
         onBack={() => back()}
         right={
           <button className="btn btn-primary btn-small" onClick={save}>{t('Save')}</button>
@@ -54,7 +54,7 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
       />
       <main className="page">
         <label className="field">
-          <span>{t('Routine name')}</span>
+          <span>{t('Workout name')}</span>
           <input
             id="routine-name"
             value={draft.name}
@@ -70,7 +70,7 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
               value={draft.folderId && state.folders.some((f) => f.id === draft.folderId) ? draft.folderId : ''}
               onChange={(e) => setDraft({ ...draft, folderId: e.target.value || undefined })}
             >
-              <option value="">{t('My routines (no folder)')}</option>
+              <option value="">{t('My workouts (no folder)')}</option>
               {state.folders.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.name}
@@ -88,12 +88,12 @@ export function RoutineEditor({ id, folderId }: { id: string; folderId?: string 
         />
         {draft.exercises.length > 0 && <RoutineSummaryPanel routine={draft} />}
         {existing && (
-          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete routine')}</button>
+          <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmDelete(true)}>{t('Delete workout')}</button>
         )}
       </main>
       <Confirm
         open={confirmDelete}
-        title={t('Delete routine?')}
+        title={t('Delete workout?')}
         message={t('“{name}” will be removed. Past workouts stay in your history.', { name: existing?.name ?? '' })}
         confirmLabel={t('Delete')}
         danger

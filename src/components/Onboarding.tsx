@@ -9,7 +9,7 @@ import { LEGAL_VERSION } from '../legal';
 import { t, tk, detectLang, type AppLang } from '../i18n';
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'dumbbell', title: tk('Log every set'), text: tk('450 exercises, routines, supersets and a rest timer built for the gym floor.') },
+  { icon: 'dumbbell', title: tk('Log every set'), text: tk('450 exercises, workouts, supersets and a rest timer built for the gym floor.') },
   { icon: 'apple', title: tk('Eat to your goal'), text: tk('Food log with barcode scan, and targets that adapt to how your body really responds.') },
   { icon: 'chart', title: tk('See what works'), text: tk('Strength trends, records, and how your diet moves your lifts.') },
 ];
@@ -275,7 +275,7 @@ export function QuickStart() {
 
   const choices: { icon: IconName; title: string; text: string; route: string }[] = [
     { icon: 'search', title: t('Pick a program'), text: t('Full Body, Upper / Lower or Push / Pull / Legs, ready to start.'), route: 'explore' },
-    { icon: 'plus', title: t('Build my own routine'), text: t('Choose your exercises, sets and rep ranges.'), route: 'r/new' },
+    { icon: 'plus', title: t('Build my own workout'), text: t('Choose your exercises, sets and rep ranges.'), route: 'r/new' },
     { icon: 'apple', title: t('Set up my nutrition'), text: t('Your calorie and macro targets, adjusted every week.'), route: 'n/setup' },
   ];
   return (

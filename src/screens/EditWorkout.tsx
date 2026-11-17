@@ -131,7 +131,7 @@ export function EditWorkout({ id }: { id: string }) {
         </label>
         {!existing && state.routines.length > 0 && (
           <button className="btn btn-wide" onClick={() => requirePro('fillFromRoutine') && setPicking(true)}>
-            <Icon name="folder" size={18} /> {t('Fill from a routine')}
+            <Icon name="folder" size={18} /> {t('Fill from a workout')}
           </button>
         )}
         {error && <p className="field-error">{error}</p>}
@@ -146,7 +146,7 @@ export function EditWorkout({ id }: { id: string }) {
         />
         <p className="muted small">{t('Sets without reps are left out when you save.')}</p>
       </main>
-      <Sheet open={picking} onClose={() => setPicking(false)} title={t('Fill from a routine')}>
+      <Sheet open={picking} onClose={() => setPicking(false)} title={t('Fill from a workout')}>
         <p className="sheet-text muted small">{t('Sets are filled with what you did last time on each exercise. Check the numbers, then save.')}</p>
         <div className="menu">
           {state.routines.map((r) => (

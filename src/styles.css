@@ -4546,3 +4546,25 @@ a.btn.disabled {
   position: static;
   margin-left: 2px;
 }
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.more-row span {
+  flex: 1;
+  text-align: left;
+}
+.hero-last {
+  color: var(--muted) !important;
+  text-decoration: none;
+  text-align: left;
+  padding: 0;
+  margin: 2px 0 10px;
+}
+.routine-kind > svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}

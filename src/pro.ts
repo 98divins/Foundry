@@ -58,12 +58,12 @@ export type ProFeature =
 
 /** What the upgrade sheet says for each locked feature. */
 export const PRO_COPY: Record<ProFeature, string> = {
-  routines: tk('Free accounts keep up to 4 routines. Go Pro for as many as you like.'),
-  folders: tk('Free accounts have 1 folder. Go Pro to organise routines in as many folders as you like.'),
+  routines: tk('Free accounts keep up to 4 workouts. Go Pro for as many as you like.'),
+  folders: tk('Free accounts have 1 folder. Go Pro to organise workouts in as many folders as you like.'),
   customExercises: tk('Free accounts can create up to 5 custom exercises. Go Pro for unlimited ones.'),
   savedMeals: tk('Free accounts keep up to 4 saved meals. Go Pro for as many as you like.'),
-  mergeRoutines: tk('Merging routines is part of Foundry Pro.'),
-  fillFromRoutine: tk('Filling a past workout from a routine is part of Foundry Pro.'),
+  mergeRoutines: tk('Merging workouts is part of Foundry Pro.'),
+  fillFromRoutine: tk('Filling a past workout from one of your saved workouts is part of Foundry Pro.'),
   adaptiveCoach: tk('Your weekly check-in adjusts your targets to how your body really responds. It is the heart of Foundry Pro.'),
   customMacros: tk('Setting protein and fat yourself is part of Foundry Pro.'),
   shareMeals: tk('Sharing your meals with the community is part of Foundry Pro.'),

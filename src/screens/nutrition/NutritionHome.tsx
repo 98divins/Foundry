@@ -57,6 +57,7 @@ export function NutritionHome({ date }: { date: string }) {
   const { n, setN, unit } = useNutrition();
   const [editing, setEditing] = useState<FoodEntry | null>(null);
   const [checkIn, setCheckIn] = useState(false);
+  const [more, setMore] = useState(false);
   const today = dayKey();
   const totals = dayTotals(n.log, date);
   const planned = n.log.filter((e) => e.date === date && e.planned);
@@ -204,12 +205,29 @@ export function NutritionHome({ date }: { date: string }) {
             />{t('I did not log everything this day (leave it out of the expenditure estimate)')}</label>
         )}
 
-        <div className="link-row">
-          <button className="btn" onClick={() => go('n/weight')}>{t('Weight')}</button>
-          <button className="btn" onClick={() => go('n/insights')}>{t('Expenditure')}</button>
-          <button className="btn" onClick={() => go('n/meals')}>{t('Meals')}</button>
-          <button className="btn" onClick={() => go('n/plan')}>{t('Plan')}</button>
-        </div>
+        <button className="btn btn-wide more-row" onClick={() => setMore(true)}>
+          <Icon name="list" size={18} />
+          <span>{t('Weight · Expenditure · Meals · Plan')}</span>
+          <Icon name="chevron" size={18} />
+        </button>
+        <Sheet open={more} onClose={() => setMore(false)} title={t('More')}>
+          <div className="menu">
+            {([
+              ['ruler', t('Weight'), t('Your weigh-ins and the trend line.'), 'n/weight'],
+              ['chart', t('Expenditure'), t('How many calories you really burn, learned from your data.'), 'n/insights'],
+              ['copy', t('Meals'), t('Your saved meals, meal ideas and community meals.'), 'n/meals'],
+              ['flag', t('Plan'), t('Your goal, calories and macros.'), 'n/plan'],
+            ] as const).map(([icon, label, text, to]) => (
+              <button key={to} className="menu-item routine-kind" onClick={() => { setMore(false); go(to); }}>
+                <Icon name={icon} size={22} />
+                <span>
+                  <strong>{label}</strong>
+                  <span className="muted small">{text}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </Sheet>
       </main>
 
       <EntrySheet entry={editing} onClose={() => setEditing(null)} />

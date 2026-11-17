@@ -290,7 +290,7 @@ function AccountPage() {
       <Confirm
         open={confirmDelete}
         title={t('Delete your account?')}
-        message={t('Your account and all its data (workouts, routines, nutrition) are deleted for good, here and in the cloud.')}
+        message={t('Your account and all its data (workouts, history, nutrition) are deleted for good, here and in the cloud.')}
         confirmLabel={t('Delete account')}
         danger
         onConfirm={async () => {
@@ -524,8 +524,8 @@ function ThemePage() {
 
 function GuidePage() {
   const steps: [string, string][] = [
-    [t('Set up your routines'), t('Workout tab → New routine, or Explore programs for a ready-made plan. Group routines in folders, pair exercises as supersets from their ⋯ menu, and set target reps like 8-12.')],
-    [t('Train'), t('Start a routine and tick each set as you go. The rest timer starts by itself. Empty sets reuse last time’s numbers when you tick them. Change a set’s type (warm-up, drop, failure) by tapping its number.')],
+    [t('Set up your workouts'), t('Workout tab → New workout, or Explore programs for a ready-made plan. Group workouts in folders, pair exercises as supersets from their ⋯ menu, and set target reps like 8-12.')],
+    [t('Train'), t('Start a workout and tick each set as you go. The rest timer starts by itself. Empty sets reuse last time’s numbers when you tick them. Change a set’s type (warm-up, drop, failure) by tapping its number.')],
     [t('Finish'), t('Tap Finish at any time: sets you filled in are saved, empty ones are dropped. Records are marked with a trophy.')],
     [t('Eat to your goal'), t('Nutrition tab → set up your plan, weigh in most mornings and log your meals. Save meals you eat often and star your favourite foods.')],
     [t('Weekly check-in'), t('Once a week Foundry compares what you ate with how your weight moved, and adjusts your calorie and macro targets.')],
@@ -553,7 +553,7 @@ function FaqPage() {
     [t('How is my expenditure estimated?'), t('It starts from your age, height, weight, sex and activity, then learns from your data: what you ate over the last 3 weeks against how your weight moved (about 7 700 kcal per kg). Days you mark as not fully logged are left out.')],
     [t('Why didn’t the rest timer ring with the app closed?'), t('Phones pause web apps in the background. When you come back, Foundry shows when the rest ended. On iPhone, Guided Access keeps you in the app during a workout.')],
     [t('How do I bring my Hevy history?'), t('In Hevy: Settings → Export & Import Data → Export workouts. Then in Foundry: Settings → Export & import data → Import CSV.')],
-    [t('How do I share a routine?'), t('Open the routine → Copy link, or a folder’s ⋯ menu → Copy share link. Whoever opens it can add the routines to their Foundry.')],
+    [t('How do I share a workout?'), t('Open the workout → Copy link, or a folder’s ⋯ menu → Copy share link. Whoever opens it can add the workouts to their Foundry.')],
   ];
   return (
     <Sub title={t('FAQ')}>

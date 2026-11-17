@@ -103,7 +103,7 @@ export function WorkoutEditor({
       {!exercises.length && (
         <div className="empty-card">
           <Icon name="dumbbell" size={28} />
-          <p>{mode === 'routine' ? t('Add the exercises this routine is made of.') : t('Add your first exercise to start logging sets.')}</p>
+          <p>{mode === 'routine' ? t('Add the exercises this workout is made of.') : t('Add your first exercise to start logging sets.')}</p>
         </div>
       )}
       <button className="btn btn-primary btn-wide" onClick={() => setPicking(true)}>

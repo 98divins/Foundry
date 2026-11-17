@@ -18,7 +18,7 @@ export function ProSheet() {
           <p>{t(PRO_COPY[feature])}</p>
           <ul className="pro-perks small">
             <li><Icon name="check" size={16} /> {t('Adaptive nutrition coach and weekly check-ins')}</li>
-            <li><Icon name="check" size={16} /> {t('Unlimited routines, folders and saved meals')}</li>
+            <li><Icon name="check" size={16} /> {t('Unlimited workouts, folders and saved meals')}</li>
             <li><Icon name="check" size={16} /> {t('Full history, advanced statistics, diet × strength')}</li>
             <li><Icon name="check" size={16} /> {t('Head-to-head with friends, long leaderboards')}</li>
             <li><Icon name="check" size={16} /> {t('Plan meals a month ahead, Excel export, custom colours')}</li>

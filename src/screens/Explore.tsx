@@ -13,7 +13,7 @@ export function ExplorePrograms() {
     <>
       <Header title={t('Explore programs')} onBack={() => back()} />
       <main className="page">
-        <p className="muted">{t('Ready-made programs to start from. Adding one copies its routines into a folder in My routines, where you can change anything.')}</p>
+        <p className="muted">{t('Ready-made programs to start from. Adding one copies its workouts into a folder in My workouts, where you can change anything.')}</p>
         <ul className="routine-list">
           {PROGRAMS.map((p) => {
             const sets = p.routines.reduce(
@@ -88,7 +88,7 @@ export function ProgramDetail({ id }: { id: string }) {
         </p>
         <p>{t(p.description)}</p>
         <button className="btn btn-primary btn-wide" onClick={add}>
-          <Icon name="plus" size={18} />{' '}{t('Add to my routines')}</button>
+          <Icon name="plus" size={18} />{' '}{t('Add to my workouts')}</button>
         {p.routines.map((r) => {
           const sum = routineSummary(r.exercises.map((we) => ({ ...we, id: '' })), exMap);
           return (

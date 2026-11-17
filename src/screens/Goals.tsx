@@ -29,7 +29,7 @@ export function GoalsPage() {
           <h2 className="panel-title">{t('Training')}</h2>
           <span>{t('Training days per week')}</span>
           <Segmented<string> label={t('Training days per week')} value={String(training)} onChange={(v) => setTraining(Number(v))} options={[1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: String(n), label: String(n) }))} />
-          <p className="muted small">{t('A day counts once, however many routines you do that day.')}</p>
+          <p className="muted small">{t('A day counts once, however many workouts you do that day.')}</p>
         </section>
         <section className="panel form">
           <h2 className="panel-title">{t('Diet')}</h2>

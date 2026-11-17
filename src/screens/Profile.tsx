@@ -100,7 +100,7 @@ export function DataPage() {
       <Confirm
         open={pendingRestore != null}
         title={t('Restore backup?')}
-        message={t('Your current workouts, routines and settings will be replaced by the backup.')}
+        message={t('Your current workouts, history and settings will be replaced by the backup.')}
         confirmLabel={t('Restore')}
         danger
         onConfirm={() => {
@@ -117,7 +117,7 @@ export function DataPage() {
       <Confirm
         open={confirmReset}
         title={t('Erase all data?')}
-        message={t('All workouts, routines, foods, weigh-ins and settings are deleted, on this phone and in your account. Export a backup first if you may need them.')}
+        message={t('All your workouts (saved and done), foods, weigh-ins and settings are deleted, on this phone and in your account. Export a backup first if you may need them.')}
         confirmLabel={t('Erase everything')}
         danger
         onConfirm={() => {

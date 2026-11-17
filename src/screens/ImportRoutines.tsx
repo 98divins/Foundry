@@ -35,7 +35,7 @@ export function ImportRoutines({ code }: { code: string }) {
 
   return (
     <>
-      <Header title={t('Add routines')} onBack={() => back()} />
+      <Header title={t('Add workouts')} onBack={() => back()} />
       <main className="page">
         {error && (
           <div className="empty-card">
@@ -48,10 +48,10 @@ export function ImportRoutines({ code }: { code: string }) {
           <>
             <p>
               {data.folder ? (
-                <>{tp(data.routines.length, 'This link holds the folder “{folder}” with {n} routine.', 'This link holds the folder “{folder}” with {n} routines.', { folder: data.folder })}</>
+                <>{tp(data.routines.length, 'This link holds the folder “{folder}” with {n} workout.', 'This link holds the folder “{folder}” with {n} workouts.', { folder: data.folder })}</>
               ) : (
-                <>{tp(data.routines.length, 'This link holds {n} routine.', 'This link holds {n} routines.')}</>
-              )}{' '}{t('They will be added to the routines already on this device.')}</p>
+                <>{tp(data.routines.length, 'This link holds {n} workout.', 'This link holds {n} workouts.')}</>
+              )}{' '}{t('They will be added to the workouts already on this device.')}</p>
             <ul className="routine-list">
               {data.routines.map((r) => {
                 const sum = routineSummary(r.exercises, exMap);
@@ -72,7 +72,7 @@ export function ImportRoutines({ code }: { code: string }) {
                 {tp(unknown.length, '{n} exercise is not in this app’s library and will show as “Deleted exercise”. Update the app, or replace it after adding.', '{n} exercises are not in this app’s library and will show as “Deleted exercise”. Update the app, or replace them after adding.')}</p>
             )}
             <button className="btn btn-primary btn-wide" onClick={add}>
-              <Icon name="plus" size={18} />{' '}{t('Add')}{' '}{data.routines.length > 1 ? tp(data.routines.length, '{n} routine', '{n} routines') : t('routine')}
+              <Icon name="plus" size={18} />{' '}{t('Add')}{' '}{data.routines.length > 1 ? tp(data.routines.length, '{n} workout', '{n} workouts') : t('workout')}
             </button>
           </>
         )}
