@@ -143,6 +143,6 @@ export async function accountMode(sb: SupabaseClient, uid: string): Promise<{ mi
     if (error.code === '42P01' || error.code === 'PGRST205') return { migrated: false, enabled: false };
     throw error;
   }
-  const ids = new Set(((data ?? []) as { id: string }[]).map((r) => r.id));
+  const ids = new Set((Array.isArray(data) ? (data as { id: string }[]) : []).map((r) => r.id));
   return { migrated: ids.has('migrated'), enabled: ids.has('v2_enabled') };
 }

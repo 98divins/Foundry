@@ -87,3 +87,34 @@ describe('local storage split (IndexedDB)', () => {
     expect(d.put.length + d.del.length + d.docs.length).toBe(0);
   });
 });
+
+describe('monthly chunks', () => {
+  it('puts dated items in their month, the rest in one chunk per kind', async () => {
+    const { chunkOf } = await import('./db');
+    expect(chunkOf('workout|w1', { startedAt: Date.UTC(2026, 10, 17) })).toBe('workout@2026-11');
+    expect(chunkOf('log|l1', { date: '2026-02-03' })).toBe('log@2026-02');
+    expect(chunkOf('weight|2026-03-01', { date: '2026-03-01' })).toBe('weight@2026-03');
+    expect(chunkOf('routine|r1', { id: 'r1' })).toBe('routine@all');
+    expect(chunkOf('favorite|abc', 'abc')).toBe('favorite@all');
+  });
+});
+
+describe('diff by changed lists', () => {
+  it('finds the same changes as the full comparison, touching only changed lists', async () => {
+    const { diffStates } = await import('./db');
+    const s = sample();
+    const next: State = {
+      ...s,
+      workouts: s.workouts.map((w) => (w.id === 'w1' ? { ...w, name: 'A2' } : w)),
+      routines: [s.routines[1], s.routines[0]],
+      nutrition: { ...s.nutrition, log: s.nutrition.log.filter((l) => l.id !== 'l1') },
+      settings: { ...s.settings, unit: 'kg' },
+    };
+    const d = diffStates(s, next);
+    expect(d.put.map(([k]) => k)).toEqual(['workout|w1']);
+    expect(d.del).toEqual(['log|l1']);
+    expect(d.docs.map(([k]) => k).sort()).toEqual(['order:routine', 'state:settings']);
+    const none = diffStates(s, { ...s });
+    expect(none.put.length + none.del.length + none.docs.length).toBe(0);
+  });
+});

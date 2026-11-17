@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { diffSize, diffState, joinState, openDb, readAll, splitState, writeDiff, writeDoc, type Split } from './db';
+import { diffSize, diffStates, joinState, openDb, readAll, writeDiff, writeDoc } from './db';
 import { recordDeletions } from './cloud/merge';
 import { displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
@@ -62,17 +62,24 @@ export async function bootState(): Promise<Boot> {
   const db = await openDb();
   if (!db) return { state: load(), db: null };
   try {
-    const { items, docs } = await readAll(db);
+    const t0 = performance.now();
+    const { items, docs, legacy } = await readAll(db);
+    const t1 = performance.now();
     const meta = docs.get(MIGRATED) as { at: number } | undefined;
     if (meta) {
       docs.delete(MIGRATED);
       if (Date.now() - meta.at > LEGACY_DAYS * 86400000) forgetLegacyCopy();
-      return { state: joinState(items, docs, defaultState()), db };
+      const state = joinState(items, docs, defaultState());
+      // Still in the first format (one entry per item): convert once to monthly chunks.
+      if (legacy) await writeDiff(db, { put: [], del: [], docs: [] }, null, state);
+      // Startup timings, checked by the performance script.
+      performance.measure?.('foundry-read', { start: t0, end: t1 });
+      performance.measure?.('foundry-join', { start: t1, end: performance.now() });
+      return { state, db };
     }
     // First launch with IndexedDB: copy everything over, all or nothing, then mark it done.
     const state = load();
-    const sp = splitState(state);
-    await writeDiff(db, { put: [...sp.items], del: [], docs: [...sp.docs] });
+    await writeDiff(db, { put: [], del: [], docs: [] }, null, state);
     await writeDoc(db, MIGRATED, { at: Date.now(), from: 'localStorage' });
     return { state, db };
   } catch {
@@ -117,7 +124,7 @@ export function StoreProvider({ children, boot }: { children: ReactNode; boot?: 
   const [saveError, setSaveError] = useState(false);
   const db = useRef<IDBDatabase | null>(boot?.db ?? null);
   // What IndexedDB holds: the next write only sends the difference.
-  const written = useRef<Split | null>(boot?.db ? splitState(boot.state) : null);
+  const written = useRef<State | null>(boot?.db ? boot.state : null);
   const latest = useRef(state);
   latest.current = state;
   const timer = useRef<number>();
@@ -126,13 +133,18 @@ export function StoreProvider({ children, boot }: { children: ReactNode; boot?: 
     clearTimeout(timer.current);
     const s = latest.current;
     if (db.current && written.current) {
-      const next = splitState(s);
-      const d = diffState(written.current, next);
+      const t0 = performance.now();
+      const next = s;
+      const d = diffStates(written.current, next);
+      // Time spent on the main thread to find what to save (checked by the performance script).
+      performance.measure?.('foundry-save', { start: t0, end: performance.now() });
       if (!diffSize(d)) return;
+      const prev = written.current;
       written.current = next;
-      writeDiff(db.current, d).then(
+      writeDiff(db.current, d, prev, next).then(
         () => setSaveError(false),
-        () => {
+        (e) => {
+          console.warn('IndexedDB write failed, using localStorage', e);
           // IndexedDB failed: keep the data safe in localStorage instead, and say so if that fails too.
           db.current = null;
           written.current = null;

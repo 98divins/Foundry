@@ -129,12 +129,46 @@ function shallowEqual(a: unknown, b: unknown): boolean {
   return ka.length === kb.length && ka.every((k) => (a as Record<string, unknown>)[k] === (b as Record<string, unknown>)[k]);
 }
 
+/** Documents only (settings, plan, order of lists…): small, rebuilt on each change. */
+export function splitDocs(s: State): Map<string, unknown> {
+  const docs = new Map<string, unknown>();
+  for (const l of LISTS) if (l.ordered) docs.set('order:' + l.kind, (l.get(s) ?? []).map(l.key));
+  for (const [k, v] of Object.entries(s)) if (!TOP_LISTS.has(k)) docs.set('state:' + k, v);
+  const plan: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(s.nutrition ?? {})) if (!NUTRITION_LISTS.has(k)) plan[k] = v;
+  docs.set('nutrition', plan);
+  return docs;
+}
+
+/**
+ * What changed between two states, looking only at the lists that changed (same array = skipped):
+ * ticking a set compares workouts only, not five years of food logs.
+ */
+export function diffStates(prev: State, next: State): Diff {
+  const put: [string, unknown][] = [];
+  const del: string[] = [];
+  for (const l of LISTS) {
+    const a = l.get(prev) ?? [];
+    const b = l.get(next) ?? [];
+    if (a === b) continue;
+    const before = new Map(a.map((x) => [l.key(x), x] as const));
+    for (const x of b) {
+      const k = l.key(x);
+      if (before.get(k) !== x) put.push([itemKey(l.kind, k), x]);
+      before.delete(k);
+    }
+    for (const k of before.keys()) del.push(itemKey(l.kind, k));
+  }
+  const docs = diffState({ items: new Map(), docs: splitDocs(prev) }, { items: new Map(), docs: splitDocs(next) }).docs;
+  return { put, del, docs };
+}
+
 export const diffSize = (d: Diff) => d.put.length + d.del.length + d.docs.length;
 
 /* ---------- IndexedDB ---------- */
 
 const DB_NAME = 'foundry';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const req = <T,>(r: IDBRequest<T>) =>
   new Promise<T>((res, rej) => {
@@ -166,6 +200,7 @@ export function openDb(timeoutMs = 3000): Promise<IDBDatabase | null> {
         const db = r.result;
         if (!db.objectStoreNames.contains('items')) db.createObjectStore('items');
         if (!db.objectStoreNames.contains('docs')) db.createObjectStore('docs');
+        if (!db.objectStoreNames.contains('chunks')) db.createObjectStore('chunks');
       };
       r.onsuccess = () => finish(r.result);
       r.onerror = () => finish(null);
@@ -176,23 +211,83 @@ export function openDb(timeoutMs = 3000): Promise<IDBDatabase | null> {
   });
 }
 
-export async function readAll(db: IDBDatabase): Promise<{ items: [string, unknown][]; docs: Map<string, unknown> }> {
-  const tx = db.transaction(['items', 'docs'], 'readonly');
-  const items = tx.objectStore('items');
-  const docs = tx.objectStore('docs');
-  const [ik, iv, dk, dv] = await Promise.all([req(items.getAllKeys()), req(items.getAll()), req(docs.getAllKeys()), req(docs.getAll())]);
-  return { items: ik.map((k, i) => [String(k), iv[i]]), docs: new Map(dk.map((k, i) => [String(k), dv[i]])) };
+/*
+ * Items are stored in monthly chunks ("workout@2026-11": [[key, item], …]) rather than one entry
+ * each: reading 5 years at startup takes half the time (fewer records), and a change rewrites only
+ * the chunk it falls in. Lists without dates are one chunk per kind.
+ */
+const DATED: Record<string, (v: Record<string, unknown>) => string | undefined> = {
+  workout: (v) => (typeof v.startedAt === 'number' ? new Date(v.startedAt).toISOString().slice(0, 7) : undefined),
+  log: (v) => (v.date as string)?.slice(0, 7),
+  weight: (v) => (v.date as string)?.slice(0, 7),
+  checkin: (v) => (v.date as string)?.slice(0, 7),
+};
+export function chunkOf(key: string, value: unknown): string {
+  const kind = key.slice(0, key.indexOf('|'));
+  const month = DATED[kind]?.(value as Record<string, unknown>) ?? 'all';
+  return `${kind}@${month}`;
 }
 
-/** Write a diff in one transaction (all or nothing). */
-export async function writeDiff(db: IDBDatabase, d: Diff): Promise<void> {
-  if (!diffSize(d)) return;
-  const tx = db.transaction(['items', 'docs'], 'readwrite');
-  const items = tx.objectStore('items');
+export async function readAll(db: IDBDatabase): Promise<{ items: [string, unknown][]; docs: Map<string, unknown>; legacy: boolean }> {
+  const tx = db.transaction(['chunks', 'items', 'docs'], 'readonly');
+  const [chunks, legacyKeys, legacyValues, dk, dv] = await Promise.all([
+    req(tx.objectStore('chunks').getAll()),
+    req(tx.objectStore('items').getAllKeys()),
+    req(tx.objectStore('items').getAll()),
+    req(tx.objectStore('docs').getAllKeys()),
+    req(tx.objectStore('docs').getAll()),
+  ]);
+  const items: [string, unknown][] = [];
+  for (const ch of chunks as [string, unknown][][]) items.push(...ch);
+  // One entry per item (the first IndexedDB format): still read, converted on the next write.
+  legacyKeys.forEach((k, i) => items.push([String(k), legacyValues[i]]));
+  return { items, docs: new Map(dk.map((k, i) => [String(k), dv[i]])), legacy: legacyKeys.length > 0 };
+}
+
+/**
+ * Write a change in one transaction (all or nothing): the chunks holding changed items are
+ * rewritten from the new state; documents are written one by one.
+ */
+export async function writeDiff(db: IDBDatabase, d: Diff, prev: State | null, next: State): Promise<void> {
+  if (!diffSize(d) && prev) return;
+  const all = !prev; // first write: every chunk
+  const touched = new Set<string>();
+  if (prev) {
+    const prevValue = new Map<string, unknown>();
+    const kinds = new Set([...d.put.map(([k]) => k), ...d.del].map((k) => k.slice(0, k.indexOf('|'))));
+    for (const l of LISTS) if (kinds.has(l.kind)) for (const x of l.get(prev) ?? []) prevValue.set(itemKey(l.kind, l.key(x)), x);
+    for (const [k, v] of d.put) {
+      touched.add(chunkOf(k, v));
+      if (prevValue.has(k)) touched.add(chunkOf(k, prevValue.get(k))); // moved to another month
+    }
+    for (const k of d.del) if (prevValue.has(k)) touched.add(chunkOf(k, prevValue.get(k)));
+  }
+  // Rebuild the touched chunks from the lists they belong to (only those lists are walked).
+  const kinds = all ? null : new Set([...touched].map((ch) => ch.slice(0, ch.indexOf('@'))));
+  const content = new Map<string, [string, unknown][]>();
+  for (const l of LISTS) {
+    if (kinds && !kinds.has(l.kind)) continue;
+    for (const x of l.get(next) ?? []) {
+      const k = itemKey(l.kind, l.key(x));
+      const ch = chunkOf(k, x);
+      if (!all && !touched.has(ch)) continue;
+      if (!content.has(ch)) content.set(ch, []);
+      content.get(ch)!.push([k, x]);
+    }
+  }
+  const tx = db.transaction(['chunks', 'items', 'docs'], 'readwrite');
+  const chunks = tx.objectStore('chunks');
+  if (all) {
+    chunks.clear();
+    tx.objectStore('items').clear();
+  }
+  for (const ch of all ? content.keys() : touched) {
+    const v = content.get(ch);
+    if (v?.length) chunks.put(v, ch);
+    else chunks.delete(ch);
+  }
   const docs = tx.objectStore('docs');
-  for (const [k, v] of d.put) items.put(v, k);
-  for (const k of d.del) items.delete(k);
-  for (const [k, v] of d.docs) (v === undefined ? docs.delete(k) : docs.put(v, k));
+  for (const [k, v] of all ? [...splitDocs(next)] : d.docs) (v === undefined ? docs.delete(k) : docs.put(v, k));
   await done(tx);
 }
 
