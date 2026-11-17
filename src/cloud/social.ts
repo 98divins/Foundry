@@ -235,11 +235,18 @@ const rowToFood = (r: FoodRow): import('../nutrition').Food => ({
   barcode: r.barcode ?? undefined,
   per100: { kcal: r.kcal, protein: r.protein, carbs: r.carbs, fat: r.fat },
   serving: r.serving_label && r.serving_grams ? { label: r.serving_label, grams: r.serving_grams } : null,
-  source: 'custom',
+  source: 'community',
 });
+
+/**
+ * Only foods the member typed in themselves go to the shared database: never a product from Open
+ * Food Facts (its licence would then apply to the shared database) nor someone else's food.
+ */
+export const canPublishFood = (f: import('../nutrition').Food) => f.source === 'custom' && !f.id.startsWith('off-');
 
 /** Add a food the user created to the shared database. */
 export async function publishFood(uid: string, f: import('../nutrition').Food) {
+  if (!canPublishFood(f)) return;
   const { error } = await (await sb()).from('community_foods').upsert({
     id: f.id,
     user_id: uid,

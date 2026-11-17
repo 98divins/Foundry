@@ -35,7 +35,8 @@ export interface Food {
   per100: Macros & { fiber?: number | null };
   /** A named portion, e.g. 1 pot = 125 g. */
   serving?: { label: string; grams: number } | null;
-  source: 'custom' | 'generic' | 'off';
+  /** custom: created by this user; community: created by another member (shared database). */
+  source: 'custom' | 'generic' | 'off' | 'community';
   barcode?: string;
 }
 

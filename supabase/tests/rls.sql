@@ -149,6 +149,12 @@ select t.ok(t.seen($$select 1 from public.community_foods$$) = 1, 'community foo
 select t.rows($$update public.community_foods set kcal = 1 where id = 'f-alice'$$, 0, 'community foods: nobody changes another member''s food');
 select t.fails($$insert into public.community_foods (id, user_id, name, kcal) values ('f-x', 'aaaaaaaa-0000-0000-0000-00000000000a', 'x', 1)$$, 'community foods: nobody adds in someone else''s name');
 
+/* ---------- community foods: at most 30 new ones a day per member ---------- */
+select t.login(:bob);
+do $$ begin for i in 1..30 loop insert into public.community_foods (id, user_id, name, kcal) values ('bob-' || i, auth.uid(), 'Food ' || i, 100); end loop; end $$;
+select t.fails($$insert into public.community_foods (id, user_id, name, kcal) values ('bob-31', auth.uid(), 'One too many', 100)$$, 'community foods: the 31st food of the day is refused');
+select t.rows($$insert into public.community_foods (id, user_id, name, kcal) values ('bob-1', auth.uid(), 'Food 1 fixed', 110) on conflict (id) do update set name = excluded.name, kcal = excluded.kcal$$, 1, 'community foods: editing one of your foods still works at the limit');
+
 /* ---------- stats: plausible values only ---------- */
 select t.login(:alice);
 select t.rows($$update public.public_stats set stats = '{"v":1,"week":0,"weekDays":4,"weekWorkouts":5,"weekSets":80,"weekVolume":24000,"weekMinutes":300,"avgDays4w":3.5,"streak":12,"prs30":6,"strength4w":2.5,"totalWorkouts":180,"lastWorkoutAt":null,"lifts":{},"level":14,"periods":{"30":{"days":14,"sets":330,"volume":95000,"prs":6,"strength":2.5,"goals":75,"cardio":120,"cardioKm":20}}}' where user_id = auth.uid()$$, 1, 'stats: a heavy but real week is accepted');

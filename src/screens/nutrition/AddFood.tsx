@@ -125,6 +125,7 @@ export function FoodRow({ food, onPick, favorite }: { food: Food; onPick: (f: Fo
             {favorite && <span className="fav-star" aria-label={t('Favourite')}>★ </span>}
             {food.name}
             {food.source === 'custom' && <span className="tag">{t('Mine')}</span>}
+            {food.source === 'community' && <span className="tag tag-community">{t('Added by a member')}</span>}
           </span>
           <span className="muted small">
             {food.brand && <>{food.brand} · </>}
