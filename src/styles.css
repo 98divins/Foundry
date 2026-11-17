@@ -4685,3 +4685,59 @@ a.btn.disabled {
   border-color: var(--accent);
   color: var(--accent-ink);
 }
+
+/* Pinned note and plate calculator (4.3). */
+.pinned-note {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 4px 0 8px;
+  padding: 8px 10px;
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  white-space: pre-wrap;
+}
+.pinned-note svg {
+  color: var(--accent);
+  flex: none;
+  margin-top: 2px;
+}
+.plate-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.plates {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  font-size: 13px;
+  height: 72px;
+}
+.plate.p25, .plate.p45 { height: 96px; background: #d33b3b; color: #fff; }
+.plate.p20, .plate.p35 { height: 90px; background: #2f6fde; color: #fff; }
+.plate.p15, .plate.p25 { height: 82px; }
+.plate.p15 { background: #e0b522; color: #111; }
+.plate.p10 { height: 72px; background: #2f9d55; color: #fff; }
+.plate.p5 { height: 58px; background: #e8e8e8; color: #111; }
+.plate.p2_5, .plate.p1_25 { height: 46px; width: 36px; background: #555; color: #fff; }

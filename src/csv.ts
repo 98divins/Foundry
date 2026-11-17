@@ -1,9 +1,9 @@
-import type { Equipment, Exercise, SetType, Workout, WorkoutExercise } from './types';
+import type { Equipment, Exercise, SetType, Unit, Workout, WorkoutExercise } from './types';
 import { uid } from './utils';
 import { t } from './i18n';
 
 /** RFC 4180-style parser: quoted fields, escaped quotes, CRLF or LF. */
-export function parseCSV(text: string): string[][] {
+export function parseCSV(text: string, sep = ','): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
@@ -18,7 +18,7 @@ export function parseCSV(text: string): string[][] {
         } else quoted = false;
       } else field += c;
     } else if (c === '"') quoted = true;
-    else if (c === ',') {
+    else if (c === sep) {
       row.push(field);
       field = '';
     } else if (c === '\n' || c === '\r') {
@@ -68,6 +68,93 @@ function guessEquipment(title: string): Equipment {
   return 'other';
 }
 
+/* ---------- Strong export ---------- */
+
+const LB = 0.45359237;
+const MILE = 1.609344;
+
+export const isStrong = (header: string[]) => {
+  const h = header.map((x) => x.trim().toLowerCase());
+  return h.includes('exercise name') && h.includes('set order');
+};
+
+/** "1h 5m", "45m", "3600" (seconds) → minutes. */
+function strongMinutes(v: string, seconds: boolean): number | null {
+  if (!v.trim()) return null;
+  if (seconds || /^\d+(\.\d+)?$/.test(v.trim())) return Number(v) / (seconds ? 60 : 1);
+  const h = v.match(/(\d+)\s*h/);
+  const m = v.match(/(\d+)\s*m/);
+  const s = v.match(/(\d+)\s*s/);
+  if (!h && !m && !s) return null;
+  return (h ? +h[1] * 60 : 0) + (m ? +m[1] : 0) + (s ? +s[1] / 60 : 0);
+}
+
+const STRONG_SET: Record<string, string> = { w: 'warmup', d: 'dropset', f: 'failure' };
+
+/**
+ * Turns a Strong export into rows in the Hevy layout, so the same import handles both. Old Strong
+ * files have no unit in their headers: weights and distances are then read in the person's unit.
+ */
+export function strongToHevy(rows: string[][], unit: Unit): string[][] {
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const find = (...names: string[]) => header.findIndex((h) => names.some((n) => h === n || h.startsWith(n + ' (')));
+  const c = {
+    date: find('date'),
+    name: find('workout name'),
+    duration: find('duration'),
+    exercise: find('exercise name'),
+    order: find('set order'),
+    weight: find('weight'),
+    reps: find('reps'),
+    distance: find('distance'),
+    seconds: find('seconds'),
+    notes: find('notes'),
+    workoutNotes: find('workout notes'),
+  };
+  const wHead = header[c.weight] ?? '';
+  const toKg = wHead.includes('lb') ? LB : wHead.includes('kg') ? 1 : unit === 'lb' ? LB : 1;
+  const dHead = header[c.distance] ?? '';
+  const toKm = dHead.includes('meter') ? 0.001 : dHead.includes('km') ? 1 : dHead.includes('mi') ? MILE : unit === 'lb' ? MILE : 1;
+  const durInSec = (header[c.duration] ?? '').includes('sec');
+  const get = (r: string[], i: number) => (i >= 0 ? (r[i] ?? '').trim() : '');
+  const num = (v: string) => (v === '' || Number.isNaN(Number(v.replace(',', '.'))) ? null : Number(v.replace(',', '.')));
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const iso = (ts: number) => {
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  };
+  const out: string[][] = [['title', 'start_time', 'end_time', 'description', 'exercise_title', 'exercise_notes', 'set_type', 'weight_kg', 'reps', 'distance_km', 'duration_seconds']];
+  // A workout's notes may sit on any of its rows.
+  const notes = new Map<string, string>();
+  for (const r of rows.slice(1)) {
+    const k = get(r, c.date) + '|' + get(r, c.name);
+    if (!notes.get(k) && get(r, c.workoutNotes)) notes.set(k, get(r, c.workoutNotes));
+  }
+  for (const r of rows.slice(1)) {
+    const order = get(r, c.order).toLowerCase();
+    if (order.startsWith('rest')) continue; // "Rest Timer" rows
+    const start = parseDate(get(r, c.date).replace(' ', 'T'));
+    if (start == null) continue;
+    const mins = strongMinutes(get(r, c.duration), durInSec);
+    const w = num(get(r, c.weight));
+    const d = num(get(r, c.distance));
+    out.push([
+      get(r, c.name) || 'Workout',
+      iso(start),
+      iso(start + (mins ?? 60) * 60000),
+      notes.get(get(r, c.date) + '|' + get(r, c.name)) ?? '',
+      get(r, c.exercise),
+      get(r, c.notes),
+      STRONG_SET[order] ?? 'normal',
+      w == null ? '' : String(Math.round(w * toKg * 1000) / 1000),
+      get(r, c.reps),
+      d ? String(Math.round(d * toKm * 1000) / 1000) : '',
+      get(r, c.seconds),
+    ]);
+  }
+  return out;
+}
+
 const SET_TYPE: Record<string, SetType> = {
   warmup: 'warmup',
   dropset: 'drop',
@@ -86,8 +173,13 @@ export interface ImportResult {
  * (title, start_time, end_time, description, exercise_title, exercise_notes,
  * set_type, weight_kg, reps, ...). Foundry's own CSV export uses the same layout.
  */
-export function importWorkoutCsv(text: string, known: Exercise[], existing: Workout[]): ImportResult {
-  const rows = parseCSV(text.replace(/^﻿/, ''));
+export function importWorkoutCsv(text: string, known: Exercise[], existing: Workout[], unit: Unit = 'kg'): ImportResult {
+  const clean = text.replace(/^﻿/, '');
+  // Strong exports may use ";" (European phones); Hevy and Foundry use ",".
+  const first = clean.split(/\r?\n/, 1)[0];
+  const sep = (first.match(/;/g)?.length ?? 0) > (first.match(/,/g)?.length ?? 0) ? ';' : ',';
+  let rows = parseCSV(clean, sep);
+  if (isStrong(rows[0] ?? [])) rows = strongToHevy(rows, unit);
   if (rows.length < 2) throw new Error(t('The file has no workout rows.'));
   const header = rows[0].map((h) => h.trim().toLowerCase());
   const col = (name: string) => header.indexOf(name);

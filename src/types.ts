@@ -153,6 +153,8 @@ export interface Settings {
   accent?: string;
   /** Pure black background in dark mode (OLED). */
   pureBlack?: boolean;
+  /** Notes pinned to an exercise, shown each time it comes up (exercise id → text). */
+  pinnedNotes?: Record<string, string>;
   /** Feature switches set by this person (features.ts); absent = the feature's default. */
   features?: Partial<Record<string, boolean>>;
 }

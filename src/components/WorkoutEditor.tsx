@@ -10,6 +10,7 @@ import { Icon, NumInput, Sheet, TimeInput } from './ui';
 import { t } from '../i18n';
 import { useFeature } from '../features';
 import { suggestNext, warmupSets, withWarmups } from '../progression';
+import { BARS, platesPerSide } from '../plates';
 
 export type EditorMode = 'live' | 'edit' | 'routine';
 
@@ -176,9 +177,19 @@ function ExerciseCard({
   onChange: (we: WorkoutExercise | null) => void;
   onSetCompleted: () => void;
 }) {
-  const { state, exMap } = useStore();
+  const { state, exMap, update } = useStore();
   const unit = state.settings.unit;
   const ex = exMap.get(we.exerciseId);
+  const pinned = state.settings.pinnedNotes?.[we.exerciseId] ?? '';
+  const [pinning, setPinning] = useState<string | null>(null);
+  const [plating, setPlating] = useState(false);
+  const savePin = (text: string) =>
+    update((s) => {
+      const notes = { ...s.settings.pinnedNotes };
+      if (text.trim()) notes[we.exerciseId] = text.trim();
+      else delete notes[we.exerciseId];
+      return { ...s, settings: { ...s.settings, pinnedNotes: notes } };
+    });
   const kind: ExerciseKind = ex?.kind ?? 'weight';
   const [menu, setMenu] = useState(false);
   const [replacing, setReplacing] = useState(false);
@@ -276,6 +287,12 @@ function ExerciseCard({
           <Icon name="dots" />
         </button>
       </div>
+      {pinned && (
+        <button className="pinned-note" onClick={() => setPinning(pinned)} aria-label={t('Edit pinned note')}>
+          <Icon name="note" size={15} />
+          <span>{pinned}</span>
+        </button>
+      )}
       {noteOpen && (
         <textarea
           id={'note-' + we.id}
@@ -482,6 +499,12 @@ function ExerciseCard({
                 : t('Add warm-up sets (enter a working weight first)')}
             </button>
           )}
+          {ex?.equipment === 'barbell' && (
+            <button className="menu-item" onClick={() => { setMenu(false); setPlating(true); }}>
+              <Icon name="dumbbell" size={18} />{' '}{t('Plates to load')}</button>
+          )}
+          <button className="menu-item" onClick={() => { setMenu(false); setPinning(pinned); }}>
+            <Icon name="note" size={18} />{' '}{pinned ? t('Edit pinned note') : t('Pin a note to this exercise')}</button>
           <button className="menu-item" onClick={() => { setNoteOpen(true); setMenu(false); }}>
             <Icon name="note" size={18} /> {we.note ? t('Edit note') : t('Add note')}
           </button>
@@ -503,6 +526,18 @@ function ExerciseCard({
             <Icon name="trash" size={18} />{' '}{t('Remove exercise')}</button>
         </div>
       </Sheet>
+      <Sheet open={pinning != null} onClose={() => setPinning(null)} title={t('Pinned note')}>
+        <p className="muted small">{t('Shown every time this exercise comes up: seat height, grip, cues…')}</p>
+        <textarea id={'pin-' + we.id} className="ex-note" rows={4} value={pinning ?? ''} maxLength={500} onChange={(e) => setPinning(e.target.value)} />
+        <button className="btn btn-primary btn-wide" onClick={() => { savePin(pinning ?? ''); setPinning(null); }}>{t('Save')}</button>
+      </Sheet>
+      {plating && (
+        <PlateSheet
+          unit={unit}
+          start={toDisplay(we.sets.find((s) => !s.done && s.type !== 'warmup' && s.weight)?.weight ?? suggest?.weight ?? workWeight ?? 0, unit)}
+          onClose={() => setPlating(false)}
+        />
+      )}
       {replacing && ex && (
         <ExercisePicker open replacing={ex} onClose={() => setReplacing(false)} onPick={([id]) => id && onReplace(id)} />
       )}
@@ -542,5 +577,36 @@ function RepRangeInput({
         if (v) onChange(v.reps, v.repsMax);
       }}
     />
+  );
+}
+
+/** Plates to load on each side for a weight (4.3). */
+function PlateSheet({ unit, start, onClose }: { unit: 'kg' | 'lb'; start: number; onClose: () => void }) {
+  const [total, setTotal] = useState<number | null>(start ? Math.round(start * 100) / 100 : null);
+  const [bar, setBar] = useState(BARS[unit][0]);
+  const r = total != null ? platesPerSide(total, bar, unit) : null;
+  return (
+    <Sheet open onClose={onClose} title={t('Plates to load')}>
+      <div className="plate-form">
+        <NumInput id="plate-total" label={t('Total weight')} value={total} placeholder="–" onChange={setTotal} />
+        <select id="plate-bar" aria-label={t('Bar')} value={bar} onChange={(e) => setBar(Number(e.target.value))}>
+          {BARS[unit].map((b) => (
+            <option key={b} value={b}>{t('Bar {w}', { w: `${b} ${unit}` })}</option>
+          ))}
+        </select>
+      </div>
+      {total != null && !r && <p className="muted">{t('Lighter than the bar.')}</p>}
+      {r && (
+        <>
+          <p className="small muted">{r.plates.length ? t('On each side:') : t('Just the bar.')}</p>
+          <div className="plates" aria-label={t('On each side:') + ' ' + r.plates.join(', ')}>
+            {r.plates.map((p, i) => (
+              <span key={i} className={'plate p' + String(p).replace('.', '_')}>{fmtNum(p)}</span>
+            ))}
+          </div>
+          {r.left > 0 && <p className="small field-error">{t('{w} per side cannot be loaded with standard plates.', { w: `${fmtNum(r.left)} ${unit}` })}</p>}
+        </>
+      )}
+    </Sheet>
   );
 }
