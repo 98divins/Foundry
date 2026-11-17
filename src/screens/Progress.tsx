@@ -118,16 +118,46 @@ export function Progress() {
 
         <section className="panel">
           <h2 className="panel-title">{t('Strength')}</h2>
-          {indexPoints.length >= 2 ? (
-            <>
-              <LineChart points={indexPoints} format={(v) => String(Math.round(v))} />
-              <p className="muted small">
-                {t('Strength index: each lift’s best estimated 1RM of the week as a % of your first session with it, averaged. 100 = where you started.')}
-              </p>
-            </>
-          ) : (
-            <p className="muted small">{t('Train for two weeks to see your strength index.')}</p>
-          )}
+          {(() => {
+            // Plain reading first: where you are against your start, then the curve once there is enough of it.
+            const last = indexPoints[indexPoints.length - 1];
+            if (!last) return <p className="muted small">{t('Train for two weeks to see how your strength changes.')}</p>;
+            const pct = Math.round(last.y - 100);
+            const weeks = indexPoints.length;
+            const since = new Date(indexPoints[0].x).toLocaleDateString(locale(), { day: 'numeric', month: 'long' });
+            return (
+              <>
+                <div className="strength-head">
+                  <strong className={'strength-pct ' + (pct > 0 ? 'up' : pct < 0 ? 'down' : '')}>
+                    {pct > 0 ? '+' : pct < 0 ? '−' : ''}
+                    {Math.abs(pct)} %
+                  </strong>
+                  <span className="small">
+                    {pct > 0
+                      ? t('stronger than your first week ({d}), on average over your lifts.', { d: since })
+                      : pct < 0
+                        ? t('below your first week ({d}), on average over your lifts.', { d: since })
+                        : t('same level as your first week ({d}).', { d: since })}
+                  </span>
+                </div>
+                {weeks < 4 ? (
+                  <p className="muted small">
+                    {t(
+                      'Only {n} weeks so far: fatigue and day-to-day form move these numbers by a few % either way. The curve appears after 4 weeks, when the trend means something.',
+                      { n: weeks },
+                    )}
+                  </p>
+                ) : (
+                  <>
+                    <LineChart points={indexPoints} format={(v) => String(Math.round(v))} baseline={100} minSpan={20} />
+                    <p className="muted small">
+                      {t('The grey line is your start (100). Above it you lift more than at the start; 110 means 10 % more. Each point is a week.')}
+                    </p>
+                  </>
+                )}
+              </>
+            );
+          })()}
           <ul className="lift-list">
             {lifts.map((l) => (
               <li key={l.exerciseId}>
@@ -148,7 +178,7 @@ export function Progress() {
               </li>
             ))}
           </ul>
-          {!lifts.length && <p className="muted small">{t('Log a lift with weight in 3 workouts to see its trend.')}</p>}
+          {!lifts.length && <p className="muted small">{t('Each exercise gets its own trend here once you have done it with weight in 3 workouts.')}</p>}
         </section>
 
         <section className="panel">

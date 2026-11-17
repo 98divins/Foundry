@@ -15,20 +15,33 @@ export function LineChart({
   format,
   scatter = [],
   emptyText = t('Log this exercise in at least two workouts to see the trend.'),
+  baseline,
+  minSpan = 0,
 }: {
   points: Point[];
   format: (v: number) => string;
   /** Raw readings drawn as faint dots behind the line (e.g. daily scale weight). */
   scatter?: Point[];
   emptyText?: string;
+  /** A reference value always shown on the axis (e.g. 100 = starting point), drawn as a line. */
+  baseline?: number;
+  /** Smallest range of the vertical axis, so small wiggles are not blown up. */
+  minSpan?: number;
 }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   if (points.length < 2) {
     return <div className="chart-empty muted">{emptyText}</div>;
   }
   const w = Math.max(width, 200);
-  const ys = [...points, ...scatter].map((p) => p.y);
-  const ticks = niceTicks(Math.min(...ys), Math.max(...ys), 4);
+  const ys = [...points, ...scatter].map((p) => p.y).concat(baseline != null ? [baseline] : []);
+  let lo = Math.min(...ys);
+  let hi = Math.max(...ys);
+  if (hi - lo < minSpan) {
+    const mid = baseline ?? (lo + hi) / 2;
+    lo = Math.min(lo, mid - minSpan / 2);
+    hi = Math.max(hi, mid + minSpan / 2);
+  }
+  const ticks = niceTicks(lo, hi, 4);
   const yMin = ticks[0];
   const yMax = ticks[ticks.length - 1];
   const xMin = points[0].x;
@@ -65,6 +78,7 @@ export function LineChart({
             </text>
           ))}
           <path d={area} fill="url(#fill)" />
+          {baseline != null && <line x1={PAD.left} x2={w - PAD.right} y1={sy(baseline)} y2={sy(baseline)} stroke="var(--muted)" strokeWidth="1.5" />}
           {scatter.map((p, i) => (
             <circle key={'s' + i} cx={sx(p.x)} cy={sy(p.y)} r="3" fill="var(--muted)" opacity="0.55" />
           ))}

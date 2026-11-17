@@ -4917,3 +4917,19 @@ a.btn.disabled {
   flex: none;
   border-radius: 10px;
 }
+
+/* Strength: the plain reading above the curve. */
+.strength-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+.strength-pct {
+  flex: none;
+  font-size: 32px;
+  line-height: 1.1;
+}
+.strength-pct.up {
+  color: var(--good);
+}
