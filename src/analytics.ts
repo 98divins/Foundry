@@ -151,6 +151,21 @@ export function strengthIndexByWeek(workouts: Workout[], starts: number[]): (num
   });
 }
 
+/**
+ * What one week's strength index is made of: each lift trained that week and its best estimated
+ * 1RM against its first session, in %, biggest changes first.
+ */
+export function strengthBreakdown(workouts: Workout[], start: number): { exerciseId: string; pct: number }[] {
+  const end = weekEnd(start);
+  const out: { exerciseId: string; pct: number }[] = [];
+  for (const [id, pts] of e1rmSessions(workouts)) {
+    const inWeek = pts.filter((p) => p.date >= start && p.date < end);
+    if (!inWeek.length) continue;
+    out.push({ exerciseId: id, pct: Math.round((Math.max(...inWeek.map((p) => p.e1rm)) / pts[0].e1rm - 1) * 100) });
+  }
+  return out.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+}
+
 export interface RecentPR {
   workoutId: string;
   date: number;

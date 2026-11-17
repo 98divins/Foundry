@@ -4933,3 +4933,20 @@ a.btn.disabled {
 .strength-pct.up {
   color: var(--good);
 }
+.strength-parts {
+  list-style: none;
+  margin: 4px 0 12px;
+  padding: 0;
+}
+.strength-parts li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.strength-parts .link-btn {
+  text-align: left;
+}

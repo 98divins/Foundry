@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   crossInsights,
+  strengthBreakdown,
   liftTrends,
   muscleSets,
   recentPRs,
@@ -134,12 +135,13 @@ export function Progress() {
                   </strong>
                   <span className="small">
                     {pct > 0
-                      ? t('stronger than your first week ({d}), on average over your lifts.', { d: since })
+                      ? t('stronger than your first week ({d}).', { d: since })
                       : pct < 0
-                        ? t('below your first week ({d}), on average over your lifts.', { d: since })
+                        ? t('below your first week ({d}).', { d: since })
                         : t('same level as your first week ({d}).', { d: since })}
                   </span>
                 </div>
+                <StrengthParts start={last.x} />
                 {weeks < 4 ? (
                   <p className="muted small">
                     {t(
@@ -261,6 +263,31 @@ export function Progress() {
 
         <MySpace />
       </main>
+    </>
+  );
+}
+
+/** The lifts behind the strength figure, each against its own first session. */
+function StrengthParts({ start }: { start: number }) {
+  const { state, exMap } = useStore();
+  const parts = useMemo(() => strengthBreakdown(state.workouts, start), [state.workouts, start]);
+  if (!parts.length) return null;
+  return (
+    <>
+      <p className="muted small">{t('Average of the lifts you did with weight in your latest week, each compared with your first session of it:')}</p>
+      <ul className="strength-parts">
+        {parts.map((p) => (
+          <li key={p.exerciseId}>
+            <button className="link-btn" onClick={() => go('e/' + p.exerciseId)}>
+              {exerciseName(exMap, p.exerciseId)}
+            </button>
+            <span className={'delta ' + (p.pct > 0 ? 'up' : p.pct < 0 ? 'down' : '')}>
+              {p.pct > 0 ? '+' : p.pct < 0 ? '−' : ''}
+              {Math.abs(p.pct)} %
+            </span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

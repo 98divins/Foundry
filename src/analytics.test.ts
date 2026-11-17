@@ -162,3 +162,29 @@ describe('training days and week streak', () => {
     expect(weekStreak([]).weeks).toBe(0);
   });
 });
+
+describe('strength breakdown', () => {
+  it('lists each lift of the week against its first session, biggest changes first', async () => {
+    const { strengthBreakdown, weekStarts } = await import('./analytics');
+    const DAY = 86400000;
+    const now = Date.UTC(2026, 10, 18, 12);
+    const w = (id: string, ex: string, at: number, kg: number) => ({
+      id,
+      name: 'W',
+      startedAt: at,
+      endedAt: at + 3600000,
+      exercises: [{ id: id + ex, exerciseId: ex, restSec: 90, sets: [{ id: id + ex + 's', type: 'normal' as const, weight: kg, reps: 5, done: true }] }],
+    });
+    const [, start] = weekStarts(2, now);
+    const ws = [
+      w('a', 'squat_bb', start - 7 * DAY, 100),
+      w('b', 'bench_bb', start - 7 * DAY, 80),
+      w('c', 'squat_bb', start + DAY, 106),
+      w('d', 'bench_bb', start + DAY, 70),
+    ];
+    expect(strengthBreakdown(ws, start)).toEqual([
+      { exerciseId: 'bench_bb', pct: -12 }, // 70 / 80 − 1 = −12.5 %
+      { exerciseId: 'squat_bb', pct: 6 },
+    ]);
+  });
+});
