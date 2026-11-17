@@ -78,7 +78,7 @@ export function volumeStatus(sets: number): 'low' | 'ok' | 'high' {
 const loaded = (s: SetEntry) => countsForStats(s) && (s.weight ?? 0) > 0 && (s.reps ?? 0) > 0;
 
 /** Best estimated 1RM per finished workout, for exercises lifted with a load. */
-function e1rmSessions(workouts: Workout[]): Map<string, { date: number; e1rm: number }[]> {
+export function e1rmSessions(workouts: Workout[]): Map<string, { date: number; e1rm: number }[]> {
   const out = new Map<string, { date: number; e1rm: number }[]>();
   for (const w of finished(workouts)) {
     const best = new Map<string, number>();

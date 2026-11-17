@@ -28,6 +28,7 @@ import { BADGES } from '../levels';
 import { YearReviewCard } from './YearReview';
 import { ChallengesPanel } from './Challenges';
 import { useFeature } from '../features';
+import { DietStrengthCard, Phases } from '../components/DietStrength';
 
 const DAY = 86400000;
 const PR_LABEL: Record<PRKind, string> = {
@@ -112,6 +113,7 @@ export function Progress() {
         <h2 className="settings-group">{t('This week')}</h2>
         <GoalsCard />
         {challengesOn && <ChallengesPanel compact />}
+        <DietStrengthCard />
         <p className="muted small center">{t('{d} training days and {s} sets so far this week.', { d: thisWeek.days, s: thisWeek.sets })}</p>
 
         <h2 className="settings-group">{t('Progress')}</h2>
@@ -319,6 +321,7 @@ export function DietTraining() {
     .slice(-8)
     .reverse();
   return (
+    <>
         <section className="panel">
           <h2 className="panel-title">{t('Diet × training')}</h2>
           {!hasDiet ? (
@@ -371,6 +374,8 @@ export function DietTraining() {
             </>
           )}
         </section>
+        <Phases />
+    </>
   );
 }
 

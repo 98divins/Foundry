@@ -115,6 +115,18 @@ export interface NutritionState {
   /** Food ids starred by the user. */
   favorites: string[];
   savedMeals: SavedMeal[];
+  /** Periods marked as a cut, maintenance or bulk (dietStrength.ts), oldest first. */
+  phases?: Phase[];
+}
+
+export type PhaseKind = 'cut' | 'maintain' | 'bulk';
+export interface Phase {
+  id: string;
+  kind: PhaseKind;
+  /** First day, YYYY-MM-DD. */
+  start: string;
+  /** Last day; absent while the phase is running. */
+  end?: string | null;
 }
 
 export const defaultNutrition = (): NutritionState => ({

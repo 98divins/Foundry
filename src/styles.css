@@ -4741,3 +4741,66 @@ a.btn.disabled {
 .plate.p10 { height: 72px; background: #2f9d55; color: #fff; }
 .plate.p5 { height: 58px; background: #e8e8e8; color: #111; }
 .plate.p2_5, .plate.p1_25 { height: 46px; width: 36px; background: #555; color: #fff; }
+
+/* Diet × strength (4.5). */
+.panel-title-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.diet-strength .stats-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.tip {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid #e0b522;
+  border-radius: 6px;
+  background: color-mix(in srgb, #e0b522 10%, transparent);
+}
+.tip p {
+  margin: 4px 0 0;
+}
+.phase-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  margin: 10px 0;
+}
+.phase-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.phase {
+  padding: 10px 0 10px 12px;
+  border-left: 3px solid var(--line);
+  margin-bottom: 8px;
+}
+.phase-cut { border-left-color: #2f6fde; }
+.phase-maintain { border-left-color: #8e98a6; }
+.phase-bulk { border-left-color: #d33b3b; }
+.phase-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.phase-head .link-btn {
+  margin-left: auto;
+}
+.phase-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+  margin-top: 6px;
+}
