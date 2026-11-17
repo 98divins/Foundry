@@ -24,6 +24,8 @@ import { ReportSheet, useHidden } from '../../components/ReportSheet';
 import { useNutrition } from '../../store';
 import { fmtNum, uid } from '../../utils';
 import { fmtDay } from './NutritionHome';
+import { CopyMealButton } from './CopyMeal';
+import { lastPortion } from '../../mealCopy';
 import { t } from '../../i18n';
 
 type Mode = 'search' | 'meals' | 'scan' | 'quick' | 'create';
@@ -80,7 +82,24 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
           </div>
         )}
 
-        {mode === 'search' && <SearchFoods foods={n.foods} log={n.log} favorites={n.favorites} meal={meal} onPick={setPicked} onCreate={() => setMode('create')} />}
+        {mode === 'search' && !n.log.some((e) => e.date === date && e.meal === meal) && (
+          <CopyMealButton date={date} meal={meal} onCopied={(names) => setAdded((a) => [...a, ...names])} />
+        )}
+        {mode === 'search' && (
+          <SearchFoods
+            foods={n.foods}
+            log={n.log}
+            favorites={n.favorites}
+            meal={meal}
+            onPick={setPicked}
+            onCreate={() => setMode('create')}
+            onQuick={(food) => {
+              // One tap: the amount last logged, else one serving, else 100 g.
+              const grams = lastPortion(n.log, food.id) ?? food.serving?.grams ?? 100;
+              log({ foodId: food.id, name: food.name, brand: food.brand, grams, ...scaleFood(food, grams) }, food);
+            }}
+          />
+        )}
         {mode === 'meals' && (
           <SavedMealsList
             onLog={(sm, servings) => {
@@ -117,10 +136,24 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
   );
 }
 
-export function FoodRow({ food, onPick, favorite }: { food: Food; onPick: (f: Food) => void; favorite?: boolean }) {
+export function FoodRow({
+  food,
+  onPick,
+  favorite,
+  onQuick,
+  portion,
+}: {
+  food: Food;
+  onPick: (f: Food) => void;
+  favorite?: boolean;
+  /** When set, the + adds the food at once with its usual amount; tapping the name still opens the amount sheet. */
+  onQuick?: (f: Food) => void;
+  portion?: number | null;
+}) {
   const p = food.per100;
+  const grams = portion ?? food.serving?.grams ?? 100;
   return (
-    <li>
+    <li className={onQuick ? 'food-row-quick' : undefined}>
       <button className="food-row" onClick={() => onPick(food)}>
         <span className="entry-text">
           <span className="entry-name">
@@ -134,8 +167,14 @@ export function FoodRow({ food, onPick, favorite }: { food: Food; onPick: (f: Fo
             {food.brand && <>{food.brand} · </>}
             {t('{kcal} kcal · P {p} · C {c} · F {f} per 100 g', { kcal: Math.round(p.kcal), p: fmtNum(p.protein), c: fmtNum(p.carbs), f: fmtNum(p.fat) })}</span>
         </span>
-        <Icon name="plus" size={18} />
+        {!onQuick && <Icon name="plus" size={18} />}
       </button>
+      {onQuick && (
+        <button className="quick-add" onClick={() => onQuick(food)} aria-label={t('Add {g} g of {name}', { g: fmtNum(grams), name: food.name })}>
+          <Icon name="plus" size={16} />
+          <span>{fmtNum(grams)} g</span>
+        </button>
+      )}
     </li>
   );
 }
@@ -147,6 +186,7 @@ export function SearchFoods({
   meal,
   onPick,
   onCreate,
+  onQuick,
 }: {
   foods: Food[];
   log: FoodEntry[];
@@ -155,8 +195,12 @@ export function SearchFoods({
   meal?: Meal;
   onPick: (f: Food) => void;
   onCreate?: () => void;
+  /** Adds a food at once with its usual amount (lists of foods the person eats). */
+  onQuick?: (f: Food) => void;
 }) {
   const [query, setQuery] = useState('');
+  // Ranked from the log as it was when the screen opened, so rows do not move under the finger while adding.
+  const [logAtOpen] = useState(log);
   const [generic, setGeneric] = useState<Food[] | null>(null);
   const [online, setOnline] = useState<{ q: string; foods: Food[] } | null>(null);
   const [busy, setBusy] = useState<'' | 'generic' | 'online'>('');
@@ -170,13 +214,13 @@ export function SearchFoods({
   const recent = useMemo(() => {
     const byId = new Map(local.map((f) => [f.id, f]));
     const out: Food[] = [];
-    for (const e of [...log].sort((a, b) => b.createdAt - a.createdAt)) {
+    for (const e of [...logAtOpen].sort((a, b) => b.createdAt - a.createdAt)) {
       const f = e.foodId ? byId.get(e.foodId) : undefined;
       if (f && !out.includes(f)) out.push(f);
       if (out.length >= 15) break;
     }
     return out;
-  }, [local, log]);
+  }, [local, logAtOpen]);
 
   const favs = useMemo(() => {
     const byId = new Map(local.map((f) => [f.id, f]));
@@ -186,7 +230,7 @@ export function SearchFoods({
 
   // Foods this person logs at this meal and time of day (features.ts: smartFoodOrder).
   const smart = useFeature('smartFoodOrder') && !!meal;
-  const usage = useMemo(() => (smart && meal ? foodUsage(log, meal) : new Map<string, number>()), [smart, log, meal]);
+  const usage = useMemo(() => (smart && meal ? foodUsage(logAtOpen, meal) : new Map<string, number>()), [smart, logAtOpen, meal]);
   const often = useMemo(() => {
     if (!smart) return [];
     const byId = new Map(local.map((f) => [f.id, f]));
@@ -269,7 +313,7 @@ export function SearchFoods({
           <h3 className="list-title">{t('Favourites')}</h3>
           <ul className="food-list">
             {favs.map((f) => (
-              <FoodRow key={f.id} food={f} onPick={onPick} favorite />
+              <FoodRow key={f.id} food={f} onPick={onPick} favorite onQuick={onQuick} portion={lastPortion(log, f.id)} />
             ))}
           </ul>
         </>
@@ -279,7 +323,7 @@ export function SearchFoods({
           <h3 className="list-title">{t('Often at this meal')}</h3>
           <ul className="food-list">
             {often.map((f) => (
-              <FoodRow key={f.id} food={f} onPick={onPick} />
+              <FoodRow key={f.id} food={f} onPick={onPick} onQuick={onQuick} portion={lastPortion(log, f.id)} />
             ))}
           </ul>
         </>
@@ -290,7 +334,7 @@ export function SearchFoods({
           {recentShown.length ? (
             <ul className="food-list">
               {recentShown.map((f) => (
-                <FoodRow key={f.id} food={f} onPick={onPick} favorite={isFav(f)} />
+                <FoodRow key={f.id} food={f} onPick={onPick} favorite={isFav(f)} onQuick={onQuick} portion={lastPortion(log, f.id)} />
               ))}
             </ul>
           ) : (
