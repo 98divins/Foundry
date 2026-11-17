@@ -3,7 +3,7 @@ import { useCloud } from '../cloud/cloud';
 import { Confirm, Header, Icon, Logo, Segmented, type IconName } from '../components/ui';
 import { back, go } from '../hooks';
 import { useStore } from '../store';
-import type { NameLang, Settings, Unit } from '../types';
+import type { Settings, Unit } from '../types';
 import { fmtClock } from '../utils';
 import { DataPage } from './Profile';
 import { sendFeedback } from '../cloud/social';
@@ -457,18 +457,6 @@ function LanguagePage() {
             options={[
               { value: 'fr', label: 'Français' },
               { value: 'en', label: 'English' },
-            ]}
-          />
-        </div>
-        <div className="setting">
-          <span>{t('Exercise names')}</span>
-          <Segmented<NameLang>
-            label={t('Exercise names')}
-            value={s.exerciseLang}
-            onChange={(v) => set('exerciseLang', v)}
-            options={[
-              { value: 'fr', label: t('Français') },
-              { value: 'en', label: t('English') },
             ]}
           />
         </div>

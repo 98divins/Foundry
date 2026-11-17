@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { itemName } from '../../foods';
 import { Header, Icon, NumInput, Sheet } from '../../components/ui';
 import { go } from '../../hooks';
 import {
@@ -278,7 +279,7 @@ function EntryRow({ e, onEdit, onConfirm }: { e: FoodEntry; onEdit: (e: FoodEntr
       <div className="entry-line">
         <button className="entry" onClick={() => onEdit(e)}>
           <span className="entry-text">
-            <span className="entry-name">{e.name}</span>
+            <span className="entry-name">{itemName(e)}</span>
             <span className="muted small">
               {e.grams != null ? `${fmtNum(e.grams)} g · ` : t('Quick add') + ' · '}
               {t('P {p} · C {c} · F {f}', { p: fmtNum(Math.round(e.protein)), c: fmtNum(Math.round(e.carbs)), f: fmtNum(Math.round(e.fat)) })}

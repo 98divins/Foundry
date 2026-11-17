@@ -9,3 +9,4 @@ src/exerciseData.ts
 supabase
 docs
 *.md
+src/foodsEn.ts

@@ -22,7 +22,7 @@ import { go } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { Muscle, PRKind } from '../types';
 import { computePRs, exerciseKind, fmtDate, fmtEstimate, fmtSet, fmtVolume, toDisplay, weekStart } from '../utils';
-import { locale, t, tk } from '../i18n';
+import { locale, t, tk, getLang } from '../i18n';
 import { gearCount } from '../gear';
 import { useProgression } from './Levels';
 import { BADGES } from '../levels';
@@ -47,7 +47,7 @@ export function Progress() {
   const { state, exMap } = useStore();
   const { workouts, settings } = state;
   const unit = settings.unit;
-  const lang = settings.exerciseLang;
+  const lang = getLang();
   const [metric, setMetric] = useState<WeekMetric>('sets');
   const [muscleRange, setMuscleRange] = useState<'week' | 'avg'>('avg');
   const recapsOn = useFeature('recaps');

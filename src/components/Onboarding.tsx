@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useCloud } from '../cloud/cloud';
 import { go } from '../hooks';
 import { useStore } from '../store';
-import type { NameLang, Unit } from '../types';
+import type { Unit } from '../types';
 import { Icon, Logo, Segmented, type IconName } from './ui';
 import { ConsentCheckbox } from './Legal';
 import { LEGAL_VERSION } from '../legal';
@@ -260,18 +260,6 @@ export function QuickStart() {
               options={[
                 { value: 'fr', label: 'Français' },
                 { value: 'en', label: 'English' },
-              ]}
-            />
-          </div>
-          <div className="setting">
-            <span>{t('Exercise names')}</span>
-            <Segmented<NameLang>
-              label={t('Exercise names')}
-              value={state.settings.exerciseLang}
-              onChange={(exerciseLang) => update((s) => ({ ...s, settings: { ...s.settings, exerciseLang } }))}
-              options={[
-                { value: 'fr', label: t('Français') },
-                { value: 'en', label: t('English') },
               ]}
             />
           </div>

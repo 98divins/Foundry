@@ -4,7 +4,7 @@ import { useFeature } from '../../features';
 import { BarcodeScanner } from '../../components/BarcodeScanner';
 import { Header, Icon, NumInput, Segmented, Sheet } from '../../components/ui';
 import { back } from '../../hooks';
-import { foodUsage, FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods } from '../../foods';
+import { foodUsage, FR_FOOD_LIST, loadGenericFoods, OffError, offByBarcode, offSearch, searchFoods, foodName, portionLabel } from '../../foods';
 import {
   dayKey,
   entriesFromMeal,
@@ -165,7 +165,7 @@ export function FoodRow({
                 ★{' '}
               </span>
             )}
-            {food.name}
+            {foodName(food)}
             {food.source === 'custom' && <span className="tag">{t('Mine')}</span>}
             {food.source === 'community' && <span className="tag tag-community">{t('Added by a member')}</span>}
             {food.source === 'off' && <span className="tag tag-off">{t('Data: Open Food Facts')}</span>}
@@ -178,7 +178,7 @@ export function FoodRow({
         {!onQuick && <Icon name="plus" size={18} />}
       </button>
       {onQuick && (
-        <button className="quick-add" onClick={() => onQuick(food)} aria-label={t('Add {g} g of {name}', { g: fmtNum(grams), name: food.name })}>
+        <button className="quick-add" onClick={() => onQuick(food)} aria-label={t('Add {g} g of {name}', { g: fmtNum(grams), name: foodName(food) })}>
           <Icon name="plus" size={16} />
           <span>{fmtNum(grams)} g</span>
         </button>
@@ -656,17 +656,17 @@ export function AmountSheet({
   if (!food) return null;
   const m = scaleFood(food, grams ?? 0);
   const presets = [
-    ...(food.serving ? [{ label: food.serving.label, g: food.serving.grams }] : []),
+    ...(food.serving ? [{ label: portionLabel(food.serving.label), g: food.serving.grams }] : []),
     { label: '100 g', g: 100 },
     ...(food.serving
-      ? [{ label: `2 × ${food.serving.label}`, g: food.serving.grams * 2 }]
+      ? [{ label: `2 × ${portionLabel(food.serving.label)}`, g: food.serving.grams * 2 }]
       : [
           { label: '50 g', g: 50 },
           { label: '200 g', g: 200 },
         ]),
   ];
   return (
-    <Sheet open onClose={onClose} title={food.name}>
+    <Sheet open onClose={onClose} title={foodName(food)}>
       <form
         className="form"
         onSubmit={(e) => {
@@ -678,7 +678,7 @@ export function AmountSheet({
           <PhotoField
             kind="food"
             id={food.id}
-            label={food.name}
+            label={foodName(food)}
             value={n.foods.find((f) => f.id === food.id)?.photo ?? food.photo}
             onChange={(photo) => setN((x) => ({ ...x, foods: x.foods.map((f) => (f.id === food.id ? { ...f, photo } : f)) }))}
           />
@@ -721,7 +721,7 @@ export function AmountSheet({
         )}
       </form>
       <ReportSheet
-        item={reporting ? { kind: 'food', target: food.id, label: food.name } : null}
+        item={reporting ? { kind: 'food', target: food.id, label: foodName(food) } : null}
         onClose={() => {
           setReporting(false);
           onClose();

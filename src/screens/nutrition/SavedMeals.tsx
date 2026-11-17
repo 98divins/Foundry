@@ -1,4 +1,5 @@
 import { PlanSheet } from './PlanSheet';
+import { itemName } from '../../foods';
 import { PhotoField, PhotoView } from '../../components/Photo';
 import { photoPath } from '../../cloud/photos';
 import { useEffect, useState } from 'react';
@@ -61,7 +62,7 @@ export function SavedMealsList({ onLog, exclude, addLabel }: { onLog: (sm: Saved
                 {m.photo && <PhotoView path={m.photo.path} at={m.photo.at} alt="" className="photo photo-thumb" />}
                 <span className="entry-name">{m.name}</span>
                 <MealSummary items={m.items} />
-                <span className="muted small meal-items">{m.items.map((i) => i.name).join(', ')}</span>
+                <span className="muted small meal-items">{m.items.map(itemName).join(', ')}</span>
               </span>
               <Icon name="plus" size={18} />
             </button>
@@ -89,7 +90,7 @@ export function SavedMealsList({ onLog, exclude, addLabel }: { onLog: (sm: Saved
             <ul className="meal-item-list">
               {picked.items.map((i, k) => (
                 <li key={k}>
-                  <span>{i.name}</span>
+                  <span>{itemName(i)}</span>
                   <span className="muted small">{i.grams != null ? `${fmtNum(Math.round(i.grams * (factor ?? 1)))} g` : t('quick add')}</span>
                 </li>
               ))}
@@ -367,7 +368,7 @@ export function MealEditor({ id }: { id: string }) {
             {draft.items.map((i, k) => (
               <li key={k}>
                 <span className="entry-text">
-                  <span className="entry-name">{i.name}</span>
+                  <span className="entry-name">{itemName(i)}</span>
                   <span className="muted small">
                     {t('{0} kcal · P {1} · C {2} · F {3}', { 0: i.kcal, 1: fmtNum(i.protein), 2: fmtNum(i.carbs), 3: fmtNum(i.fat) })}
                   </span>
@@ -376,7 +377,7 @@ export function MealEditor({ id }: { id: string }) {
                   <span className="item-grams">
                     <NumInput
                       id={`item-g-${k}`}
-                      label={t('Grams of {name}', { name: i.name })}
+                      label={t('Grams of {name}', { name: itemName(i) })}
                       value={i.grams}
                       onChange={(g) => {
                         if (!g || !i.grams) return;
@@ -398,7 +399,7 @@ export function MealEditor({ id }: { id: string }) {
                 )}
                 <button
                   className="icon-btn"
-                  aria-label={t('Remove {name}', { name: i.name })}
+                  aria-label={t('Remove {name}', { name: itemName(i) })}
                   onClick={() => setDraft({ ...draft, items: draft.items.filter((_, j) => j !== k) })}
                 >
                   <Icon name="trash" size={18} />
@@ -522,7 +523,7 @@ function MealIdeasList({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: M
                 <span className="program-name">{t(m.name)}</span>
                 <span className="muted small">{t(m.description)}</span>
                 <MealSummary items={items} />
-                <span className="small muted">{items.map((i) => `${i.name} ${fmtNum(i.grams ?? 0)} g`).join(' · ')}</span>
+                <span className="small muted">{items.map((i) => `${itemName(i)} ${fmtNum(i.grams ?? 0)} g`).join(' · ')}</span>
                 <div className="btn-grid">
                   <button className="btn btn-small" disabled={added.includes(m.id)} onClick={() => onAdd(m)}>
                     {added.includes(m.id) ? t('Added to My meals') : t('Add to My meals')}
@@ -558,7 +559,7 @@ function CommunityMeals({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: 
   const query = q.trim().toLowerCase();
   const shown = (meals ?? [])
     .filter((m) => !hidden('meal', m.user_id + '/' + m.meal_id))
-    .filter((m) => !query || m.name.toLowerCase().includes(query) || m.items.some((i) => i.name.toLowerCase().includes(query)));
+    .filter((m) => !query || m.name.toLowerCase().includes(query) || m.items.some((i) => itemName(i).toLowerCase().includes(query)));
   return (
     <>
       <p className="muted small">{t('Meals shared by other members. Share yours from its edit page.')}</p>
@@ -587,7 +588,7 @@ function CommunityMeals({ added, onAdd, onPlan }: { added: string[]; onAdd: (m: 
                 <PhotoView path={photoPath(m.user_id, 'meal', m.meal_id)} alt={m.name} className="photo photo-card" />
                 <span className="program-name">{m.name}</span>
                 <MealSummary items={m.items} />
-                <span className="small muted">{m.items.map((i) => (i.grams != null ? `${i.name} ${fmtNum(i.grams)} g` : i.name)).join(' · ')}</span>
+                <span className="small muted">{m.items.map((i) => (i.grams != null ? `${itemName(i)} ${fmtNum(i.grams)} g` : itemName(i))).join(' · ')}</span>
                 <div className="btn-grid">
                   <button className="btn btn-small" disabled={added.includes(key)} onClick={() => onAdd(m)}>
                     {added.includes(key) ? t('Added to My meals') : t('Add to My meals')}

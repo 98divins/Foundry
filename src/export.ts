@@ -1,5 +1,6 @@
 /** The user's data and reports as an Excel workbook, for their own analysis. */
 import { groupSets, MUSCLE_GROUPS, trainingDays, weeklyDiet, weeklyTraining, weekStarts } from './analytics';
+import { itemName } from './foods';
 import { goalWeeks } from './goals';
 import { t } from './i18n';
 import { dayKey, dayTotals, MEAL_LABEL, weightTrend } from './nutrition';
@@ -94,7 +95,7 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
       [t('Date'), t('Meal'), t('Food'), t('Brand'), t('Grams'), t('kcal'), t('Protein (g)'), t('Carbs (g)'), t('Fat (g)')],
       ...[...n.log]
         .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt)
-        .map((e) => [e.date, t(MEAL_LABEL[e.meal]), e.name, e.brand ?? '', e.grams ?? '', Math.round(e.kcal), r1(e.protein), r1(e.carbs), r1(e.fat)]),
+        .map((e) => [e.date, t(MEAL_LABEL[e.meal]), itemName(e), e.brand ?? '', e.grams ?? '', Math.round(e.kcal), r1(e.protein), r1(e.carbs), r1(e.fat)]),
     ],
   };
 

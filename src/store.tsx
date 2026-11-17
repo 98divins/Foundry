@@ -5,7 +5,7 @@ import { displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
 import { registerKinds, registerPrefs } from './utils';
 import { defaultNutrition, type NutritionState } from './nutrition';
-import { t, setLang, detectLang } from './i18n';
+import { t, setLang, detectLang, getLang } from './i18n';
 
 const KEY = 'foundry:v1';
 
@@ -18,7 +18,7 @@ export function defaultState(): State {
     customExercises: [],
     active: null,
     rest: null,
-    settings: { unit: 'kg', defaultRest: 90, sound: true, exerciseLang: 'fr' },
+    settings: { unit: 'kg', defaultRest: 90, sound: true },
     nutrition: defaultNutrition(),
   };
 }
@@ -189,7 +189,7 @@ export function StoreProvider({ children, boot }: { children: ReactNode; boot?: 
 
   setLang(state.settings.appLang ?? detectLang());
   registerPrefs({ weekStartsOn: state.settings.weekStartsOn ?? 1, distanceUnit: state.settings.distanceUnit ?? 'km' });
-  const lang = state.settings.exerciseLang;
+  const lang = getLang();
   const custom = state.customExercises;
   const lib = useMemo(() => {
     const exercises = [...LIBRARY, ...custom].map((e) => ({ ...e, label: displayName(e, lang) }));

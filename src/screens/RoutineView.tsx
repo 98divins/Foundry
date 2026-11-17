@@ -9,10 +9,10 @@ import { exerciseName, useStore } from '../store';
 import type { Routine } from '../types';
 import { fmtClock, fmtSet } from '../utils';
 import { startWorkout } from './WorkoutTab';
-import { t } from '../i18n';
+import { t, getLang } from '../i18n';
 
 export function RoutineSummaryPanel({ routine }: { routine: Pick<Routine, 'exercises'> }) {
-  const { state, exMap } = useStore();
+  const { exMap } = useStore();
   const sum = routineSummary(routine.exercises, exMap);
   const max = Math.max(1, ...sum.muscles.map((m) => m[1]));
   return (
@@ -32,7 +32,7 @@ export function RoutineSummaryPanel({ routine }: { routine: Pick<Routine, 'exerc
           <ul className="muscle-bars">
             {sum.muscles.map(([m, n]) => (
               <li key={m}>
-                <span className="muscle-name">{muscleLabel(m, state.settings.exerciseLang)}</span>
+                <span className="muscle-name">{muscleLabel(m, getLang())}</span>
                 <span className="muscle-track">
                   <span className="muscle-fill" style={{ width: `${(n / max) * 100}%` }} />
                 </span>

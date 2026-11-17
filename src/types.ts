@@ -118,7 +118,8 @@ export interface Settings {
   unit: Unit;
   defaultRest: number;
   sound: boolean;
-  exerciseLang: NameLang;
+  /** Old setting (exercise names had their own language); names now follow the app language. */
+  exerciseLang?: NameLang;
   /** When the last backup file was saved (data otherwise lives only on this device). */
   lastBackupAt?: number | null;
   /** Set once a new account has gone through the quick start. */

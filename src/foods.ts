@@ -2,7 +2,8 @@ import { fold } from './exercises';
 import { FR_FOODS } from './foodsFr';
 import { FR_FOODS_MORE } from './foodsFrMore';
 import { kcalFromMacros, type Food } from './nutrition';
-import { t } from './i18n';
+import { getLang, t } from './i18n';
+import { FOOD_EN, PORTION_EN } from './foodsEn';
 
 /* ---------- Built-in foods ---------- */
 
@@ -13,6 +14,19 @@ export const FR_FOOD_LIST: Food[] = [...FR_FOODS, ...FR_FOODS_MORE].map(([id, na
   serving: label && grams ? { label, grams } : null,
   source: 'generic',
 }));
+
+const FR_NAME = new Map(FR_FOOD_LIST.map((f) => [f.id, f.name]));
+
+/** A built-in food's name in the app language (other foods keep the name they were given). */
+export function foodName(f: { id?: string; foodId?: string; name: string }): string {
+  const id = f.foodId ?? f.id;
+  if (!id || !FR_NAME.has(id)) return f.name;
+  return getLang() === 'en' ? (FOOD_EN[id] ?? f.name) : FR_NAME.get(id)!;
+}
+/** Logged entries and meal items: the same, from their food id. */
+export const itemName = (x: { foodId?: string; name: string }) => (x.foodId ? foodName({ foodId: x.foodId, name: x.name }) : x.name);
+/** A built-in portion label ("1 banane") in the app language. */
+export const portionLabel = (label: string) => (getLang() === 'en' ? (PORTION_EN[label] ?? label) : label);
 
 /** Larger English list (USDA), fetched once on demand: it is not needed to start the app. */
 let genericPromise: Promise<Food[]> | null = null;
@@ -47,7 +61,8 @@ export function searchFoods(list: Food[], query: string, limit = 40, rank?: (f: 
   if (!words.length) return [];
   const scored: [number, Food][] = [];
   for (const f of list) {
-    const hay = fold(`${f.name} ${f.brand ?? ''}`);
+    // Built-in foods match in French and in English, whatever the app language.
+    const hay = fold(`${f.name} ${FOOD_EN[f.id] ?? ''} ${f.brand ?? ''}`);
     if (!words.every((w) => hay.includes(w))) continue;
     const score = (hay.startsWith(words[0]) ? 0 : 1) + hay.length / 1000 - (rank ? rank(f) : 0) * 10;
     scored.push([score, f]);

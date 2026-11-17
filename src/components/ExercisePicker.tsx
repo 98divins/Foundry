@@ -5,7 +5,7 @@ import type { Equipment, Exercise, ExerciseKind, Muscle } from '../types';
 import { uid } from '../utils';
 import { ExerciseImage } from './ExerciseImage';
 import { Icon, Sheet } from './ui';
-import { t } from '../i18n';
+import { t, getLang } from '../i18n';
 import { canAdd } from '../pro';
 
 export interface ExerciseFilter {
@@ -34,8 +34,8 @@ export function useFilteredExercises({ query, muscle, equipment }: ExerciseFilte
 }
 
 export function ExerciseFilters({ value, onChange, idPrefix }: { value: ExerciseFilter; onChange: (f: ExerciseFilter) => void; idPrefix: string }) {
-  const { state } = useStore();
-  const lang = state.settings.exerciseLang;
+  useStore(); // re-render when the language changes
+  const lang = getLang();
   return (
     <div className="filters">
       <label className="search">
@@ -87,8 +87,8 @@ export function ExerciseFilters({ value, onChange, idPrefix }: { value: Exercise
 }
 
 export function ExerciseRowText({ e }: { e: Exercise }) {
-  const { state } = useStore();
-  const lang = state.settings.exerciseLang;
+  useStore(); // re-render when the language changes
+  const lang = getLang();
   return (
     <span className="picker-text">
       <span className="picker-name">
@@ -207,8 +207,8 @@ export function CreateExercise({
   onCreated?: (e: Exercise) => void;
   initialName?: string;
 }) {
-  const { state, update, exercises } = useStore();
-  const lang = state.settings.exerciseLang;
+  const { update, exercises } = useStore();
+  const lang = getLang();
   const [name, setName] = useState(initialName);
   const [muscle, setMuscle] = useState<Muscle>('chest');
   const [equipment, setEquipment] = useState<Equipment>('barbell');

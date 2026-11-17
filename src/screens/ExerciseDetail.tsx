@@ -22,7 +22,7 @@ import {
   toDisplay,
   type Session,
 } from '../utils';
-import { t, tk, tp } from '../i18n';
+import { t, tk, tp, getLang } from '../i18n';
 
 type Metric = '1rm' | 'weight' | 'volume' | 'reps' | 'duration' | 'distance' | 'time';
 
@@ -47,7 +47,7 @@ export function ExerciseDetail({ id }: { id: string }) {
   const { state, update, exMap } = useStore();
   const ex = exMap.get(id);
   const unit = state.settings.unit;
-  const lang = state.settings.exerciseLang;
+  const lang = getLang();
   const sessions = useMemo(() => exerciseSessions(state.workouts, id), [state.workouts, id]);
   const kind: ExerciseKind = ex?.kind ?? 'weight';
   const [metric, setMetric] = useState<Metric>(METRICS[kind][0]);

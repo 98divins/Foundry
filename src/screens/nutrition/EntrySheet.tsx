@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { itemName } from '../../foods';
 import { NumInput, Sheet } from '../../components/ui';
 import { dayKey, MACRO_LABEL, MEAL_LABEL, MEALS, round1, type FoodEntry, type Meal } from '../../nutrition';
 import { useNutrition } from '../../store';
@@ -56,7 +57,7 @@ export function EntrySheet({ entry, onClose }: { entry: FoodEntry | null; onClos
   };
 
   return (
-    <Sheet open onClose={onClose} title={entry.name}>
+    <Sheet open onClose={onClose} title={itemName(entry)}>
       <div className="form">
         {entry.grams != null ? (
           <label className="field">
