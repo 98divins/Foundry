@@ -4785,3 +4785,34 @@ a.btn.disabled {
   gap: 4px 12px;
   margin-top: 6px;
 }
+
+/* Training load (stats). */
+.load-ratio {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.load-ratio strong {
+  font-size: 40px;
+  line-height: 1.1;
+}
+.load-ratio.z-steady strong { color: #2f9d55; }
+.load-ratio.z-low strong { color: #8e98a6; }
+.load-ratio.z-jump strong { color: #e07a22; }
+.load-scale {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 4px;
+  margin: 10px 0;
+  font-size: 12px;
+  text-align: center;
+}
+.load-scale span {
+  padding: 4px 0;
+  border-radius: 6px;
+  border-top: 4px solid;
+}
+.load-scale .z-low { border-color: #8e98a6; }
+.load-scale .z-steady { border-color: #2f9d55; }
+.load-scale .z-jump { border-color: #e07a22; }

@@ -8,6 +8,8 @@ import { back, go } from '../hooks';
 import { locale, t, tk, tp } from '../i18n';
 import { hasPro, requirePro } from '../pro';
 import { DietTraining } from './Progress';
+import { loadRatio, weeklyLoad } from '../trainingLoad';
+import { useFeature } from '../features';
 import { exerciseName, useStore } from '../store';
 import type { Muscle } from '../types';
 import { fmtDuration, fmtVolume, weekStart } from '../utils';
@@ -22,11 +24,12 @@ export const GROUP_LABEL: Record<MuscleGroup, string> = {
   legs: tk('Lower body'),
 };
 
-export type StatsPageId = 'diet' | 'distribution' | 'muscles' | 'exercises' | 'month';
+export type StatsPageId = 'diet' | 'load' | 'distribution' | 'muscles' | 'exercises' | 'month';
 
 /** Entries of the "Advanced statistics" list on the Progress tab. */
 export const STATS_PAGES: { id: StatsPageId; icon: 'chart' | 'dumbbell' | 'list' | 'history'; title: string; text: string; pro?: boolean }[] = [
   { id: 'diet', icon: 'chart', title: tk('Diet × training'), text: tk('How calories, protein and weight line up with your strength, week by week.') },
+  { id: 'load', icon: 'chart', title: tk('Training load'), text: tk('Working sets, tonnage and time per week, and how this week compares with your usual.') },
   { id: 'distribution', icon: 'chart', title: tk('Muscle balance'), text: tk('Sets per muscle group, this period against the one before.'), pro: true },
   { id: 'muscles', icon: 'dumbbell', title: tk('Muscles week by week'), text: tk('Working sets per muscle for any week.') },
   { id: 'exercises', icon: 'list', title: tk('Main exercises'), text: tk('The exercises you do most often.') },
@@ -41,6 +44,8 @@ export function StatsPage({ page }: { page?: StatsPageId }) {
           <DietTraining />
         </Sub>
       );
+    case 'load':
+      return <TrainingLoad />;
     case 'distribution':
       return <Distribution />;
     case 'muscles':
@@ -188,6 +193,74 @@ function MusclesByWeek() {
           ))}
         </ul>
       </section>
+    </Sub>
+  );
+}
+
+type LoadMetric = 'sets' | 'tonnage' | 'minutes' | 'effort';
+
+/** Training load: weekly totals over 12 weeks and the acute:chronic ratio. */
+function TrainingLoad() {
+  const { state } = useStore();
+  const unit = state.settings.unit;
+  const rpeOn = useFeature('rpe');
+  const [metric, setMetric] = useState<LoadMetric>('sets');
+  const starts = useMemo(() => {
+    const out = [weekStart(Date.now())];
+    while (out.length < 12) out.unshift(weekStart(out[0] - 3.5 * DAY));
+    return out;
+  }, []);
+  const weeks = useMemo(() => weeklyLoad(state.workouts, starts), [state.workouts, starts]);
+  const ratio = useMemo(() => loadRatio(state.workouts), [state.workouts]);
+  const label = (ts: number) => new Date(ts).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' });
+  const value = (w: (typeof weeks)[number]) => (metric === 'effort' ? (w.effort ?? 0) : metric === 'tonnage' ? Math.round(w.tonnage / 100) / 10 : w[metric]);
+  const zoneText = {
+    low: t('Lighter than usual: fine for a deload or a busy week.'),
+    steady: t('In line with what you usually do.'),
+    jump: t('A big jump compared with your usual. Jumps like this are often harder to recover from: keep an eye on sleep, aches and how sessions feel.'),
+  };
+  const options: { value: LoadMetric; label: string }[] = [
+    { value: 'sets', label: t('Sets') },
+    { value: 'tonnage', label: t('Tonnage') },
+    { value: 'minutes', label: t('Time') },
+    ...(rpeOn ? [{ value: 'effort' as const, label: t('Effort') }] : []),
+  ];
+  return (
+    <Sub title={t('Training load')}>
+      <section className="panel">
+        <h2 className="panel-title">{t('This week against your usual')}</h2>
+        {ratio ? (
+          <>
+            <div className={'load-ratio z-' + ratio.zone}>
+              <strong>{ratio.ratio.toLocaleString(locale())}</strong>
+              <span className="muted small">{t('{a} sets in the last 7 days · usual {b} a week (last 4 weeks)', { a: ratio.acute, b: ratio.chronic.toLocaleString(locale()) })}</span>
+            </div>
+            <div className="load-scale" aria-hidden="true">
+              <span className="z-low">{'< 0,8'}</span>
+              <span className="z-steady">0,8 – 1,3</span>
+              <span className="z-jump">{'> 1,3'}</span>
+            </div>
+            <p className="small">{zoneText[ratio.zone]}</p>
+          </>
+        ) : (
+          <p className="muted small">{t('Train on at least 3 of the last 4 weeks to compare this week with your usual.')}</p>
+        )}
+      </section>
+      <section className="panel">
+        <h2 className="panel-title">{t('Per week')}</h2>
+        <Segmented label={t('Measure')} value={metric} onChange={setMetric} options={options} />
+        <BarChart bars={weeks.map((w) => ({ label: label(w.start), value: value(w) }))} />
+        <p className="muted small">
+          {metric === 'sets'
+            ? t('Completed working sets (warm-ups left out).')
+            : metric === 'tonnage'
+              ? t('Weight × reps, in tonnes ({unit} converted to t).', { unit })
+              : metric === 'minutes'
+                ? t('Workout time in minutes, pauses left out.')
+                : t('Average RPE of rated sets × minutes, added up over the week (sets without RPE are left out).')}
+        </p>
+      </section>
+      <p className="muted small">{t('The ratio is a rough guide to spot sudden changes, not a prediction of injury.')}</p>
     </Sub>
   );
 }
