@@ -1,4 +1,5 @@
 import { safeRate } from './safeguards';
+import { memoByRef } from './memo';
 import { tk } from './i18n';
 /**
  * Nutrition engine: food log totals, weight trend, an adaptive estimate of energy
@@ -209,7 +210,10 @@ export interface TrendPoint {
 }
 
 /** One point per day from the first weigh-in to `until`; days without a weigh-in keep the trend. */
-export function weightTrend(weights: WeighIn[], until = dayKey()): TrendPoint[] {
+export const weightTrend = (weights: WeighIn[], until = dayKey()): TrendPoint[] => trendMemo(weights, until);
+const trendMemo = memoByRef((weights: WeighIn[], until: string) => weightTrendUncached(weights, until));
+
+function weightTrendUncached(weights: WeighIn[], until: string): TrendPoint[] {
   if (!weights.length) return [];
   const byDay = new Map<string, number>();
   for (const w of [...weights].sort((a, b) => a.date.localeCompare(b.date))) byDay.set(w.date, w.kg);
@@ -237,7 +241,10 @@ export interface ExpenditurePoint {
  * Daily expenditure estimates. A day contributes intake only if something was logged and the
  * user did not mark it incomplete. Returns [] until there is a profile and a weigh-in.
  */
-export function expenditureSeries(n: NutritionState, until = dayKey()): ExpenditurePoint[] {
+export const expenditureSeries = (n: NutritionState, until = dayKey()): ExpenditurePoint[] => expMemo(n, until);
+const expMemo = memoByRef((n: NutritionState, until: string) => expenditureSeriesUncached(n, until));
+
+function expenditureSeriesUncached(n: NutritionState, until: string): ExpenditurePoint[] {
   if (!n.profile || !n.weights.length) return [];
   const byDay = new Map<string, number>();
   for (const w of [...n.weights].sort((x, y) => x.date.localeCompare(y.date))) byDay.set(w.date, w.kg);

@@ -1,3 +1,4 @@
+import { memoByRef } from './memo';
 import type { ExerciseKind, PRKind, SetEntry, Unit, Workout, WorkoutExercise } from './types';
 import { locale, t, getLang } from './i18n';
 
@@ -219,7 +220,11 @@ const PR_METRICS: Record<ExerciseKind, PRKind[]> = {
  * earlier workout for that exercise; the first session sets the baseline.
  * Within one workout only the best set per metric is flagged.
  */
-export function computePRs(workouts: Workout[]): Map<string, PRKind[]> {
+/** Records per set, computed once per list of workouts (memo.ts). */
+export const computePRs = (workouts: Workout[]): Map<string, PRKind[]> => prsMemo(workouts, undefined);
+const prsMemo = memoByRef((workouts: Workout[], _: undefined) => computePRsUncached(workouts));
+
+function computePRsUncached(workouts: Workout[]): Map<string, PRKind[]> {
   const bests = new Map<string, Partial<Record<PRKind, number>>>();
   const result = new Map<string, PRKind[]>();
   const flag = (id: string, k: PRKind) => result.set(id, [...(result.get(id) ?? []), k]);
