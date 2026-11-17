@@ -5,12 +5,15 @@ import { exportWorkoutCsv, importWorkoutCsv } from '../csv';
 import { defaultState, parseBackup, useStore } from '../store';
 import { download } from '../utils';
 import { fmtBackupAge, saveBackup } from '../backup';
+import { exportSocialData } from '../cloud/social';
+import { useCloud } from '../cloud/cloud';
 import { downloadWorkbook } from '../export';
 import { t, tp } from '../i18n';
 import { requirePro } from '../pro';
 
 /** Settings → Export & import data. */
 export function DataPage() {
+  const cloud = useCloud();
   const { state, update, exercises, exMap } = useStore();
   const { workouts } = state;
   const done = workouts.filter((w) => w.endedAt);
@@ -67,6 +70,21 @@ export function DataPage() {
             <Icon name="download" size={18} /> {t('Export to Excel (report and all data)')}
           </button>
           <p className="muted small">{t('One workbook: weekly report, workouts, every set, weigh-ins, daily nutrition, food log and check-ins. Opens in Excel, Numbers or Google Sheets.')}</p>
+          {cloud.user && (
+            <button
+              className="btn btn-wide"
+              onClick={async () => {
+                try {
+                  const data = await exportSocialData(cloud.user!.id);
+                  download(`foundry-social-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json');
+                } catch (e) {
+                  alert((e as Error).message);
+                }
+              }}
+            >
+              <Icon name="download" size={18} /> {t('Export my social data (profile, posts, comments, shared meals)')}
+            </button>
+          )}
           <p className="muted small">{t('To bring your history over from Hevy: in Hevy, open Settings → Export & Import Data → Export workouts, then import that CSV file here. Exercises with unknown names become custom exercises.')}</p>
           {msg && <p className={msg.error ? 'field-error' : 'ok-line'}>{msg.text}</p>}
           <button className="btn btn-ghost-danger btn-wide" onClick={() => setConfirmReset(true)}>{t('Erase all data')}</button>

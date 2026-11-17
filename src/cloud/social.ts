@@ -421,3 +421,39 @@ export async function reportContent(kind: import('../reports').ReportKind, targe
   if (error?.code === '23505') return;
   check(error);
 }
+
+/* ---------- Export of social data (portability) ---------- */
+
+/** Tables holding what the member shared, and the column that says it is theirs. */
+export const SOCIAL_EXPORT: [table: string, owner: string][] = [
+  ['profiles', 'user_id'],
+  ['public_stats', 'user_id'],
+  ['friendships', 'requester'],
+  ['friendships', 'addressee'],
+  ['activities', 'user_id'],
+  ['activity_comments', 'user_id'],
+  ['respects', 'user_id'],
+  ['shared_meals', 'user_id'],
+  ['community_foods', 'user_id'],
+];
+
+/** Everything this member has on the shared tables, table by table (tables missing on the server are skipped). */
+export async function collectSocialData(
+  uid: string,
+  read: (table: string, owner: string, uid: string) => Promise<unknown[] | null>,
+): Promise<Record<string, unknown[]>> {
+  const out: Record<string, unknown[]> = {};
+  for (const [table, owner] of SOCIAL_EXPORT) {
+    const rows = await read(table, owner, uid).catch(() => null);
+    if (rows) out[table] = [...(out[table] ?? []), ...rows];
+  }
+  return out;
+}
+
+export async function exportSocialData(uid: string): Promise<Record<string, unknown[]>> {
+  const c = await sb();
+  return collectSocialData(uid, async (table, owner, id) => {
+    const { data, error } = await c.from(table).select('*').eq(owner, id);
+    return error ? null : (data as unknown[]);
+  });
+}

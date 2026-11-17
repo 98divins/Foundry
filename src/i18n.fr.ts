@@ -363,6 +363,7 @@ export const FR: Record<string, string> = {
   "Export CSV": "Exporter en CSV",
   "Export backup": "Exporter une sauvegarde",
   "Export my data": "Exporter mes données",
+  "Export my social data (profile, posts, comments, shared meals)": "Exporter mes données sociales (profil, publications, commentaires, repas partagés)",
   "Export to Excel (report and all data)": "Exporter en Excel (rapport et toutes les données)",
   "F": "É",
   "Failure": "Échec",
