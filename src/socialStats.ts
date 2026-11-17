@@ -339,7 +339,11 @@ export function coveringPeriod(from: number, now = Date.now()): BoardPeriod {
 export function compareScore(pairs: [number | null | undefined, number | null | undefined][]): [number, number] {
   let a = 0;
   let b = 0;
-  for (const [x, y] of pairs) if (x != null && y != null && x !== y) x > y ? a++ : b++;
+  for (const [x, y] of pairs) {
+    if (x == null || y == null || x === y) continue;
+    if (x > y) a++;
+    else b++;
+  }
   return [a, b];
 }
 

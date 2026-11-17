@@ -174,7 +174,7 @@ export interface ImportResult {
  * set_type, weight_kg, reps, ...). Foundry's own CSV export uses the same layout.
  */
 export function importWorkoutCsv(text: string, known: Exercise[], existing: Workout[], unit: Unit = 'kg'): ImportResult {
-  const clean = text.replace(/^﻿/, '');
+  const clean = text.replace(/^\uFEFF/, '');
   // Strong exports may use ";" (European phones); Hevy and Foundry use ",".
   const first = clean.split(/\r?\n/, 1)[0];
   const sep = (first.match(/;/g)?.length ?? 0) > (first.match(/,/g)?.length ?? 0) ? ';' : ',';

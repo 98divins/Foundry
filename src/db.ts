@@ -85,7 +85,11 @@ export function joinState(items: Iterable<[string, unknown]>, docs: Map<string, 
       const order = (docs.get('order:' + l.kind) as string[] | undefined) ?? [];
       const seen = new Set<string>();
       xs = [];
-      for (const key of order) if (m.has(key) && !seen.has(key)) (seen.add(key), xs.push(m.get(key)!));
+      for (const key of order)
+        if (m.has(key) && !seen.has(key)) {
+          seen.add(key);
+          xs.push(m.get(key)!);
+        }
       for (const [key, x] of m) if (!seen.has(key)) xs.push(x); // not in the order document: at the end
     } else {
       xs = [...m.values()];
@@ -287,7 +291,10 @@ export async function writeDiff(db: IDBDatabase, d: Diff, prev: State | null, ne
     else chunks.delete(ch);
   }
   const docs = tx.objectStore('docs');
-  for (const [k, v] of all ? [...splitDocs(next)] : d.docs) (v === undefined ? docs.delete(k) : docs.put(v, k));
+  for (const [k, v] of all ? [...splitDocs(next)] : d.docs) {
+    if (v === undefined) docs.delete(k);
+    else docs.put(v, k);
+  }
   await done(tx);
 }
 

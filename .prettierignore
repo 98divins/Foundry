@@ -1,0 +1,11 @@
+dist
+node_modules
+public
+package-lock.json
+src/i18n.fr.ts
+src/foodsFr.ts
+src/foodsFrMore.ts
+src/exerciseData.ts
+supabase
+docs
+*.md

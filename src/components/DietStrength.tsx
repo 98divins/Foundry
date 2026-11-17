@@ -59,7 +59,7 @@ export function DietStrengthCard() {
 export function Phases() {
   const { state, update } = useStore();
   const unit = state.settings.unit;
-  const phases = state.nutrition.phases ?? [];
+  const phases = useMemo(() => state.nutrition.phases ?? [], [state.nutrition.phases]);
   const running = phases.find((p) => !p.end);
   const [kind, setKind] = useState<PhaseKind>('cut');
   const [start, setStart] = useState(dayKey());

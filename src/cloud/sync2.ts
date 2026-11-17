@@ -78,7 +78,10 @@ export function applyRows(state: State, rows: Row[], pending: Set<string>, base:
     const isDoc = r.kind === 'doc';
     const map = isDoc ? sp.docs : sp.items;
     if (r.deleted) {
-      if (map.has(k)) (map.delete(k), (changed = true));
+      if (map.has(k)) {
+        map.delete(k);
+        changed = true;
+      }
     } else if (JSON.stringify(map.get(k)) !== JSON.stringify(r.data)) {
       map.set(k, r.data);
       changed = true;

@@ -122,7 +122,7 @@ function wav(freq: number, ms: number): string {
 }
 type Sound = 'tick' | 'work' | 'rest' | 'end';
 const SOUND_SPEC: Record<Sound, [number, number]> = { tick: [660, 140], work: [990, 450], rest: [520, 450], end: [880, 900] };
-let sounds: Partial<Record<Sound, HTMLAudioElement>> = {};
+const sounds: Partial<Record<Sound, HTMLAudioElement>> = {};
 let soundOn = true;
 function unlockSounds() {
   for (const k of Object.keys(SOUND_SPEC) as Sound[]) {

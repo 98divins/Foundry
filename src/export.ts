@@ -26,7 +26,12 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
       ...done.map((w) => {
         let sets = 0;
         let vol = 0;
-        for (const we of w.exercises) for (const s of we.sets) if (s.done) (sets++, (vol += setVolume(s, exerciseKind(we.exerciseId))));
+        for (const we of w.exercises)
+          for (const s of we.sets)
+            if (s.done) {
+              sets++;
+              vol += setVolume(s, exerciseKind(we.exerciseId));
+            }
         return [iso(w.startedAt), w.name, Math.round(((w.endedAt ?? w.startedAt) - w.startedAt) / 60000), w.exercises.length, sets, Math.round(vol), w.note ?? ''];
       }),
     ],
