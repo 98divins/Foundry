@@ -84,3 +84,27 @@ describe('comparisons over any dates', () => {
     expect(rangeTotals(undefined, at(1), at(9))).toBeNull();
   });
 });
+
+describe('head-to-head periods', () => {
+  it('"this week" only counts the current week, from its first day', async () => {
+    const { buildPublicStats, metricValue, liftsFor } = await import('./socialStats');
+    const H = 3600000;
+    const now = weekStart(Date.now()) + 2 * 24 * H + 12 * H;
+    const start = weekStart(now);
+    let k = 0;
+    const set = (weight: number, reps: number) => ({ id: 'h' + k++, type: 'normal' as const, weight, reps, done: true });
+    const w = (at: number, weight: number) => ({ id: 'w' + k++, name: 'W', startedAt: at, endedAt: at + H, exercises: [{ id: 'e' + k++, exerciseId: 'bench_bb', restSec: 90, sets: [set(weight, 5)] }] });
+    // Last week: 60 then a record at 100. This week: 80 (not a record) and one session.
+    const s = buildPublicStats({ ...defaultState(), workouts: [w(start - 6 * 24 * H, 60), w(start - 2 * 24 * H, 100), w(start + 10 * H, 80)] } as State, now);
+    expect(metricValue(s, 'days', 'week', now)).toBe(1);
+    expect(metricValue(s, 'prs', 'week', now)).toBe(0);
+    expect(metricValue(s, 'prs', '30', now)).toBe(1);
+    expect(liftsFor(s, 'week', now)?.bench_bb).toBeLessThan(liftsFor(s, '30', now)!.bench_bb!);
+  });
+  it('averages training days per week over the chosen period', async () => {
+    const { daysPerWeek } = await import('./socialStats');
+    const s = { v: 1, week: 0, weekDays: 0, weekWorkouts: 0, weekSets: 0, weekVolume: 0, weekMinutes: 0, avgDays4w: 0, streak: 0, prs30: 0, strength4w: null, totalWorkouts: 0, lastWorkoutAt: null, lifts: {}, periods: { '30': { days: 12, sets: 0, volume: 0, prs: 0, strength: null, goals: null } } } as const;
+    expect(daysPerWeek(s as never, '30')).toBe(2.8);
+    expect(daysPerWeek(null, '30')).toBeNull();
+  });
+});

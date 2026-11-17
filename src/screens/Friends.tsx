@@ -24,7 +24,7 @@ import { LevelChip } from '../components/Level';
 import { ActivityFeed } from './Feed';
 import { ChallengesPanel } from './Challenges';
 import { exerciseName, useStore } from '../store';
-import { rangeTotals } from '../socialStats';
+import { daysPerWeek, liftsFor, rangeTotals } from '../socialStats';
 import { dayKey } from '../nutrition';
 import { BIG_LIFTS, BOARD_PERIODS, buildPublicStats, metricValue, rankBoard, type BoardMetric, type BoardPeriod, type PublicStats } from '../socialStats';
 import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
@@ -436,6 +436,20 @@ export function FriendCompare({ id }: { id: string }) {
   const [period, setPeriod] = useState<BoardPeriod>('week');
   const [custom, setCustom] = useState<{ from: string; to: string } | null>(null);
   const v = (s: PublicStats | null, m: BoardMetric) => metricValue(s, m, period);
+  const periodName = custom
+    ? `${new Date(custom.from + 'T12:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' })} – ${new Date(custom.to + 'T12:00').toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}`
+    : t(PERIOD_LABEL[period]);
+  // Chosen dates: totals from the shared per-day summary.
+  const rangeOf = (s: PublicStats | null) =>
+    custom ? rangeTotals(s?.days, new Date(custom.from + 'T12:00').getTime(), new Date(custom.to + 'T12:00').getTime()) : null;
+  const mineRange = rangeOf(mine);
+  const theirRange = rangeOf(theirs);
+  const perWeek = (s: PublicStats | null, r: ReturnType<typeof rangeOf>) => {
+    if (!custom) return daysPerWeek(s, period);
+    if (!r) return null;
+    const weeks = Math.max(1, (new Date(custom.to + 'T12:00').getTime() - new Date(custom.from + 'T12:00').getTime()) / 86400000 + 1) / 7;
+    return Math.round((r.days / weeks) * 10) / 10;
+  };
   const score = (() => {
     const pairs: [number | null, number | null][] = (['days', 'goals', 'sets', 'volume', 'cardio', 'streak', 'prs', 'strength'] as BoardMetric[]).map((m) => [v(mine, m), v(theirs, m)]);
     let a = 0;
@@ -532,29 +546,33 @@ export function FriendCompare({ id }: { id: string }) {
                 />
                 <Row label={t('Sets')} a={v(mine, 'sets')} b={v(theirs, 'sets')} />
                 <Row label={t('Volume')} a={v(mine, 'volume')} b={v(theirs, 'volume')} fmt={(x) => fmtVolume(x, unit)} />
-                <Row label={period === 'week' ? t('Records (30 d)') : t('Records')} a={v(mine, 'prs')} b={v(theirs, 'prs')} />
-                <Row label={period === 'week' ? t('Strength progress (4 weeks)') : t('Strength progress')} a={v(mine, 'strength')} b={v(theirs, 'strength')} fmt={(x) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) })} />
+                <Row label={t('Records')} a={v(mine, 'prs')} b={v(theirs, 'prs')} />
+                {period !== 'week' && <Row label={t('Strength progress')} a={v(mine, 'strength')} b={v(theirs, 'strength')} fmt={(x) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) })} />}
                 {period === 'week' && <Row label={t('Time')} a={mine.weekMinutes} b={theirs ? (theirs.week === mine.week ? theirs.weekMinutes : 0) : null} fmt={(x) => fmtDuration(x * 60000)} />}
               </ul>
             </section>
             )}
 
             <section className="panel">
-              <h2 className="panel-title">{t('Consistency')}</h2>
+              <h2 className="panel-title">{t('Consistency')} · {periodName}</h2>
               <ul className="cmp-list">
-                <Row label={t('Week streak')} a={v(mine, 'streak')} b={v(theirs, 'streak')} />
-                <Row label={t('Days per week (4 weeks)')} a={mine.avgDays4w} b={theirs?.avgDays4w} fmt={fmtNum} />
-                <Row label={t('Workouts in total')} a={mine.totalWorkouts} b={theirs?.totalWorkouts} />
+                <Row label={t('Training days per week')} a={perWeek(mine, mineRange)} b={perWeek(theirs, theirRange)} fmt={fmtNum} />
+                <Row label={t('Current week streak')} a={v(mine, 'streak')} b={v(theirs, 'streak')} />
               </ul>
+              <p className="muted small">{t('Since the start: {a} workouts for you, {b} for {name}.', { a: mine.totalWorkouts, b: theirs?.totalWorkouts ?? '–', name: nameOf(f.profile) })}</p>
             </section>
 
             <section className="panel">
-              <h2 className="panel-title">{t('Big lifts (est. 1RM, 90 days)')}</h2>
-              <ul className="cmp-list">
-                {BIG_LIFTS.map((l) => (
-                  <Row key={l} label={exerciseName(exMap, l)} a={mine.lifts[l] ?? null} b={theirs?.lifts[l] ?? null} fmt={(x) => fmtEstimate(x, unit)} />
-                ))}
-              </ul>
+              <h2 className="panel-title">{t('Big lifts (est. 1RM)')} · {periodName}</h2>
+              {custom ? (
+                <p className="muted small">{t('Best lifts are compared over a set period: choose this week, 1 month, 6 months or 1 year.')}</p>
+              ) : (
+                <ul className="cmp-list">
+                  {BIG_LIFTS.map((l) => (
+                    <Row key={l} label={exerciseName(exMap, l)} a={liftsFor(mine, period)?.[l] ?? null} b={liftsFor(theirs, period)?.[l] ?? null} fmt={(x) => fmtEstimate(x, unit)} />
+                  ))}
+                </ul>
+              )}
               <p className="muted small">{t('Estimated from your best set (weight × reps). Train for yourself first: everyone starts somewhere.')}</p>
             </section>
 

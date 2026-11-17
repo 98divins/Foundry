@@ -37,8 +37,12 @@ export interface PublicStats {
   strength4w: number | null;
   totalWorkouts: number;
   lastWorkoutAt: number | null;
-  /** kg */
+  /** kg, best estimated 1RM over the last 90 days. */
   lifts: Partial<Record<BigLift, number>>;
+  /** Records beaten this week. */
+  weekPrs?: number;
+  /** kg, best estimated 1RM this week. */
+  weekLifts?: Partial<Record<BigLift, number>>;
   /** When these numbers were computed (rolling periods are as of then). */
   computedAt?: number;
   /** Totals over rolling periods: last 30, 182 and 365 days. */
@@ -75,6 +79,8 @@ export interface PeriodStats {
   cardio?: number;
   /** km of cardio. */
   cardioKm?: number;
+  /** kg, best estimated 1RM over the period. */
+  lifts?: Partial<Record<BigLift, number>>;
 }
 
 /** Cardio minutes and km between two times: every set of a cardio exercise (duration and distance). */
@@ -93,6 +99,24 @@ export function cardioIn(workouts: State['workouts'], from: number, to: number):
     }
   }
   return { cardio: Math.round(sec / 60), cardioKm: Math.round(km * 10) / 10 };
+}
+
+/** Best estimated 1RM of the big lifts between two times (kg, one decimal). */
+export function bestLifts(workouts: State['workouts'], from: number, to: number): Partial<Record<BigLift, number>> {
+  const lifts: Partial<Record<BigLift, number>> = {};
+  for (const x of finished(workouts)) {
+    if (x.startedAt < from || x.startedAt >= to) continue;
+    for (const we of x.exercises) {
+      if (!(BIG_LIFTS as readonly string[]).includes(we.exerciseId)) continue;
+      for (const s of we.sets) {
+        if (!countsForStats(s) || !s.weight || !s.reps) continue;
+        const e = Math.round(epley(s.weight, s.reps) * 10) / 10;
+        const id = we.exerciseId as BigLift;
+        if (e > (lifts[id] ?? 0)) lifts[id] = e;
+      }
+    }
+  }
+  return lifts;
 }
 
 export function buildPublicStats(state: State, now = Date.now()): PublicStats {
@@ -131,6 +155,7 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
       strength: idx.length >= 2 ? Math.round((idx[idx.length - 1] - idx[0]) * 10) / 10 : null,
       goals: goalRate(state, state.goals, from, now),
       ...cardioIn(w, from, now + DAY),
+      lifts: bestLifts(w, from, now + DAY),
     };
   }
   return {
@@ -146,6 +171,12 @@ export function buildPublicStats(state: State, now = Date.now()): PublicStats {
     avgDays4w: Math.round((trainingDays(prev4) / 4) * 10) / 10,
     streak: weekStreak(w, now).weeks,
     prs30: recentPRs(w, computePRs(w), 30, now).length,
+    weekPrs: (() => {
+      let n = 0;
+      for (const x of finished(w)) if (x.startedAt >= start) for (const we of x.exercises) for (const s of we.sets) if (prs.has(s.id)) n++;
+      return n;
+    })(),
+    weekLifts: bestLifts(w, start, now + DAY),
     strength4w: index.length >= 2 ? Math.round((index[index.length - 1] - index[0]) * 10) / 10 : null,
     totalWorkouts: done.length,
     lastWorkoutAt: done.length ? done[done.length - 1].startedAt : null,
@@ -245,7 +276,8 @@ export function metricValue(s: PublicStats | null | undefined, m: BoardMetric, p
       case 'volume':
         return current ? s.weekVolume : 0;
       case 'prs':
-        return s.prs30;
+        // This week's records; older app versions only shared the last 30 days.
+        return s.weekPrs == null ? null : current ? s.weekPrs : 0;
       case 'strength':
         return s.strength4w;
       case 'goals':
@@ -277,4 +309,19 @@ export function rankBoard<P>(people: { person: P; stats: PublicStats | null }[],
     }
     return { ...r, rank };
   });
+}
+
+/** Average training days per week over a period (null when not shared). */
+export function daysPerWeek(s: PublicStats | null | undefined, period: BoardPeriod, now = Date.now()): number | null {
+  const d = metricValue(s, 'days', period, now);
+  if (d == null) return null;
+  if (period === 'week') return d;
+  return Math.round((d / (Number(period) / 7)) * 10) / 10;
+}
+
+/** Best estimated 1RM per big lift over a period (null when not shared, e.g. older app versions). */
+export function liftsFor(s: PublicStats | null | undefined, period: BoardPeriod, now = Date.now()): Partial<Record<BigLift, number>> | null {
+  if (!s) return null;
+  if (period === 'week') return s.weekLifts ? (s.week === weekStart(now) ? s.weekLifts : {}) : null;
+  return s.periods?.[period]?.lifts ?? null;
 }
