@@ -1,0 +1,523 @@
+{
+ "rows": [
+  {
+   "kind": "workout",
+   "id": "w2",
+   "data": {
+    "id": "w2",
+    "name": "Pull",
+    "startedAt": 2000,
+    "endedAt": 3000,
+    "exercises": [
+     {
+      "id": "e2",
+      "exerciseId": "row_bb",
+      "restSec": 90,
+      "sets": [
+       {
+        "id": "s3",
+        "type": "normal",
+        "weight": 60,
+        "reps": 8,
+        "done": true
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "kind": "workout",
+   "id": "w1",
+   "data": {
+    "id": "w1",
+    "name": "Push",
+    "startedAt": 1000,
+    "endedAt": 1500,
+    "exercises": [
+     {
+      "id": "e1",
+      "exerciseId": "bench_bb",
+      "restSec": 90,
+      "sets": [
+       {
+        "id": "s1",
+        "type": "normal",
+        "weight": 60,
+        "reps": 8,
+        "done": true
+       },
+       {
+        "id": "s2",
+        "type": "normal",
+        "weight": 60,
+        "reps": 8,
+        "done": true
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "kind": "routine",
+   "id": "r2",
+   "data": {
+    "id": "r2",
+    "name": "Pull",
+    "exercises": [],
+    "updatedAt": 1,
+    "folderId": "f1"
+   }
+  },
+  {
+   "kind": "routine",
+   "id": "r1",
+   "data": {
+    "id": "r1",
+    "name": "Push",
+    "exercises": [],
+    "updatedAt": 1
+   }
+  },
+  {
+   "kind": "folder",
+   "id": "f1",
+   "data": {
+    "id": "f1",
+    "name": "PPL"
+   }
+  },
+  {
+   "kind": "exercise",
+   "id": "c_1",
+   "data": {
+    "id": "c_1",
+    "name": "Presse maison",
+    "muscle": "quads",
+    "equipment": "machine",
+    "kind": "weight",
+    "custom": true
+   }
+  },
+  {
+   "kind": "food",
+   "id": "c-2",
+   "data": {
+    "id": "c-2",
+    "name": "B",
+    "per100": {
+     "kcal": 2,
+     "protein": 0,
+     "carbs": 0,
+     "fat": 0
+    },
+    "source": "custom"
+   }
+  },
+  {
+   "kind": "food",
+   "id": "c-1",
+   "data": {
+    "id": "c-1",
+    "name": "A",
+    "per100": {
+     "kcal": 1,
+     "protein": 0,
+     "carbs": 0,
+     "fat": 0
+    },
+    "source": "custom"
+   }
+  },
+  {
+   "kind": "meal",
+   "id": "m1",
+   "data": {
+    "id": "m1",
+    "name": "Bowl",
+    "items": [],
+    "updatedAt": 3
+   }
+  },
+  {
+   "kind": "log",
+   "id": "l2",
+   "data": {
+    "id": "l2",
+    "date": "2026-11-02",
+    "meal": "lunch",
+    "name": "x",
+    "grams": 100,
+    "kcal": 100,
+    "protein": 1,
+    "carbs": 1,
+    "fat": 1,
+    "createdAt": 20
+   }
+  },
+  {
+   "kind": "log",
+   "id": "l1",
+   "data": {
+    "id": "l1",
+    "date": "2026-11-01",
+    "meal": "lunch",
+    "name": "y",
+    "grams": 50,
+    "kcal": 50,
+    "protein": 1,
+    "carbs": 1,
+    "fat": 1,
+    "createdAt": 10
+   }
+  },
+  {
+   "kind": "weight",
+   "id": "2026-11-02",
+   "data": {
+    "date": "2026-11-02",
+    "kg": 80
+   }
+  },
+  {
+   "kind": "weight",
+   "id": "2026-11-01",
+   "data": {
+    "date": "2026-11-01",
+    "kg": 80.4
+   }
+  },
+  {
+   "kind": "checkin",
+   "id": "2026-11-01",
+   "data": {
+    "date": "2026-11-01",
+    "targets": {
+     "kcal": 2400,
+     "protein": 160,
+     "carbs": 280,
+     "fat": 70
+    }
+   }
+  },
+  {
+   "kind": "favorite",
+   "id": "c-2",
+   "data": "c-2"
+  },
+  {
+   "kind": "favorite",
+   "id": "c-1",
+   "data": "c-1"
+  },
+  {
+   "kind": "incomplete",
+   "id": "2026-11-02",
+   "data": "2026-11-02"
+  },
+  {
+   "kind": "incomplete",
+   "id": "2026-11-01",
+   "data": "2026-11-01"
+  },
+  {
+   "kind": "doc",
+   "id": "order:routine",
+   "data": [
+    "r2",
+    "r1"
+   ]
+  },
+  {
+   "kind": "doc",
+   "id": "order:folder",
+   "data": [
+    "f1"
+   ]
+  },
+  {
+   "kind": "doc",
+   "id": "order:exercise",
+   "data": [
+    "c_1"
+   ]
+  },
+  {
+   "kind": "doc",
+   "id": "order:food",
+   "data": [
+    "c-2",
+    "c-1"
+   ]
+  },
+  {
+   "kind": "doc",
+   "id": "order:meal",
+   "data": [
+    "m1"
+   ]
+  },
+  {
+   "kind": "doc",
+   "id": "order:favorite",
+   "data": [
+    "c-2",
+    "c-1"
+   ]
+  },
+  {
+   "kind": "doc",
+   "id": "state:version",
+   "data": 1
+  },
+  {
+   "kind": "doc",
+   "id": "state:active",
+   "data": null
+  },
+  {
+   "kind": "doc",
+   "id": "state:rest",
+   "data": null
+  },
+  {
+   "kind": "doc",
+   "id": "state:settings",
+   "data": {
+    "unit": "kg",
+    "defaultRest": 90,
+    "sound": true,
+    "exerciseLang": "fr",
+    "shareStats": true
+   }
+  },
+  {
+   "kind": "doc",
+   "id": "state:profile",
+   "data": {
+    "name": "Alex",
+    "bio": "hi"
+   }
+  },
+  {
+   "kind": "doc",
+   "id": "state:goals",
+   "data": {
+    "trainingDays": 4,
+    "dietDays": 5,
+    "setAt": 9
+   }
+  },
+  {
+   "kind": "doc",
+   "id": "nutrition",
+   "data": {
+    "profile": null,
+    "rateKgPerWeek": -0.25,
+    "proteinPerKg": 2,
+    "fatShare": 0.28,
+    "checkInDay": 1
+   }
+  }
+ ],
+ "expected": {
+  "version": 1,
+  "workouts": [
+   {
+    "id": "w1",
+    "name": "Push",
+    "startedAt": 1000,
+    "endedAt": 1500,
+    "exercises": [
+     {
+      "id": "e1",
+      "exerciseId": "bench_bb",
+      "restSec": 90,
+      "sets": [
+       {
+        "id": "s1",
+        "type": "normal",
+        "weight": 60,
+        "reps": 8,
+        "done": true
+       },
+       {
+        "id": "s2",
+        "type": "normal",
+        "weight": 60,
+        "reps": 8,
+        "done": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "w2",
+    "name": "Pull",
+    "startedAt": 2000,
+    "endedAt": 3000,
+    "exercises": [
+     {
+      "id": "e2",
+      "exerciseId": "row_bb",
+      "restSec": 90,
+      "sets": [
+       {
+        "id": "s3",
+        "type": "normal",
+        "weight": 60,
+        "reps": 8,
+        "done": true
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "routines": [
+   {
+    "id": "r2",
+    "name": "Pull",
+    "exercises": [],
+    "updatedAt": 1,
+    "folderId": "f1"
+   },
+   {
+    "id": "r1",
+    "name": "Push",
+    "exercises": [],
+    "updatedAt": 1
+   }
+  ],
+  "folders": [
+   {
+    "id": "f1",
+    "name": "PPL"
+   }
+  ],
+  "customExercises": [
+   {
+    "id": "c_1",
+    "name": "Presse maison",
+    "muscle": "quads",
+    "equipment": "machine",
+    "kind": "weight",
+    "custom": true
+   }
+  ],
+  "active": null,
+  "rest": null,
+  "settings": {
+   "unit": "kg",
+   "defaultRest": 90,
+   "sound": true,
+   "exerciseLang": "fr",
+   "shareStats": true
+  },
+  "nutrition": {
+   "profile": null,
+   "rateKgPerWeek": -0.25,
+   "proteinPerKg": 2,
+   "fatShare": 0.28,
+   "checkInDay": 1,
+   "foods": [
+    {
+     "id": "c-2",
+     "name": "B",
+     "per100": {
+      "kcal": 2,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 0
+     },
+     "source": "custom"
+    },
+    {
+     "id": "c-1",
+     "name": "A",
+     "per100": {
+      "kcal": 1,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 0
+     },
+     "source": "custom"
+    }
+   ],
+   "log": [
+    {
+     "id": "l1",
+     "date": "2026-11-01",
+     "meal": "lunch",
+     "name": "y",
+     "grams": 50,
+     "kcal": 50,
+     "protein": 1,
+     "carbs": 1,
+     "fat": 1,
+     "createdAt": 10
+    },
+    {
+     "id": "l2",
+     "date": "2026-11-02",
+     "meal": "lunch",
+     "name": "x",
+     "grams": 100,
+     "kcal": 100,
+     "protein": 1,
+     "carbs": 1,
+     "fat": 1,
+     "createdAt": 20
+    }
+   ],
+   "weights": [
+    {
+     "date": "2026-11-01",
+     "kg": 80.4
+    },
+    {
+     "date": "2026-11-02",
+     "kg": 80
+    }
+   ],
+   "incompleteDays": [
+    "2026-11-01",
+    "2026-11-02"
+   ],
+   "checkIns": [
+    {
+     "date": "2026-11-01",
+     "targets": {
+      "kcal": 2400,
+      "protein": 160,
+      "carbs": 280,
+      "fat": 70
+     }
+    }
+   ],
+   "favorites": [
+    "c-2",
+    "c-1"
+   ],
+   "savedMeals": [
+    {
+     "id": "m1",
+     "name": "Bowl",
+     "items": [],
+     "updatedAt": 3
+    }
+   ]
+  },
+  "profile": {
+   "name": "Alex",
+   "bio": "hi"
+  },
+  "goals": {
+   "trainingDays": 4,
+   "dietDays": 5,
+   "setAt": 9
+  }
+ }
+}

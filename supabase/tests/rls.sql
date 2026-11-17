@@ -259,4 +259,21 @@ update public.user_state set updated_at = now() - interval '25 months' where use
 select t.ok((select count(*) from admin.inactive_accounts where username = 'carol') = 1, 'retention: accounts inactive for 24 months are listed');
 select t.ok(not exists (select 1 from public.user_items where id = 'w1') and exists (select 1 from public.user_items where id = 'w2'), 'retention: only deletion markers older than 180 days are purged');
 
+/* ---------- sync v2 rollback: folding the rows gives back exactly the v1 state ---------- */
+reset role;
+\set dave '''dddddddd-0000-0000-0000-00000000000d'''
+insert into auth.users (id, email) values (:dave, 'dave@test.invalid');
+insert into public.user_state (user_id, data) values (:dave, '{}');
+\set fixture `cat supabase/tests/sync_fixture.json`
+insert into public.user_items (user_id, kind, id, data)
+  select :dave, r.kind, r.id, r.data from jsonb_to_recordset((:'fixture'::jsonb) -> 'rows') as r(kind text, id text, data jsonb);
+insert into public.user_items (user_id, kind, id, data) values (:dave, 'meta', 'migrated', '{}');
+select t.ok(admin.fold_items(:dave) = (:'fixture'::jsonb) -> 'expected', 'rollback: the rows fold back into exactly the same state');
+insert into public.user_items (user_id, kind, id, data, deleted) values (:dave, 'workout', 'w1', null, true)
+  on conflict (user_id, kind, id) do update set deleted = true;
+select t.ok(jsonb_array_length(admin.fold_items(:dave) -> 'workouts') = 1, 'rollback: deleted items stay deleted');
+select admin.rollback_to_v1(:dave);
+select t.ok((select jsonb_array_length(data -> 'workouts') from public.user_state where user_id = :dave) = 1, 'rollback: the single block is rebuilt');
+select t.ok(not exists (select 1 from public.user_items where user_id = :dave and kind = 'meta' and id = 'migrated'), 'rollback: the account is unfrozen');
+
 \echo 'All access-rule checks passed.'

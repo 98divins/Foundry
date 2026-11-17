@@ -10,6 +10,12 @@ export interface SyncMeta {
   lastSyncAt: number | null;
   /** When this device last changed something (decides which side is newer in a merge). */
   lastChangeAt?: number | null;
+  /** Sync v2 (docs/SYNC_V2.md): this account syncs item by item. */
+  v2?: boolean;
+  /** v2: latest server time already received. */
+  cursor?: string | null;
+  /** v2: keys changed here and not yet sent (kept across restarts and offline periods). */
+  outbox?: string[];
 }
 
 const KEY = 'foundry:sync';

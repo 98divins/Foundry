@@ -31,9 +31,34 @@ export function setPreviewFree(on: boolean) {
   }
 }
 
+/** The Pro access decided by the server (entitlements table), cached on the device. */
+const ENT_KEY = 'foundry:entitlement';
+export interface Entitlement {
+  plan: 'free' | 'pro';
+  expires_at: string | null;
+}
+export function setEntitlement(e: Entitlement | null) {
+  try {
+    if (e) localStorage.setItem(ENT_KEY, JSON.stringify(e));
+    else localStorage.removeItem(ENT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+export function entitledToPro(e: Entitlement | null, now = Date.now()): boolean {
+  return !!e && e.plan === 'pro' && (!e.expires_at || Date.parse(e.expires_at) > now);
+}
+function cachedEntitlement(): Entitlement | null {
+  try {
+    return JSON.parse(localStorage.getItem(ENT_KEY) ?? 'null');
+  } catch {
+    return null;
+  }
+}
+
 export function hasPro(): boolean {
   if (previewingFree()) return false;
-  return PRO_FREE_DURING_BETA;
+  return PRO_FREE_DURING_BETA || entitledToPro(cachedEntitlement());
 }
 
 export type ProFeature =

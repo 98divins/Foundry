@@ -21,3 +21,15 @@ describe('Pro gates', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('Pro access from the server', () => {
+  it('counts only a current Pro plan', async () => {
+    const { entitledToPro } = await import('./pro');
+    const now = Date.parse('2026-11-17T12:00:00Z');
+    expect(entitledToPro(null, now)).toBe(false);
+    expect(entitledToPro({ plan: 'free', expires_at: null }, now)).toBe(false);
+    expect(entitledToPro({ plan: 'pro', expires_at: null }, now)).toBe(true);
+    expect(entitledToPro({ plan: 'pro', expires_at: '2026-12-01T00:00:00Z' }, now)).toBe(true);
+    expect(entitledToPro({ plan: 'pro', expires_at: '2026-11-01T00:00:00Z' }, now)).toBe(false);
+  });
+});

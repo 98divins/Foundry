@@ -457,3 +457,10 @@ export async function exportSocialData(uid: string): Promise<Record<string, unkn
     return error ? null : (data as unknown[]);
   });
 }
+
+/** This member's Pro access from the server (null when none, or the table is not set up). */
+export async function loadEntitlement(uid: string): Promise<import('../pro').Entitlement | null> {
+  const { data, error } = await (await sb()).from('entitlements').select('plan, expires_at').eq('user_id', uid).maybeSingle();
+  if (error) return null;
+  return (data as import('../pro').Entitlement | null) ?? null;
+}

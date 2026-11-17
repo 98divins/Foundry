@@ -4,13 +4,20 @@ import { forgetLegacyCopy, defaultState, parseBackup, useStore } from '../store'
 import type { State } from '../types';
 import { appUrl, cloudConfigured, SUPABASE_KEY, SUPABASE_URL } from './config';
 import { mergeStates } from './merge';
-import { belongsToOtherAccount, emptyMeta, hasData, loadMeta, loginAction, refreshAction, saveMeta, type SyncMeta } from './sync';
+import { accountMode, applyRows, tombstoneKey, changedKeys, fromRowKey, maxTime, pullRows, pushRows, rowsFor, rowsOf, stateFromRows } from './sync2';
+import { joinState, splitState, type Split } from '../db';
+import { belongsToOtherAccount, emptyMeta, hasData, loadMeta, loginAction, refreshAction, sameTime, saveMeta, type SyncMeta } from './sync';
 import { t } from '../i18n';
 
 import { prepareSignOut } from './signOut';
+import { loadEntitlement } from './social';
+import { setEntitlement } from '../pro';
 
 /** signOut() result when changes are not on the account yet. */
 export const UNSAVED = 'unsaved-changes';
+
+/** Sync v2 for every account. Until then, only accounts switched on one by one (a 'meta/v2_enabled' row). */
+export const SYNC_V2_FOR_ALL = false;
 
 export type SyncStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error';
 
@@ -217,6 +224,127 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     [fetchRemote, upload, applyRemote, setMeta],
   );
 
+  /* ---------- Sync v2: item by item (docs/SYNC_V2.md) ---------- */
+
+  /** What has already been put in the outbox (or received): the next change is compared with it. */
+  const baseRef = useRef<Split | null>(null);
+
+  /** Put a state received from the account into the app (not a local edit, not sent back). */
+  const applyFromServer = useCallback(
+    (next: State) => {
+      applyingRemote.current = true;
+      stateRef.current = next;
+      replace(next);
+    },
+    [replace],
+  );
+
+  /** Keys changed here since the last look, added to the saved outbox. */
+  const collectOutbox = useCallback((): string[] => {
+    const now = splitState(stateRef.current);
+    const keys = new Set(metaRef.current.outbox ?? []);
+    if (baseRef.current) for (const k of changedKeys(baseRef.current, now)) keys.add(k);
+    baseRef.current = now;
+    return [...keys];
+  }, []);
+
+  const pushOutbox = useCallback(
+    async (sb: SupabaseClient, uid: string) => {
+      const seq = changeSeq.current;
+      const keys = collectOutbox();
+      setMeta({ ...metaRef.current, outbox: keys });
+      if (keys.length) await pushRows(sb, uid, rowsFor(keys, baseRef.current!));
+      // The cursor is not moved by our own writes: rows from other devices written meanwhile must still arrive.
+      setMeta({ ...metaRef.current, outbox: [], dirty: changeSeq.current !== seq, lastSyncAt: Date.now() });
+    },
+    [collectOutbox, setMeta],
+  );
+
+  const syncV2 = useCallback(
+    async (uid: string) => {
+      const sb = (await getClient())!;
+      const meta = metaRef.current;
+      if (meta.userId !== uid || !meta.v2 || !meta.cursor || (!baseRef.current && meta.dirty)) {
+        // New device, other account's data, or changes whose outbox was lost in a crash: compare
+        // everything once. Rows changed since the cursor are taken from the server; any other
+        // difference is a change made here, sent back.
+        const rows = await pullRows(sb, uid, null);
+        const remote = stateFromRows(rows, defaultState());
+        const recent = meta.userId === uid && meta.cursor ? rows.filter((r) => r.updated_at && Date.parse(r.updated_at) > Date.parse(meta.cursor!)) : rows;
+        const recentKeys = new Set(recent.map(fromRowKey));
+        const local = stateRef.current;
+        const mine = meta.userId === uid || !belongsToOtherAccount(meta, uid);
+        let next: State;
+        if (!mine || !hasData(local)) next = remote;
+        else {
+          const sp = splitState(local);
+          const rsp = splitState(remote);
+          for (const k of recentKeys) {
+            const isDoc = !k.includes('|');
+            const from = isDoc ? rsp.docs : rsp.items;
+            const to = isDoc ? sp.docs : sp.items;
+            if (from.has(k)) to.set(k, from.get(k));
+            else to.delete(k);
+          }
+          // Items the server has and this device never saw (another device, before this one's cursor).
+          for (const [k, v] of rsp.items) if (!sp.items.has(k) && !((local.deleted?.[tombstoneKey(k)] ?? 0) > 0)) sp.items.set(k, v);
+          next = joinState(sp.items, sp.docs, defaultState());
+        }
+        if (next !== local) applyFromServer(next);
+        baseRef.current = splitState(remote);
+        setMeta({ ...metaRef.current, userId: uid, v2: true, cursor: maxTime(rows, null), outbox: [] });
+        await pushOutbox(sb, uid);
+        return;
+      }
+      if (!baseRef.current) baseRef.current = splitState(stateRef.current);
+      // Receive first, then send: changes waiting here win over older ones from the server.
+      const pending = new Set(collectOutbox());
+      setMeta({ ...metaRef.current, outbox: [...pending] });
+      const rows = await pullRows(sb, uid, meta.cursor);
+      const next = applyRows(stateRef.current, rows, pending, defaultState());
+      if (next) {
+        applyFromServer(next);
+        baseRef.current = splitState(next);
+      }
+      setMeta({ ...metaRef.current, cursor: maxTime(rows, meta.cursor ?? null) });
+      await pushOutbox(sb, uid);
+    },
+    [applyFromServer, collectOutbox, pushOutbox, setMeta],
+  );
+
+  /** Move an account from the single block to rows, after a v1 sync (so this device holds everything). */
+  const migrate = useCallback(
+    async (uid: string) => {
+      const sb = (await getClient())!;
+      const sp = splitState(stateRef.current);
+      const written = await pushRows(sb, uid, rowsOf(sp));
+      await pushRows(sb, uid, [{ kind: 'meta', id: 'migrated', data: { at: Date.now(), app: __APP_VERSION__ } }]);
+      baseRef.current = sp;
+      setMeta({ ...metaRef.current, v2: true, cursor: maxTime(written, null), outbox: [] });
+      // A device still on v1 may have written the block just before it was frozen: merge that in.
+      const head = await fetchRemote(uid, true);
+      if (head?.data && !sameTime(head.updated_at, metaRef.current.remoteUpdatedAt)) {
+        const merged = mergeStates(stateRef.current, parseBackup(JSON.stringify(head.data)), false);
+        applyFromServer(merged);
+        await pushOutbox(sb, uid);
+      }
+    },
+    [fetchRemote, applyFromServer, pushOutbox, setMeta],
+  );
+
+  /** v1 or v2 for this account, migrating when the account was switched on for v2. */
+  const syncAny = useCallback(
+    async (uid: string, first: boolean) => {
+      if (metaRef.current.v2 && metaRef.current.userId === uid) return syncV2(uid);
+      const sb = (await getClient())!;
+      const mode = await accountMode(sb, uid);
+      if (mode.migrated) return syncV2(uid);
+      await syncWith(uid, first);
+      if (mode.enabled || SYNC_V2_FOR_ALL) await migrate(uid);
+    },
+    [syncWith, syncV2, migrate],
+  );
+
   const runSync = useCallback(
     async (uid: string, first: boolean) => {
       if (running.current) {
@@ -228,7 +356,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
         try {
           do {
             again.current = false;
-            await syncWith(uid, first);
+            await syncAny(uid, first);
             first = false;
           } while (again.current);
           ready.current = true;
@@ -243,12 +371,13 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       running.current = job;
       return job;
     },
-    [syncWith, fail],
+    [syncAny, fail],
   );
 
   /** First sync after signing in. */
   const onLogin = useCallback(
     async (u: User) => {
+      loadEntitlement(u.id).then(setEntitlement, () => {});
       await runSync(u.id, true);
       ready.current = true;
       setInitialSynced(true);
@@ -328,6 +457,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
 
   /** Accounts are required: once signed out, this device keeps no one's data. */
   const clearDevice = () => {
+    baseRef.current = null;
+    setEntitlement(null);
     setMeta(emptyMeta());
     forgetLegacyCopy();
     replace(defaultState());
