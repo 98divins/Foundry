@@ -59,7 +59,7 @@ export function DataPage() {
               onClick={() => saveBackup(state, update)}
             >{t('Export backup')}</button>
             <button className="btn" onClick={() => jsonInput.current?.click()}>{t('Restore backup')}</button>
-            <button className="btn" onClick={() => csvInput.current?.click()}>{t('Import CSV (Hevy export)')}</button>
+            <button className="btn" onClick={() => csvInput.current?.click()}>{t('Import a CSV in Hevy format')}</button>
             <button
               className="btn"
               disabled={!done.length}
