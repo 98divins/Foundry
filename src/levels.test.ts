@@ -55,3 +55,20 @@ describe('levels', () => {
     expect(rankOf(50).id).toBe('titanium');
   });
 });
+
+describe('pace to the top level', () => {
+  // Weekly XP of a steady lifter: workouts, weekly goal met, full streak bonus, a few records, and
+  // nutrition (diet days + weigh-in) when logged. Same assumptions as the curve's comment.
+  const weekly = (sessions: number, nutrition: boolean) => sessions * 112 + 400 + (nutrition ? 230 : 0);
+  const years = (level: number, sessions: number, nutrition: boolean) => xpForLevel(level) / weekly(sessions, nutrition) / 52;
+
+  it('level 10 in about one to one and a half months', () => {
+    expect(years(10, 3, false) * 12).toBeLessThan(1.6);
+    expect(years(10, 7, true) * 12).toBeGreaterThan(0.6);
+  });
+  it('level 50 stays rare even for very regular lifters', () => {
+    expect(years(50, 7, true)).toBeGreaterThan(2.2);
+    expect(years(50, 4, false)).toBeGreaterThan(3.5);
+    expect(years(50, 3, false)).toBeLessThan(5);
+  });
+});

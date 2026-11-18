@@ -37,8 +37,12 @@ export function countsForXp(w: Workout): boolean {
   return minutes >= 20 || workoutSetCount(w) >= 6;
 }
 
-/** Total XP needed to reach a level (level 1 = 0). About 2 months of steady training for level 10, 3 years for 50. */
-export const xpForLevel = (level: number) => (level <= 1 ? 0 : Math.round(80 * Math.pow(level - 1, 1.83)));
+/**
+ * Total XP needed to reach a level (level 1 = 0). Level 10 comes after 1 to 1.5 months of steady
+ * training; the curve then steepens so level 50 stays rare: about 2.5 years at 6–7 workouts a week
+ * with nutrition logged, nearly 5 years at 3 a week (levels.test.ts checks these spans).
+ */
+export const xpForLevel = (level: number) => (level <= 1 ? 0 : Math.round(36.9 * Math.pow(level - 1, 2.182)));
 export const MAX_LEVEL = 50;
 
 export interface Rank {
