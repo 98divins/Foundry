@@ -13,6 +13,8 @@ test('data stays on the phone offline and reaches a second device', async ({ bro
   // Typed right after signing in, during the first sync: both fields reach the account.
   await expect.poll(() => fake.writes.at(-1)?.profile, { timeout: 15_000 }).toMatchObject({ name: 'Sam', bio: 'Squats on Mondays' });
 
+  // The phone saves locally 0.3 s after the last change (changes are grouped): let it finish.
+  await a.waitForTimeout(1000);
   // Offline: the server cannot be reached, the data is still there after a reload.
   await a.unroute(/fake\.supabase\.test/);
   await a.route(/fake\.supabase\.test/, (r) => r.abort('internetdisconnected'));

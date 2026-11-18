@@ -22,7 +22,8 @@ test('log a workout: add an exercise, complete a set, finish, find it in the his
   await expect(page.getByText('Workout done. Nice work!')).toBeVisible();
   await expect(page.getByText('80 kg × 8')).toBeVisible();
   await page.goto('/#/history');
-  await expect(page.getByText('Evening workout').first()).toBeVisible();
+  // The name depends on the time of day (Morning / Afternoon / Evening workout): find it by its content.
+  await expect(page.getByRole('button', { name: /workout .*640 kg.*Bench Press \(Barbell\)/ })).toBeVisible();
   // Saved to the account too.
   await expect
     .poll(() => (fake.writes.at(-1)?.workouts as { endedAt: number | null }[] | undefined)?.filter((w) => w.endedAt).length, { timeout: 15_000 })

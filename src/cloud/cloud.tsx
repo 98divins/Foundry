@@ -88,7 +88,12 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   const initialHydrated = useRef(false);
   stateRef.current = state;
   /** Set while the cloud copy is being written into the app, so it is not uploaded straight back. */
-  const applyingRemote = useRef(false);
+  /**
+   * The last state put in the app from the account. A state that is exactly this one is not an edit;
+   * anything else is (even when it comes right after, in the same render): a boolean flag here used to
+   * swallow an edit made at the moment the account's copy arrived (found by e2e journeys 02 and 05).
+   */
+  const fromServer = useRef<State | null>(null);
   const ready = useRef(false);
 
   const setMeta = useCallback((m: SyncMeta) => {
@@ -157,7 +162,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   const applyRemote = useCallback(
     (uid: string, data: State, updatedAt: string, dirty = false) => {
       const next = parseBackup(JSON.stringify(data));
-      applyingRemote.current = true;
+      fromServer.current = next;
       stateRef.current = next;
       replace(next);
       setMeta({ ...metaRef.current, userId: uid, remoteUpdatedAt: updatedAt, dirty, lastSyncAt: Date.now() });
@@ -187,8 +192,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
           // No copy in the account yet (new account). Another account's data on this device stays out
           // of it; data from before accounts existed becomes the new account's.
           if (belongsToOtherAccount(meta, uid)) {
-            applyingRemote.current = true;
             stateRef.current = defaultState();
+            fromServer.current = stateRef.current;
             replace(stateRef.current);
             setMeta({ ...emptyMeta(), userId: uid, lastSyncAt: Date.now() });
             return;
@@ -237,7 +242,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   /** Put a state received from the account into the app (not a local edit, not sent back). */
   const applyFromServer = useCallback(
     (next: State) => {
-      applyingRemote.current = true;
+      fromServer.current = next;
       stateRef.current = next;
       replace(next);
     },
@@ -434,10 +439,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   // Every change: mark it unsent at once, upload 2 s after the last one.
   useEffect(() => {
     if (!user) return;
-    if (applyingRemote.current) {
-      applyingRemote.current = false;
-      return;
-    }
+    if (state === fromServer.current) return;
     // Before the first sync is done, an edit is only recorded: the first sync sees it (it merges
     // instead of replacing) and sends it. Without this, an edit made in the first seconds after
     // signing in was lost (found by the e2e journey 05).
