@@ -212,3 +212,28 @@ describe('comparisons over dates', () => {
     expect(coveringPeriod(now - 300 * 86400000, now)).toBe('365');
   });
 });
+
+describe('cardio minutes', () => {
+  it('count cardio-area exercises tracked by time only (stair machine) as well as distance + time ones', async () => {
+    const { cardioIn } = await import('./socialStats');
+    const { LIBRARY } = await import('./exercises');
+    const { registerCardio, registerKinds } = await import('./utils');
+    const byId = new Map(LIBRARY.map((e) => [e.id, e]));
+    registerKinds((id) => byId.get(id)?.kind ?? 'weight');
+    registerCardio((id) => byId.get(id)?.muscle === 'cardio');
+    const at = Date.UTC(2026, 10, 17, 19);
+    const set = (id: string, extra: object) => ({ id, type: 'normal' as const, weight: null, reps: null, done: true, ...extra });
+    const w = {
+      id: 'w',
+      name: 'Cardio x Abs',
+      startedAt: at,
+      endedAt: at + 28 * 60000,
+      exercises: [
+        { id: 'a', exerciseId: 'stair_machine_steps', restSec: 0, sets: [set('s1', { duration: 960 })] },
+        { id: 'b', exerciseId: 'plank', restSec: 0, sets: [set('s2', { duration: 60 })] },
+      ],
+    };
+    expect(byId.get('stair_machine_steps')?.kind).toBe('duration');
+    expect(cardioIn([w], at - 1, at + 86400000).cardio).toBe(16); // the plank is not cardio
+  });
+});

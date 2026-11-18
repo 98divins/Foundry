@@ -3,7 +3,7 @@ import { diffSize, diffStates, joinState, openDb, readAll, writeDiff, writeDoc }
 import { recordDeletions } from './cloud/merge';
 import { displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
-import { registerKinds, registerPrefs } from './utils';
+import { registerCardio, registerKinds, registerPrefs } from './utils';
 import { defaultNutrition, type NutritionState } from './nutrition';
 import { t, setLang, detectLang, getLang } from './i18n';
 
@@ -195,6 +195,7 @@ export function StoreProvider({ children, boot }: { children: ReactNode; boot?: 
     const exercises = [...LIBRARY, ...custom].map((e) => ({ ...e, label: displayName(e, lang) }));
     const exMap = new Map(exercises.map((e) => [e.id, e]));
     registerKinds((id) => exMap.get(id)?.kind ?? 'weight');
+    registerCardio((id) => exMap.get(id)?.muscle === 'cardio');
     return { exercises, exMap };
   }, [custom, lang, state.settings.appLang]);
 

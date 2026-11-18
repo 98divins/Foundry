@@ -50,6 +50,15 @@ export function epley(weight: number, reps: number): number {
 
 /* The store registers how each exercise is tracked, so stats can treat cardio or assisted sets correctly. */
 let kindOf: (exerciseId: string) => ExerciseKind = () => 'weight';
+let cardioOf: (exerciseId: string) => boolean = () => false;
+/**
+ * Whether an exercise counts as cardio in stats, leaderboards and challenges: tracked as distance and
+ * time, or in the Cardio area while tracked by time only (stair machine, jump rope, HIIT…).
+ */
+export const isCardioExercise = (exerciseId: string) => kindOf(exerciseId) === 'cardio' || cardioOf(exerciseId);
+export function registerCardio(fn: (exerciseId: string) => boolean) {
+  cardioOf = fn;
+}
 export function registerKinds(fn: (exerciseId: string) => ExerciseKind) {
   kindOf = fn;
 }

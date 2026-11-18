@@ -7,7 +7,7 @@ import { goalRate, weekGoal } from './goals';
 import { progression } from './levels';
 import { monthChallenges, monthKey } from './challenges';
 import type { State } from './types';
-import { computePRs, countsForStats, epley, exerciseKind, finished, weekStart } from './utils';
+import { computePRs, countsForStats, epley, finished, isCardioExercise, weekStart } from './utils';
 
 const DAY = 86400000;
 
@@ -83,14 +83,14 @@ export interface PeriodStats {
   lifts?: Partial<Record<BigLift, number>>;
 }
 
-/** Cardio minutes and km between two times: every set of a cardio exercise (duration and distance). */
+/** Cardio minutes and km between two times: every set of a cardio exercise (see isCardioExercise). */
 export function cardioIn(workouts: State['workouts'], from: number, to: number): { cardio: number; cardioKm: number } {
   let sec = 0;
   let km = 0;
   for (const w of finished(workouts)) {
     if (w.startedAt < from || w.startedAt >= to) continue;
     for (const we of w.exercises) {
-      if (exerciseKind(we.exerciseId) !== 'cardio') continue;
+      if (!isCardioExercise(we.exerciseId)) continue;
       for (const s of we.sets) {
         if (!s.done) continue;
         sec += s.duration ?? 0;
@@ -212,7 +212,7 @@ export function encodeDays(state: State, now = Date.now()): string {
     const v = by.get(k) ?? [0, 0, 0, 0];
     let sec = 0;
     for (const we of w.exercises) {
-      const cardio = exerciseKind(we.exerciseId) === 'cardio';
+      const cardio = isCardioExercise(we.exerciseId);
       for (const s of we.sets) {
         if (!s.done) continue;
         if (cardio) sec += s.duration ?? 0;
