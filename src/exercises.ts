@@ -205,3 +205,33 @@ export const KIND_LABEL: Record<ExerciseKind, string> = {
   duration: tk('Duration'),
   cardio: tk('Distance and time'),
 };
+
+/**
+ * Dumbbell exercises usually done with ONE dumbbell (the others use two). People log the weight of
+ * one dumbbell; volume counts it twice when two are lifted (loadFactor).
+ */
+const ONE_DUMBBELL = new Set([
+  'concentration_curl',
+  'row_db',
+  'dumbbell_snatch',
+  'frog_pumps_dumbbell',
+  'goblet_squat',
+  'hip_thrust_dumbbell',
+  'pullover_dumbbell',
+  'reverse_grip_concentration_curl',
+  'seated_triceps_press',
+  'side_bend_dumbbell',
+  'single_arm_triceps_extension_dumbbell',
+  'single_leg_hip_thrust_dumbbell',
+  'single_leg_romanian_deadlift_dumbbell',
+  'single_leg_standing_calf_raise_dumbbell',
+  'suitcase_carry_dumbbell',
+  'sumo_squat_dumbbell',
+  'overhead_ext_db',
+  'waiter_curl_dumbbell',
+]);
+
+/** Default number of dumbbells (or kettlebells) lifted at once: 2 for two-dumbbell moves, else 1. */
+export function defaultLoads(e: Pick<Exercise, 'id' | 'equipment'>): 1 | 2 {
+  return e.equipment === 'dumbbell' && !ONE_DUMBBELL.has(e.id) ? 2 : 1;
+}

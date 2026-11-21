@@ -6,7 +6,7 @@
 import { addDays, dayKey, dayTotals, fitSlope, weightTrend, type NutritionState } from './nutrition';
 import type { Exercise, Muscle, PRKind, SetEntry, Workout } from './types';
 import { areaOf } from './exercises';
-import { countsForStats, epley, exerciseKind, finished, setVolume, weekStart } from './utils';
+import { countsForStats, epley, exerciseKind, finished, loadFactor, setVolume, weekStart } from './utils';
 import { t } from './i18n';
 
 const DAY = 86400000;
@@ -41,7 +41,7 @@ export function weeklyTraining(workouts: Workout[], starts: number[]): TrainingW
         const kind = exerciseKind(we.exerciseId);
         for (const s of we.sets.filter(countsForStats)) {
           sets++;
-          volume += setVolume(s, kind);
+          volume += setVolume(s, kind) * loadFactor(we.exerciseId);
         }
       }
     return {
@@ -368,7 +368,7 @@ export function periodSummary(workouts: Workout[], from: number, to: number): Pe
       const kind = exerciseKind(we.exerciseId);
       for (const s of we.sets.filter(countsForStats)) {
         sets++;
-        volume += setVolume(s, kind);
+        volume += setVolume(s, kind) * loadFactor(we.exerciseId);
       }
     }
   return {

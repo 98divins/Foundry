@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { diffSize, diffStates, joinState, openDb, readAll, writeDiff, writeDoc } from './db';
 import { recordDeletions } from './cloud/merge';
-import { displayName, LIBRARY } from './exercises';
+import { defaultLoads, displayName, LIBRARY } from './exercises';
 import type { Exercise, State } from './types';
-import { registerCardio, registerKinds, registerPrefs } from './utils';
+import { registerCardio, registerKinds, registerLoads, registerPrefs } from './utils';
 import { defaultNutrition, type NutritionState } from './nutrition';
 import { t, setLang, detectLang, getLang } from './i18n';
 
@@ -191,13 +191,18 @@ export function StoreProvider({ children, boot }: { children: ReactNode; boot?: 
   registerPrefs({ weekStartsOn: state.settings.weekStartsOn ?? 1, distanceUnit: state.settings.distanceUnit ?? 'km' });
   const lang = getLang();
   const custom = state.customExercises;
+  const loads = state.settings.loads;
   const lib = useMemo(() => {
     const exercises = [...LIBRARY, ...custom].map((e) => ({ ...e, label: displayName(e, lang) }));
     const exMap = new Map(exercises.map((e) => [e.id, e]));
     registerKinds((id) => exMap.get(id)?.kind ?? 'weight');
     registerCardio((id) => exMap.get(id)?.muscle === 'cardio');
+    registerLoads((id) => {
+      const e = exMap.get(id);
+      return loads?.[id] ?? (e ? defaultLoads(e) : 1);
+    });
     return { exercises, exMap };
-  }, [custom, lang, state.settings.appLang]);
+  }, [custom, lang, state.settings.appLang, loads]);
 
   const update = useCallback((fn: (s: State) => State) => {
     setState((prev) => {

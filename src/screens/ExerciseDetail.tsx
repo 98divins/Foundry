@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { LoadsSetting } from '../components/LoadsSetting';
 import { PeriodPicker, usePeriod } from '../components/PeriodPicker';
 import { PhotoField } from '../components/Photo';
 import { LineChart } from '../components/Charts';
@@ -100,6 +101,7 @@ export function ExerciseDetail({ id }: { id: string }) {
           {muscleLabel(ex.muscle, lang)} · {equipmentLabel(ex.equipment, lang)}
           {ex.custom && t(' · Custom')}
         </p>
+        <LoadsSetting exerciseId={ex.id} />
         {ex.custom && (
           <PhotoField
             kind="exercise"

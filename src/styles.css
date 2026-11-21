@@ -5008,3 +5008,9 @@ a.btn.disabled {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.loads-setting {
+  margin: 4px 0 12px;
+}
+.loads-setting .muted {
+  margin: 6px 0 0;
+}

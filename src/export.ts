@@ -5,7 +5,7 @@ import { goalWeeks } from './goals';
 import { t } from './i18n';
 import { dayKey, dayTotals, MEAL_LABEL, weightTrend } from './nutrition';
 import type { Exercise, State } from './types';
-import { epley, exerciseKind, finished, setVolume } from './utils';
+import { epley, finished, setVolumeOf } from './utils';
 import { workbook, type Sheet } from './xlsx';
 
 const iso = (ts: number) => {
@@ -31,7 +31,7 @@ export function buildWorkbook(state: State, exMap: Map<string, Exercise>): Blob 
           for (const s of we.sets)
             if (s.done) {
               sets++;
-              vol += setVolume(s, exerciseKind(we.exerciseId));
+              vol += setVolumeOf(s, we.exerciseId);
             }
         return [
           iso(w.startedAt),

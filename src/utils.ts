@@ -63,6 +63,14 @@ export function registerKinds(fn: (exerciseId: string) => ExerciseKind) {
   kindOf = fn;
 }
 export const exerciseKind = (exerciseId: string) => kindOf(exerciseId);
+let loadsOf: (exerciseId: string) => 1 | 2 = () => 1;
+/** How many dumbbells are lifted at once: people log one dumbbell's weight, volume counts each. */
+export const loadFactor = (exerciseId: string) => loadsOf(exerciseId);
+export function registerLoads(fn: (exerciseId: string) => 1 | 2) {
+  loadsOf = fn;
+}
+/** Lifted load of a set of this exercise (weight × reps × dumbbells). Records and 1RM use one dumbbell. */
+export const setVolumeOf = (s: SetEntry, exerciseId: string) => setVolume(s, kindOf(exerciseId)) * loadsOf(exerciseId);
 
 /** A set counts toward stats once it is completed, is not a warm-up and has something logged. */
 export const countsForStats = (s: SetEntry) => s.done && s.type !== 'warmup' && ((s.reps ?? 0) > 0 || (s.duration ?? 0) > 0 || (s.distance ?? 0) > 0);
@@ -89,7 +97,7 @@ export function setVolume(s: SetEntry, kind: ExerciseKind): number {
 
 export function exerciseVolume(we: WorkoutExercise): number {
   const kind = kindOf(we.exerciseId);
-  return we.sets.filter(countsForStats).reduce((t, s) => t + setVolume(s, kind), 0);
+  return we.sets.filter(countsForStats).reduce((t, s) => t + setVolume(s, kind) * loadsOf(we.exerciseId), 0);
 }
 
 export function workoutVolume(w: Workout): number {
@@ -204,7 +212,7 @@ export function exerciseSessions(workouts: Workout[], exerciseId: string): Sessi
       best1rm: loaded ? Math.max(...sets.map((s) => epley(s.weight ?? 0, s.reps ?? 0))) : 0,
       bestSetVolume: Math.max(...sets.map((s) => setVolume(s, kind))),
       bestReps: Math.max(...sets.map((s) => s.reps ?? 0)),
-      volume: sets.reduce((t, s) => t + setVolume(s, kind), 0),
+      volume: sets.reduce((t, s) => t + setVolume(s, kind), 0) * loadsOf(exerciseId),
       bestDuration: Math.max(...sets.map((s) => s.duration ?? 0)),
       totalDuration: sets.reduce((t, s) => t + (s.duration ?? 0), 0),
       totalDistance: sets.reduce((t, s) => t + (s.distance ?? 0), 0),

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LoadsSetting } from './LoadsSetting';
 import { go } from '../hooks';
 import { exerciseName, useStore } from '../store';
 import type { ExerciseKind, SetEntry, SetType, WorkoutExercise } from '../types';
@@ -468,6 +469,7 @@ function ExerciseCard({
 
       <Sheet open={menu} onClose={() => setMenu(false)} title={ex?.label ?? ex?.name}>
         <div className="menu">
+          <LoadsSetting exerciseId={we.exerciseId} />
           {mode !== 'edit' && (
             <label className="field">
               <span>{t('Rest timer')}</span>
