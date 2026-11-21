@@ -235,6 +235,9 @@ const PR_METRICS: Record<ExerciseKind, PRKind[]> = {
  * Within one workout only the best set per metric is flagged.
  */
 /** Records per set, computed once per list of workouts (memo.ts). */
+/** Sessions of an exercise that only set the starting point: no record before the next one. */
+export const RECORD_AFTER_SESSIONS = 3;
+
 export const computePRs = (workouts: Workout[]): Map<string, PRKind[]> => prsMemo(workouts, undefined);
 const prsMemo = memoByRef((workouts: Workout[], _: undefined) => computePRsUncached(workouts));
 
@@ -251,6 +254,7 @@ function computePRsUncached(workouts: Workout[]): Map<string, PRKind[]> {
     distance: (s) => s.distance ?? 0,
   };
 
+  const sessionsSeen = new Map<string, number>();
   for (const w of finished(workouts)) {
     const byExercise = new Map<string, SetEntry[]>();
     for (const we of w.exercises) {
@@ -259,6 +263,10 @@ function computePRsUncached(workouts: Workout[]): Map<string, PRKind[]> {
     }
     for (const [exId, sets] of byExercise) {
       const prev = bests.get(exId);
+      // The first sessions of an exercise only set the starting point: records count from the 4th.
+      const seen = sessionsSeen.get(exId) ?? 0;
+      sessionsSeen.set(exId, seen + 1);
+      const counts = seen >= RECORD_AFTER_SESSIONS;
       const next = { ...(prev ?? {}) };
       for (const k of PR_METRICS[kindOf(exId)]) {
         let top: SetEntry | null = null;
@@ -267,7 +275,7 @@ function computePRsUncached(workouts: Workout[]): Map<string, PRKind[]> {
         const v = metric[k](top);
         // Rep records only count when no set carried extra load.
         const relevant = k === 'reps' ? sets.every((s) => !s.weight) || kindOf(exId) === 'assisted' : v > 0;
-        if (prev && relevant && v > (prev[k] ?? 0) + 1e-9) flag(top.id, k);
+        if (prev && counts && relevant && v > (prev[k] ?? 0) + 1e-9) flag(top.id, k);
         next[k] = Math.max(next[k] ?? 0, v);
       }
       bests.set(exId, next);

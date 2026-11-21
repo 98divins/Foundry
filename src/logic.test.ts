@@ -29,6 +29,23 @@ const set = (id: string, weight: number | null, reps: number, extra: Partial<Set
   ...extra,
 });
 
+/** Two small earlier sessions, so the next two are the 3rd and 4th (records count from the 4th). */
+const baseline = (exerciseId: string): Workout[] =>
+  [0, 1].map((i) => ({
+    id: `base-${exerciseId}-${i}`,
+    name: 'Base',
+    startedAt: Date.UTC(2025, 11, 1 + i, 10),
+    endedAt: Date.UTC(2025, 11, 1 + i, 11),
+    exercises: [
+      {
+        id: `be-${exerciseId}-${i}`,
+        exerciseId,
+        restSec: 60,
+        sets: [{ id: `bs-${exerciseId}-${i}`, type: 'normal', weight: null, reps: 1, duration: 1, distance: null, done: true }],
+      },
+    ],
+  }));
+
 const workout = (id: string, day: number, exerciseId: string, sets: SetEntry[]): Workout => ({
   id,
   name: 'W' + id,
@@ -61,8 +78,18 @@ describe('records', () => {
     workout('3', 5, 'bench_bb', [set('e', 60, 10, { type: 'warmup' }), set('f', 82.5, 5)]),
   ];
 
-  it('first session is the baseline, later improvements are flagged once', () => {
-    const prs = computePRs(history);
+  it('the first three sessions are the starting point: no record before the fourth', () => {
+    const early = [
+      workout('x1', 1, 'bench_bb', [set('p', 60, 5)]),
+      workout('x2', 2, 'bench_bb', [set('q', 70, 5)]),
+      workout('x3', 3, 'bench_bb', [set('r', 80, 5)]),
+    ];
+    expect(computePRs(early).size).toBe(0); // heavier each time, but still learning the starting level
+    expect(computePRs([...early, workout('x4', 4, 'bench_bb', [set('s', 82.5, 5)])]).get('s')).toContain('weight');
+  });
+
+  it('first sessions are the baseline, later improvements are flagged once', () => {
+    const prs = computePRs([...baseline('bench_bb'), ...history]);
     expect(prs.has('a')).toBe(false);
     expect(prs.get('c')).toContain('weight');
     expect(prs.get('d')).toEqual(expect.arrayContaining(['1rm', 'volume']));
@@ -83,7 +110,7 @@ describe('records', () => {
   });
 
   it('flags rep records for bodyweight work', () => {
-    const prs = computePRs([workout('1', 1, 'pull_up', [set('a', null, 8)]), workout('2', 2, 'pull_up', [set('b', null, 10)])]);
+    const prs = computePRs([...baseline('pull_up'), workout('1', 1, 'pull_up', [set('a', null, 8)]), workout('2', 2, 'pull_up', [set('b', null, 10)])]);
     expect(prs.get('b')).toEqual(['reps']);
   });
 });
@@ -144,6 +171,8 @@ describe('exercise kinds', () => {
       distance,
     });
     const prs = computePRs([
+      ...baseline('plank'),
+      ...baseline('running'),
       workout('1', 1, 'plank', [t('a', 60)]),
       workout('2', 2, 'plank', [t('b', 90)]),
       workout('3', 3, 'running', [t('c', 1500, 5)]),

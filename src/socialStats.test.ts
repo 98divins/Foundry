@@ -129,8 +129,15 @@ describe('head-to-head periods', () => {
       endedAt: at + H,
       exercises: [{ id: 'e' + k++, exerciseId: 'bench_bb', restSec: 90, sets: [set(weight, 5)] }],
     });
-    // Last week: 60 then a record at 100. This week: 80 (not a record) and one session.
-    const s = buildPublicStats({ ...defaultState(), workouts: [w(start - 6 * 24 * H, 60), w(start - 2 * 24 * H, 100), w(start + 10 * H, 80)] } as State, now);
+    // Last week: three starting sessions (records only count from the 4th), then a record at 100.
+    // This week: 80 (not a record) and one session.
+    const s = buildPublicStats(
+      {
+        ...defaultState(),
+        workouts: [w(start - 6 * 24 * H, 60), w(start - 5 * 24 * H, 60), w(start - 4 * 24 * H, 60), w(start - 2 * 24 * H, 100), w(start + 10 * H, 80)],
+      } as State,
+      now,
+    );
     expect(metricValue(s, 'days', 'week', now)).toBe(1);
     expect(metricValue(s, 'prs', 'week', now)).toBe(0);
     expect(metricValue(s, 'prs', '30', now)).toBe(1);
