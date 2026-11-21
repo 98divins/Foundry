@@ -14,10 +14,42 @@ export interface CardInput {
   records: Set<string>;
   unit: Unit;
   accent: string;
-  level: number;
+  /** Null when levels are switched off (features.ts): the footer then shows the streak only. */
+  level: number | null;
   rank: Rank;
   streak: number;
   author: string;
+  theme?: CardTheme;
+}
+
+export type CardTheme = 'dark' | 'light' | 'colour';
+interface Palette {
+  bg: string;
+  glow: number;
+  text: string;
+  muted: string;
+  tile: string;
+  tileLine: string;
+  line: string;
+  pr: string;
+  logo: string;
+}
+function palette(theme: CardTheme, accent: string): Palette {
+  if (theme === 'light')
+    return { bg: '#f3f5f8', glow: 0x33, text: '#10141a', muted: '#5d6775', tile: '#ffffff', tileLine: '#d8dee6', line: '#d8dee6', pr: '#b5622a', logo: accent };
+  if (theme === 'colour')
+    return {
+      bg: accent,
+      glow: 0,
+      text: '#ffffff',
+      muted: 'rgba(255,255,255,0.78)',
+      tile: 'rgba(255,255,255,0.14)',
+      tileLine: 'rgba(255,255,255,0.28)',
+      line: 'rgba(255,255,255,0.35)',
+      pr: '#ffd29a',
+      logo: '#ffffff',
+    };
+  return { bg: '#0d1015', glow: 0x66, text: '#eef1f5', muted: '#8e98a6', tile: '#151a21', tileLine: '#2a313c', line: '#2a313c', pr: '#e08a4c', logo: accent };
 }
 
 const W = 1080;
@@ -48,6 +80,16 @@ function logo(ctx: CanvasRenderingContext2D, x: number, y: number, size: number,
   ctx.restore();
 }
 
+/** Sets the largest font size (from `size` down to `min`) at which the text fits `max` pixels. */
+function fitFont(ctx: CanvasRenderingContext2D, text: string, max: number, weight: string, size: number, min: number, family: string) {
+  let px = size;
+  ctx.font = `${weight} ${px}px ${family}`;
+  while (px > min && ctx.measureText(text).width > max) {
+    px -= 2;
+    ctx.font = `${weight} ${px}px ${family}`;
+  }
+}
+
 function round(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
@@ -70,18 +112,24 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
   c.height = H;
   const ctx = c.getContext('2d')!;
 
-  // Background: near-black with a glow of the accent colour.
-  ctx.fillStyle = '#0d1015';
+  // Background: the theme's colour, with a glow of the accent colour (or a soft shade on the colour theme).
+  const pal = palette(input.theme ?? 'dark', accent);
+  ctx.fillStyle = pal.bg;
   ctx.fillRect(0, 0, W, H);
   const g = ctx.createRadialGradient(W * 0.85, 0, 50, W * 0.85, 0, 900);
-  g.addColorStop(0, accent + '66');
-  g.addColorStop(1, accent + '00');
+  if (pal.glow) {
+    g.addColorStop(0, accent + pal.glow.toString(16).padStart(2, '0'));
+    g.addColorStop(1, accent + '00');
+  } else {
+    g.addColorStop(0, 'rgba(255,255,255,0.22)');
+    g.addColorStop(1, 'rgba(0,0,0,0.18)');
+  }
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
 
   const P = 80;
-  logo(ctx, P, 70, 74, accent);
-  ctx.fillStyle = '#eef1f5';
+  logo(ctx, P, 70, 74, pal.logo);
+  ctx.fillStyle = pal.text;
   ctx.font = `800 40px ${DISPLAY}`;
   ctx.textBaseline = 'middle';
   ctx.fillText('FOUNDRY', P + 92, 101);
@@ -90,7 +138,7 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
   ctx.textBaseline = 'alphabetic';
   ctx.font = `800 84px ${DISPLAY}`;
   ctx.fillText(fit(ctx, w.name, W - 2 * P), P, 270);
-  ctx.fillStyle = '#8e98a6';
+  ctx.fillStyle = pal.muted;
   ctx.font = `500 34px ${BODY}`;
   ctx.fillText(fit(ctx, `${fmtDate(w.startedAt)} · ${input.author}`, W - 2 * P), P, 325);
 
@@ -106,15 +154,16 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
   stats.forEach(([label, value], i) => {
     const x = P + i * (tw + 20);
     round(ctx, x, 380, tw, 150, 22);
-    ctx.fillStyle = i === 3 && records ? 'rgba(224,138,76,0.16)' : '#151a21';
+    ctx.fillStyle = pal.tile;
     ctx.fill();
-    ctx.strokeStyle = i === 3 && records ? '#e08a4c' : '#2a313c';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = i === 3 && records ? pal.pr : pal.tileLine;
+    ctx.lineWidth = i === 3 && records ? 3 : 2;
     ctx.stroke();
-    ctx.fillStyle = i === 3 && records ? '#e08a4c' : '#eef1f5';
-    ctx.font = `800 46px ${DISPLAY}`;
+    ctx.fillStyle = i === 3 && records ? pal.pr : pal.text;
+    // Shrink long values ("1h 22min") instead of cutting them.
+    fitFont(ctx, value, tw - 40, '800', 46, 28, DISPLAY);
     ctx.fillText(fit(ctx, value, tw - 40), x + 24, 460);
-    ctx.fillStyle = '#8e98a6';
+    ctx.fillStyle = pal.muted;
     ctx.font = `500 26px ${BODY}`;
     ctx.fillText(fit(ctx, label, tw - 40), x + 24, 503);
   });
@@ -122,7 +171,9 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
   // Exercises with their best set
   let y = 610;
   const list = w.exercises.filter((e) => e.sets.some((s) => s.done));
-  for (const we of list.slice(0, 6)) {
+  // Six rows fit above the footer; with more, five rows and a "+ n more" line.
+  const shown = list.length > 6 ? list.slice(0, 5) : list;
+  for (const we of shown) {
     const kind = input.kind(we.exerciseId);
     const done = we.sets.filter((s) => s.done && s.type !== 'warmup');
     const sets = done.length ? done : we.sets.filter((s) => s.done);
@@ -131,56 +182,60 @@ export async function drawWorkoutCard(input: CardInput): Promise<Blob> {
         ? sets.reduce((a, s) => (epley(s.weight ?? 0, s.reps ?? 0) > epley(a.weight ?? 0, a.reps ?? 0) ? s : a), sets[0])
         : sets[sets.length - 1];
     const pr = we.sets.some((s) => input.records.has(s.id));
-    ctx.fillStyle = '#eef1f5';
+    ctx.fillStyle = pal.text;
     ctx.font = `600 36px ${BODY}`;
     ctx.fillText(fit(ctx, input.name(we.exerciseId), 600), P, y);
-    ctx.fillStyle = '#8e98a6';
+    ctx.fillStyle = pal.muted;
     ctx.font = `500 28px ${BODY}`;
     ctx.fillText(tp(sets.length, '{n} set', '{n} sets'), P, y + 40);
     ctx.textAlign = 'right';
-    ctx.fillStyle = pr ? '#e08a4c' : '#eef1f5';
+    ctx.fillStyle = pr ? pal.pr : pal.text;
     ctx.font = `700 36px ${DISPLAY}`;
     ctx.fillText((pr ? '★ ' : '') + (best ? fmtSet(best, kind, unit) : ''), W - P, y + 16);
     ctx.textAlign = 'left';
     y += 100;
   }
-  if (list.length > 6) {
-    ctx.fillStyle = '#8e98a6';
-    ctx.font = `500 28px ${BODY}`;
-    ctx.fillText(t('+ {n} more exercises', { n: list.length - 6 }), P, y - 20);
+  if (list.length > shown.length) {
+    ctx.fillStyle = pal.muted;
+    ctx.font = `500 30px ${BODY}`;
+    ctx.fillText(tp(list.length - shown.length, '+ {n} more exercise', '+ {n} more exercises'), P, y + 10);
   }
 
-  // Footer: level and streak
+  // Footer: level (when levels are on) and streak
   const fy = H - 110;
-  ctx.strokeStyle = '#2a313c';
+  ctx.strokeStyle = pal.line;
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(P, fy - 60);
   ctx.lineTo(W - P, fy - 60);
   ctx.stroke();
-  const hex = (cx: number, cy: number, r: number) => {
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const a = (Math.PI / 3) * i - Math.PI / 2;
-      ctx[i ? 'lineTo' : 'moveTo'](cx + r * Math.cos(a), cy + r * Math.sin(a));
-    }
-    ctx.closePath();
-  };
-  hex(P + 36, fy, 38);
-  ctx.fillStyle = input.rank.color;
-  ctx.fill();
-  ctx.fillStyle = '#0d1015';
-  ctx.font = `800 32px ${DISPLAY}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(String(input.level), P + 36, fy + 2);
-  ctx.textAlign = 'left';
-  ctx.fillStyle = input.rank.color;
   ctx.font = `700 32px ${BODY}`;
-  ctx.fillText(t('Level {n}', { n: input.level }) + ' · ' + t(input.rank.name), P + 96, fy);
+  ctx.textBaseline = 'middle';
+  if (input.level != null) {
+    const hex = (cx: number, cy: number, r: number) => {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (Math.PI / 3) * i - Math.PI / 2;
+        ctx[i ? 'lineTo' : 'moveTo'](cx + r * Math.cos(a), cy + r * Math.sin(a));
+      }
+      ctx.closePath();
+    };
+    hex(P + 36, fy, 38);
+    ctx.fillStyle = input.rank.color;
+    ctx.fill();
+    ctx.fillStyle = '#0d1015';
+    ctx.font = `800 32px ${DISPLAY}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(String(input.level), P + 36, fy + 2);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = input.theme === 'colour' ? '#ffffff' : input.rank.color;
+    ctx.font = `700 32px ${BODY}`;
+    ctx.fillText(t('Level {n}', { n: input.level }) + ' · ' + t(input.rank.name), P + 96, fy);
+  }
   if (input.streak > 0) {
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#e08a4c';
-    ctx.fillText(tp(input.streak, '{n} week in a row', '{n} weeks in a row'), W - P, fy);
+    ctx.textAlign = input.level != null ? 'right' : 'left';
+    ctx.fillStyle = pal.pr;
+    ctx.fillText(tp(input.streak, '{n} week in a row', '{n} weeks in a row'), input.level != null ? W - P : P, fy);
     ctx.textAlign = 'left';
   }
 

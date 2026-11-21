@@ -153,6 +153,8 @@ export interface Settings {
   pinnedNotes?: Record<string, string>;
   /** Dumbbells lifted at once, set by the person per exercise (exercise id → 1 or 2); absent = default. */
   loads?: Record<string, 1 | 2>;
+  /** Look of the shared workout image (shareCard.ts). */
+  shareTheme?: 'dark' | 'light' | 'colour';
   /** Feature switches set by this person (features.ts); absent = the feature's default. */
   features?: Partial<Record<string, boolean>>;
 }

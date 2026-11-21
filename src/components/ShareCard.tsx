@@ -2,16 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { weekStreak } from '../analytics';
 import { t } from '../i18n';
 import { progression } from '../levels';
-import { drawWorkoutCard } from '../shareCard';
+import { drawWorkoutCard, type CardTheme } from '../shareCard';
+import { featureOn } from '../features';
 import { exerciseName, useStore } from '../store';
 import { DEFAULT_ACCENT } from '../theme';
 import type { Workout } from '../types';
 import { computePRs } from '../utils';
-import { Icon, Sheet } from './ui';
+import { Icon, Segmented, Sheet } from './ui';
 
 /** Preview of the workout image, with Share (phone share sheet) and Save. */
 export function ShareCardSheet({ workout, open, onClose }: { workout: Workout; open: boolean; onClose: () => void }) {
-  const { state, exMap } = useStore();
+  const { state, exMap, update } = useStore();
+  const theme: CardTheme = state.settings.shareTheme ?? 'dark';
   const [blob, setBlob] = useState<Blob | null>(null);
   const [msg, setMsg] = useState('');
   const url = useMemo(() => (blob ? URL.createObjectURL(blob) : ''), [blob]);
@@ -33,14 +35,15 @@ export function ShareCardSheet({ workout, open, onClose }: { workout: Workout; o
       records: new Set(computePRs(state.workouts).keys()),
       unit: state.settings.unit,
       accent: state.settings.accent ?? DEFAULT_ACCENT,
-      level: p.level,
+      level: featureOn(state.settings, 'levels') ? p.level : null,
+      theme,
       rank: p.rank,
       streak: weekStreak(state.workouts).weeks,
       author: state.profile?.name?.trim() || 'Foundry',
     }).then(setBlob, () => setMsg(t('The image could not be created on this device.')));
     // Drawn once per opening.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, workout.id]);
+  }, [open, workout.id, theme]);
 
   const file = () => new File([blob!], `foundry-${workout.name.replace(/[^\w-]+/g, '-').toLowerCase()}.png`, { type: 'image/png' });
   const share = async () => {
@@ -66,6 +69,16 @@ export function ShareCardSheet({ workout, open, onClose }: { workout: Workout; o
   return (
     <Sheet open={open} onClose={onClose} title={t('Share my workout')} tall>
       <div className="share-card">
+        <Segmented<CardTheme>
+          label={t('Style')}
+          value={theme}
+          onChange={(v) => update((s) => ({ ...s, settings: { ...s.settings, shareTheme: v } }))}
+          options={[
+            { value: 'dark', label: t('Dark') },
+            { value: 'light', label: t('Light') },
+            { value: 'colour', label: t('Colour') },
+          ]}
+        />
         {url ? (
           <img src={url} alt={t('Workout card: {name}', { name: workout.name })} />
         ) : (
