@@ -49,6 +49,8 @@ export interface Exercise {
   equipment: Equipment;
   kind: ExerciseKind;
   custom?: boolean;
+  /** Custom exercises: the logged set counts twice in the volume (two dumbbells, or each side). */
+  loads?: 1 | 2;
   /** The person's own photo (custom exercises), see cloud/photos.ts. */
   photo?: { path: string; at: number } | null;
 }

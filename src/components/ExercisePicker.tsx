@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { LoadsChoice } from './LoadsSetting';
 import { AREAS, EQUIPMENT, KIND_LABEL, areaLabel, areaOf, equipmentLabel, fold, muscleLabel, type BodyArea } from '../exercises';
 import { useStore } from '../store';
 import type { Equipment, Exercise, ExerciseKind } from '../types';
@@ -214,6 +215,9 @@ export function CreateExercise({
   const [muscle, setMuscle] = useState<BodyArea>('chest');
   const [equipment, setEquipment] = useState<Equipment>('barbell');
   const [kind, setKind] = useState<ExerciseKind>('weight');
+  // Unset until chosen: two dumbbells suggest twice; the person can change it.
+  const [loads, setLoads] = useState<1 | 2 | null>(null);
+  const shownLoads = loads ?? (equipment === 'dumbbell' ? 2 : 1);
   const clash = exercises.some((e) => fold(e.name) === fold(name.trim()) || (e.nameFr && fold(e.nameFr) === fold(name.trim())));
 
   return (
@@ -223,7 +227,15 @@ export function CreateExercise({
         onSubmit={(ev) => {
           ev.preventDefault();
           if (!name.trim() || clash) return;
-          const e: Exercise = { id: 'c_' + uid(), name: name.trim(), muscle, equipment, kind, custom: true };
+          const e: Exercise = {
+            id: 'c_' + uid(),
+            name: name.trim(),
+            muscle,
+            equipment,
+            kind,
+            custom: true,
+            loads: kind === 'weight' || kind === 'bodyweight' ? shownLoads : 1,
+          };
           update((s) => ({ ...s, customExercises: [...s.customExercises, e] }));
           onCreated?.(e);
           setName('');
@@ -265,6 +277,7 @@ export function CreateExercise({
             ))}
           </select>
         </label>
+        {(kind === 'weight' || kind === 'bodyweight') && <LoadsChoice value={shownLoads} onChange={setLoads} />}
         <div className="sheet-actions">
           <button type="button" className="btn" onClick={onClose}>
             {t('Cancel')}

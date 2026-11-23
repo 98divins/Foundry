@@ -10,8 +10,27 @@ describe('one or two dumbbells', () => {
   it('two-dumbbell moves count twice by default; one-dumbbell moves and barbells once', () => {
     expect(defaultLoads(byId.get('seated_incline_curl_dumbbell') ?? LIBRARY.find((e) => e.name === 'Seated Incline Curl (Dumbbell)')!)).toBe(2);
     expect(defaultLoads(byId.get('goblet_squat')!)).toBe(1);
-    expect(defaultLoads(byId.get('row_db')!)).toBe(1);
+    expect(defaultLoads(byId.get('pullover_dumbbell')!)).toBe(1);
     expect(defaultLoads(byId.get('bench_bb')!)).toBe(1);
+  });
+
+  it('moves done on each side count twice, whatever the equipment', () => {
+    for (const id of [
+      'single_leg_hip_thrust',
+      'single_arm_cable_row',
+      'single_leg_press',
+      'row_db',
+      'concentration_curl',
+      'pistol_squat',
+      'bulgarian_split_squat_barbell',
+    ])
+      expect(defaultLoads(byId.get(id)!), id).toBe(2);
+    expect(defaultLoads(byId.get('hip_thrust_barbell') ?? byId.get('squat_bb')!)).toBe(1);
+  });
+
+  it('a custom exercise keeps the choice made when it was created', () => {
+    expect(defaultLoads({ id: 'c_x', equipment: 'machine', loads: 2 })).toBe(2);
+    expect(defaultLoads({ id: 'c_y', equipment: 'dumbbell', loads: 1 })).toBe(1);
   });
 
   it('volume counts every dumbbell; the person can change it per exercise; records stay per dumbbell', () => {

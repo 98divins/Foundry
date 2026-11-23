@@ -3,33 +3,60 @@ import { t } from '../i18n';
 import { useStore } from '../store';
 import { Segmented } from './ui';
 
-/** Shown for dumbbell and kettlebell exercises: whether one or two are lifted at once. */
+/**
+ * Whether a logged set counts once or twice in the volume: twice with two dumbbells (the weight of one
+ * is logged) or for a move done on each side in turn (one side is logged). For loaded exercises.
+ */
 export function LoadsSetting({ exerciseId }: { exerciseId: string }) {
   const { state, update, exMap } = useStore();
   const ex = exMap.get(exerciseId);
-  if (!ex || ex.kind !== 'weight' || (ex.equipment !== 'dumbbell' && ex.equipment !== 'kettlebell')) return null;
-  const value = state.settings.loads?.[exerciseId] ?? defaultLoads(ex);
-  const unitName = ex.equipment === 'kettlebell' ? t('kettlebell') : t('dumbbell');
+  if (!ex || (ex.kind !== 'weight' && ex.kind !== 'bodyweight')) return null;
+  const base = defaultLoads(ex);
+  const value = state.settings.loads?.[exerciseId] ?? base;
   return (
     <div className="loads-setting">
+      <span className="small">{t('Each set counts in the volume')}</span>
       <Segmented<'1' | '2'>
-        label={t('Lifted at once')}
+        label={t('Each set counts in the volume')}
         value={String(value) as '1' | '2'}
         onChange={(v) =>
           update((s) => {
             const loads = { ...s.settings.loads };
             const n = Number(v) as 1 | 2;
-            if (n === defaultLoads(ex)) delete loads[exerciseId];
+            if (n === base) delete loads[exerciseId];
             else loads[exerciseId] = n;
             return { ...s, settings: { ...s.settings, loads } };
           })
         }
         options={[
-          { value: '1', label: t('1 {item}', { item: unitName }) },
-          { value: '2', label: t('2 {items}', { items: ex.equipment === 'kettlebell' ? t('kettlebells') : t('dumbbells') }) },
+          { value: '1', label: t('Once') },
+          { value: '2', label: t('Twice') },
         ]}
       />
-      <p className="muted small">{t('Log the weight of one {item}. With two, the volume counts both; records and 1RM stay per {item}.', { item: unitName })}</p>
+      <p className="muted small">
+        {t('Twice for two dumbbells (log the weight of one) or a move done on each side (log one side). Records and 1RM stay on what you log.')}
+      </p>
+    </div>
+  );
+}
+
+/** The same choice when creating a custom exercise. */
+export function LoadsChoice({ value, onChange }: { value: 1 | 2; onChange: (v: 1 | 2) => void }) {
+  return (
+    <div className="loads-setting">
+      <span className="small">{t('Each set counts in the volume')}</span>
+      <Segmented<'1' | '2'>
+        label={t('Each set counts in the volume')}
+        value={String(value) as '1' | '2'}
+        onChange={(v) => onChange(Number(v) as 1 | 2)}
+        options={[
+          { value: '1', label: t('Once') },
+          { value: '2', label: t('Twice') },
+        ]}
+      />
+      <p className="muted small">
+        {t('Twice for two dumbbells (log the weight of one) or a move done on each side (log one side). Records and 1RM stay on what you log.')}
+      </p>
     </div>
   );
 }

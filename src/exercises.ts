@@ -207,31 +207,66 @@ export const KIND_LABEL: Record<ExerciseKind, string> = {
 };
 
 /**
- * Dumbbell exercises usually done with ONE dumbbell (the others use two). People log the weight of
- * one dumbbell; volume counts it twice when two are lifted (loadFactor).
+ * Volume counts a set twice for two-dumbbell moves (people log one dumbbell's weight) and for moves
+ * done on each side in turn (one arm, one leg: people log one side). Everything else counts once.
  */
 const ONE_DUMBBELL = new Set([
-  'concentration_curl',
-  'row_db',
-  'dumbbell_snatch',
   'frog_pumps_dumbbell',
   'goblet_squat',
   'hip_thrust_dumbbell',
   'pullover_dumbbell',
-  'reverse_grip_concentration_curl',
   'seated_triceps_press',
-  'side_bend_dumbbell',
-  'single_arm_triceps_extension_dumbbell',
-  'single_leg_hip_thrust_dumbbell',
-  'single_leg_romanian_deadlift_dumbbell',
-  'single_leg_standing_calf_raise_dumbbell',
-  'suitcase_carry_dumbbell',
   'sumo_squat_dumbbell',
   'overhead_ext_db',
   'waiter_curl_dumbbell',
 ]);
+/** Done on each side in turn: the logged set is one side. */
+const EACH_SIDE = new Set([
+  'assisted_pistol_squat',
+  'bulgarian_split_squat_barbell',
+  'clamshell',
+  'concentration_curl',
+  'reverse_grip_concentration_curl',
+  'row_db',
+  'dumbbell_snatch',
+  'kettlebell_snatch',
+  'kettlebell_turkish_get_up',
+  'fire_hydrants',
+  'glute_kickback_machine',
+  'glute_kickback_on_floor',
+  'cable_kickback',
+  'meadows_rows_barbell',
+  'one_arm_push_up',
+  'pistol_squat',
+  'reverse_fly_single_arm_cable',
+  'side_bend',
+  'side_bend_dumbbell',
+  'single_arm_cable_crossover',
+  'single_arm_cable_row',
+  'single_arm_curl_cable',
+  'single_arm_landmine_press_barbell',
+  'single_arm_lat_pulldown',
+  'single_arm_lateral_raise_cable',
+  'single_arm_triceps_extension_dumbbell',
+  'single_arm_triceps_pushdown_cable',
+  'single_leg_extensions',
+  'single_leg_glute_bridge',
+  'single_leg_hip_thrust',
+  'single_leg_hip_thrust_dumbbell',
+  'single_leg_press',
+  'single_leg_romanian_deadlift_barbell',
+  'single_leg_romanian_deadlift_dumbbell',
+  'single_leg_standing_calf_raise',
+  'single_leg_standing_calf_raise_barbell',
+  'single_leg_standing_calf_raise_dumbbell',
+  'single_leg_standing_calf_raise_machine',
+  'suitcase_carry_dumbbell',
+  'triceps_kickback_cable',
+]);
 
-/** Default number of dumbbells (or kettlebells) lifted at once: 2 for two-dumbbell moves, else 1. */
-export function defaultLoads(e: Pick<Exercise, 'id' | 'equipment'>): 1 | 2 {
+/** How many times a logged set counts in the volume, by default: 2 for two dumbbells or each side, else 1. */
+export function defaultLoads(e: Pick<Exercise, 'id' | 'equipment'> & { loads?: 1 | 2 }): 1 | 2 {
+  if (e.loads) return e.loads;
+  if (EACH_SIDE.has(e.id)) return 2;
   return e.equipment === 'dumbbell' && !ONE_DUMBBELL.has(e.id) ? 2 : 1;
 }
