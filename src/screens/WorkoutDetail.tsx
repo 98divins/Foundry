@@ -7,6 +7,7 @@ import type { ExerciseKind, PRKind } from '../types';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { computePRs, epley, fmtDate, fmtDuration, fmtTime, fmtVolume, fmtEstimate, fmtSet, uid, workoutSetCount, workoutVolume } from '../utils';
 import { t, tk, tp } from '../i18n';
+import { startWorkout } from './WorkoutTab';
 
 const PR_LABEL: Record<PRKind, string> = {
   weight: tk('Heaviest'),
@@ -47,6 +48,31 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
   }
 
   const prSets = w.exercises.flatMap((we) => we.sets).filter((s) => prs.has(s.id));
+
+  /** Starts a new workout with the same exercises, sets and order; the boxes start empty (Previous shows this one). */
+  const repeat = () => {
+    setMenu(false);
+    if (state.active) return;
+    startWorkout(update, {
+      id: w.routineId ?? '',
+      name: w.name,
+      updatedAt: Date.now(),
+      exercises: w.exercises.map((we) => ({
+        ...we,
+        // The rep target of a workout started from a saved one comes back as the hint (liveSetFromRoutine).
+        sets: we.sets.map((st) => ({
+          ...st,
+          weight: null,
+          reps: st.target?.reps ?? null,
+          repsMax: st.target?.repsMax ?? null,
+          duration: null,
+          distance: null,
+          rpe: null,
+          done: false,
+        })),
+      })),
+    });
+  };
 
   const saveAsRoutine = () => {
     update((s) => ({
@@ -91,6 +117,10 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
           <Stat label={t('Sets')} value={workoutSetCount(w)} />
           <Stat label={t('Records')} value={prSets.length} />
         </div>
+        <button className="btn btn-wide" onClick={repeat} disabled={!!state.active}>
+          <Icon name="play" size={16} /> {t('Do this workout again')}
+        </button>
+        {state.active && <p className="muted small center">{t('Finish the workout in progress first.')}</p>}
         {justFinished ? (
           <section className="panel done-banner">
             <strong>
@@ -194,6 +224,9 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
             }}
           >
             <Icon name="edit" size={18} /> {t('Edit workout')}
+          </button>
+          <button className="menu-item" onClick={repeat} disabled={!!state.active}>
+            <Icon name="play" size={18} /> {t('Do this workout again')}
           </button>
           <button className="menu-item" onClick={saveAsRoutine}>
             <Icon name="copy" size={18} /> {t('Save as workout')}

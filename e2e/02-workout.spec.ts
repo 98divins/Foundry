@@ -28,4 +28,12 @@ test('log a workout: add an exercise, complete a set, finish, find it in the his
   await expect
     .poll(() => (fake.writes.at(-1)?.workouts as { endedAt: number | null }[] | undefined)?.filter((w) => w.endedAt).length, { timeout: 15_000 })
     .toBe(1);
+
+  // Do it again from the history: same exercise and number of sets, empty boxes, last time as Previous.
+  await page.getByRole('button', { name: /workout .*640 kg.*Bench Press \(Barbell\)/ }).click();
+  await page.getByRole('button', { name: 'Do this workout again' }).first().click();
+  const again = page.getByRole('region', { name: 'Bench Press (Barbell)' });
+  await expect(again.getByRole('group')).toHaveCount(1);
+  await expect(again.getByLabel('Weight').first()).toHaveValue('');
+  await expect(again.getByRole('button', { name: /Use previous: 80 × 8/ })).toBeVisible();
 });
