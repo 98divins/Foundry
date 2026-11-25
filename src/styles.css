@@ -5014,3 +5014,16 @@ a.btn.disabled {
 .loads-setting .muted {
   margin: 6px 0 0;
 }
+
+/* "Do again" on each card of the history list. */
+.history-item {
+  position: relative;
+}
+.history-again {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+}
+.history-item .history-ex {
+  padding-right: 110px;
+}

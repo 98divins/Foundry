@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { repeatWorkout } from './WorkoutTab';
 import { Header, Icon } from '../components/ui';
 import { back, go } from '../hooks';
 import { exerciseName, useStore } from '../store';
@@ -6,7 +7,7 @@ import { computePRs, fmtDate, fmtDuration, fmtVolume, workoutVolume } from '../u
 import { locale, t, tp } from '../i18n';
 
 export function History() {
-  const { state, exMap } = useStore();
+  const { state, exMap, update } = useStore();
   const prs = useMemo(() => computePRs(state.workouts), [state.workouts]);
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
@@ -71,7 +72,7 @@ export function History() {
               {g.items.map((w) => {
                 const prCount = w.exercises.flatMap((we) => we.sets).filter((s) => prs.has(s.id)).length;
                 return (
-                  <li key={w.id}>
+                  <li key={w.id} className="history-item">
                     <button className="history-card" onClick={() => go('w/' + w.id)}>
                       <div className="history-top">
                         <span className="history-name">{w.name}</span>
@@ -94,6 +95,14 @@ export function History() {
                         ))}
                         {w.exercises.length > 4 && <li>{t('+{0} more', { 0: w.exercises.length - 4 })}</li>}
                       </ul>
+                    </button>
+                    <button
+                      className="btn btn-small history-again"
+                      disabled={!!state.active}
+                      onClick={() => repeatWorkout(update, w)}
+                      aria-label={t('Do “{name}” again', { name: w.name })}
+                    >
+                      <Icon name="play" size={14} /> {t('Do again')}
                     </button>
                   </li>
                 );

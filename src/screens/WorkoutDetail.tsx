@@ -7,7 +7,7 @@ import type { ExerciseKind, PRKind } from '../types';
 import { ExerciseImage } from '../components/ExerciseImage';
 import { computePRs, epley, fmtDate, fmtDuration, fmtTime, fmtVolume, fmtEstimate, fmtSet, uid, workoutSetCount, workoutVolume } from '../utils';
 import { t, tk, tp } from '../i18n';
-import { startWorkout } from './WorkoutTab';
+import { repeatWorkout } from './WorkoutTab';
 
 const PR_LABEL: Record<PRKind, string> = {
   weight: tk('Heaviest'),
@@ -49,29 +49,9 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
 
   const prSets = w.exercises.flatMap((we) => we.sets).filter((s) => prs.has(s.id));
 
-  /** Starts a new workout with the same exercises, sets and order; the boxes start empty (Previous shows this one). */
   const repeat = () => {
     setMenu(false);
-    if (state.active) return;
-    startWorkout(update, {
-      id: w.routineId ?? '',
-      name: w.name,
-      updatedAt: Date.now(),
-      exercises: w.exercises.map((we) => ({
-        ...we,
-        // The rep target of a workout started from a saved one comes back as the hint (liveSetFromRoutine).
-        sets: we.sets.map((st) => ({
-          ...st,
-          weight: null,
-          reps: st.target?.reps ?? null,
-          repsMax: st.target?.repsMax ?? null,
-          duration: null,
-          distance: null,
-          rpe: null,
-          done: false,
-        })),
-      })),
-    });
+    if (!state.active) repeatWorkout(update, w);
   };
 
   const saveAsRoutine = () => {

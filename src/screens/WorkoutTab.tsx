@@ -36,6 +36,29 @@ export function startWorkout(update: (fn: (s: State) => State) => void, routine?
   go('active');
 }
 
+/** Starts a new workout like a past one: same exercises, order and sets; boxes empty, last time as Previous. */
+export function repeatWorkout(update: (fn: (s: State) => State) => void, w: Workout) {
+  startWorkout(update, {
+    id: w.routineId ?? '',
+    name: w.name,
+    updatedAt: Date.now(),
+    exercises: w.exercises.map((we) => ({
+      ...we,
+      // The rep target of a workout started from a saved one comes back as the hint (liveSetFromRoutine).
+      sets: we.sets.map((st) => ({
+        ...st,
+        weight: null,
+        reps: st.target?.reps ?? null,
+        repsMax: st.target?.repsMax ?? null,
+        duration: null,
+        distance: null,
+        rpe: null,
+        done: false,
+      })),
+    })),
+  });
+}
+
 /** The folder a routine shows in; one whose folder no longer exists counts as unfiled. */
 const folderOf = (r: Routine, folders: RoutineFolder[]) => (r.folderId && folders.some((f) => f.id === r.folderId) ? r.folderId : undefined);
 
