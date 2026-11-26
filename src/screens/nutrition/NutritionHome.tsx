@@ -647,13 +647,13 @@ function DayGoalLine({
   incomplete: boolean;
 }) {
   const s = dayTargetStatus(eaten, target);
-  const range = { min: s.kcalMin, max: s.kcalMax };
+  const range = { min: s.kcalMin, max: s.kcalMax, target: target.kcal };
   const kcalText =
     s.kcal === 'below'
-      ? t('{n} kcal more to enter the goal ({min}–{max})', { n: s.kcalToGo, ...range })
+      ? t('{n} kcal more to reach the minimum. Valid range {min}–{max} ({target} ± 10 %)', { n: s.kcalToGo, ...range })
       : s.kcal === 'in'
-        ? t('Calories in the goal ({min}–{max}), {n} kcal of room left', { n: s.kcalToGo, ...range })
-        : t('{n} kcal over the goal ({min}–{max})', { n: s.kcalToGo, ...range });
+        ? t('Valid range {min}–{max} ({target} ± 10 %): {n} kcal left before the maximum', { n: s.kcalToGo, ...range })
+        : t('{n} kcal over the maximum. Valid range {min}–{max} ({target} ± 10 %)', { n: s.kcalToGo, ...range });
   const proteinText =
     s.proteinToGo > 0
       ? t('Protein: {n} g more to reach {min} g (90 %)', { n: s.proteinToGo, min: s.proteinMin })
