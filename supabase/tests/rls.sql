@@ -199,7 +199,9 @@ select t.ok(t.seen($$select 1 from public.shared_meals$$) = 1, 'shared meals: me
 select t.rows($$update public.shared_meals set name = 'x' where user_id = 'aaaaaaaa-0000-0000-0000-00000000000a'$$, 0, 'shared meals: nobody changes another member''s meal');
 select t.rows($$delete from public.shared_meals where user_id = 'aaaaaaaa-0000-0000-0000-00000000000a'$$, 0, 'shared meals: nobody deletes another member''s meal');
 select t.fails($$insert into public.shared_meals (user_id, meal_id, name, items) values ('aaaaaaaa-0000-0000-0000-00000000000a', 'x', 'x', '[{}]')$$, 'shared meals: nobody shares in someone else''s name');
-select t.ok(t.seen($$select 1 from public.community_foods$$) = 1, 'community foods: members read them');
+select t.ok(t.seen($$select 1 from public.community_foods where origin = 'member'$$) = 1, 'community foods: members read them');
+select t.fails($$insert into public.community_foods (id, user_id, name, kcal, origin) values ('off-x', auth.uid(), 'x', 1, 'off')$$, 'scanned products: an Open Food Facts food needs its barcode as id');
+select t.rows($$insert into public.community_foods (id, user_id, name, kcal, barcode, origin) values ('off-3017620422003', auth.uid(), 'Spread', 539, '3017620422003', 'off')$$, 1, 'scanned products: a scanned product is shared once, under its barcode');
 select t.rows($$update public.community_foods set kcal = 1 where id = 'f-alice'$$, 0, 'community foods: nobody changes another member''s food');
 select t.fails($$insert into public.community_foods (id, user_id, name, kcal) values ('f-x', 'aaaaaaaa-0000-0000-0000-00000000000a', 'x', 1)$$, 'community foods: nobody adds in someone else''s name');
 

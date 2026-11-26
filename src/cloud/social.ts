@@ -286,6 +286,7 @@ type FoodRow = {
   fat: number;
   serving_label: string | null;
   serving_grams: number | null;
+  origin?: 'member' | 'off';
 };
 const rowToFood = (r: FoodRow): import('../nutrition').Food => ({
   id: r.id,
@@ -294,20 +295,24 @@ const rowToFood = (r: FoodRow): import('../nutrition').Food => ({
   barcode: r.barcode ?? undefined,
   per100: { kcal: r.kcal, protein: r.protein, carbs: r.carbs, fat: r.fat },
   serving: r.serving_label && r.serving_grams ? { label: r.serving_label, grams: r.serving_grams } : null,
-  source: 'community',
+  // Products scanned from Open Food Facts keep their origin (and its licence notice).
+  source: r.origin === 'off' ? 'off' : 'community',
 });
 
 /**
- * Only foods the member typed in themselves go to the shared database: never a product from Open
- * Food Facts (its licence would then apply to the shared database) nor someone else's food.
+ * What goes to the shared database: foods the member typed in, and Open Food Facts products with a
+ * barcode (stored once under "off-<barcode>", marked as such: they stay under the Open Database
+ * License). Never generic foods or someone else's food.
  */
-export const canPublishFood = (f: import('../nutrition').Food) => f.source === 'custom' && !f.id.startsWith('off-');
+export const canPublishFood = (f: import('../nutrition').Food) =>
+  (f.source === 'custom' && !f.id.startsWith('off-')) || (f.source === 'off' && !!f.barcode && /^[0-9]{8,14}$/.test(f.barcode));
 
 /** Add a food the user created to the shared database. */
 export async function publishFood(uid: string, f: import('../nutrition').Food) {
   if (!canPublishFood(f)) return;
-  const { error } = await (await sb()).from('community_foods').upsert({
-    id: f.id,
+  const off = f.source === 'off';
+  const row: Record<string, unknown> = {
+    id: off ? 'off-' + f.barcode : f.id,
     user_id: uid,
     name: f.name.slice(0, 80),
     brand: f.brand?.slice(0, 60) ?? null,
@@ -318,7 +323,11 @@ export async function publishFood(uid: string, f: import('../nutrition').Food) {
     fat: f.per100.fat,
     serving_label: f.serving?.label?.slice(0, 40) ?? null,
     serving_grams: f.serving?.grams ?? null,
-  });
+  };
+  const c = await sb();
+  let { error } = await c.from('community_foods').upsert(off ? { ...row, origin: 'off' } : row);
+  // Before community_foods_origin.sql: no origin column. Member foods still go; scanned products wait.
+  if (error && /origin/.test(error.message) && !off) ({ error } = await c.from('community_foods').upsert(row));
   check(error);
 }
 
@@ -330,7 +339,7 @@ export async function searchCommunityFoods(query: string, limit = 20): Promise<i
     .filter((w) => w.length >= 2)
     .slice(0, 4);
   if (!words.length) return [];
-  let q = (await sb()).from('community_foods').select('id, name, brand, barcode, kcal, protein, carbs, fat, serving_label, serving_grams');
+  let q = (await sb()).from('community_foods').select('*');
   for (const w of words) q = q.ilike('name', `%${w.replace(/[%_,()]/g, '')}%`);
   const { data, error } = await q.order('uses', { ascending: false }).limit(limit);
   check(error);
@@ -338,13 +347,7 @@ export async function searchCommunityFoods(query: string, limit = 20): Promise<i
 }
 
 export async function communityFoodByBarcode(code: string): Promise<import('../nutrition').Food | null> {
-  const { data, error } = await (
-    await sb()
-  )
-    .from('community_foods')
-    .select('id, name, brand, barcode, kcal, protein, carbs, fat, serving_label, serving_grams')
-    .eq('barcode', code)
-    .limit(1);
+  const { data, error } = await (await sb()).from('community_foods').select('*').eq('barcode', code).limit(1);
   check(error);
   const r = (data ?? [])[0] as FoodRow | undefined;
   return r ? rowToFood(r) : null;

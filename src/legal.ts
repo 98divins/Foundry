@@ -410,7 +410,7 @@ const sources = (): LegalDoc =>
           {
             h: 'Données',
             p: [
-              'Marques et codes-barres : Open Food Facts (openfoodfacts.org), base sous licence Open Database License (ODbL), contenus sous Database Contents License. Les produits Open Food Facts ne sont jamais recopiés dans la base commune de Foundry.',
+              'Marques et codes-barres : Open Food Facts (openfoodfacts.org), base sous licence Open Database License (ODbL), contenus sous Database Contents License. Quand un membre scanne un produit Open Food Facts, sa fiche est ajoutée à la base commune de Foundry pour que les autres membres la retrouvent : ces fiches restent sous ODbL, sont marquées « Données : Open Food Facts » et ne sont jamais mélangées aux aliments saisis par les membres.',
               'Aliments de base : USDA FoodData Central (domaine public), via le jeu de données TempoLife (tempolife.app, licence CC-BY 4.0).',
               'Photos et noms d’exercices : Free Exercise DB (github.com/yuhonas/free-exercise-db), domaine public (Unlicense).',
             ],
@@ -432,7 +432,7 @@ const sources = (): LegalDoc =>
           {
             h: 'Data',
             p: [
-              'Brands and barcodes: Open Food Facts (openfoodfacts.org), database under the Open Database License (ODbL), contents under the Database Contents License. Open Food Facts products are never copied into Foundry’s shared database.',
+              'Brands and barcodes: Open Food Facts (openfoodfacts.org), database under the Open Database License (ODbL), contents under the Database Contents License. When a member scans an Open Food Facts product, its record is added to Foundry’s shared database so other members can find it: these records stay under the ODbL, are marked “Data: Open Food Facts” and are kept apart from foods typed in by members.',
               'Basic foods: USDA FoodData Central (public domain), via the TempoLife dataset (tempolife.app, CC-BY 4.0 licence).',
               'Exercise photos and names: Free Exercise DB (github.com/yuhonas/free-exercise-db), public domain (Unlicense).',
             ],

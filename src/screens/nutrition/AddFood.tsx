@@ -45,6 +45,8 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
       foods: food && !food.id.startsWith('g-fr-') && !x.foods.some((f) => f.id === food.id) ? [...x.foods, food] : x.foods,
       log: [...x.log, { ...entry, id: uid(), date, meal, createdAt: Date.now(), ...(date > dayKey() ? { planned: true } : {}) }],
     }));
+    // A scanned Open Food Facts product becomes findable by every member (once, under its barcode).
+    if (food?.source === 'off' && cloud.user) publishFood(cloud.user.id, food).catch(() => {});
     setAdded((a) => [...a, itemName(entry)]);
   };
 

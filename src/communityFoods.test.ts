@@ -8,8 +8,9 @@ describe('community foods', () => {
   it('only foods the member typed in are shared', () => {
     expect(canPublishFood(food({}))).toBe(true);
   });
-  it('never republishes an Open Food Facts product', () => {
-    expect(canPublishFood(food({ source: 'off', id: 'off-3017620422003' }))).toBe(false);
+  it('shares a scanned Open Food Facts product only when it has a real barcode', () => {
+    expect(canPublishFood(food({ source: 'off', id: 'off-3017620422003', barcode: '3017620422003' }))).toBe(true);
+    expect(canPublishFood(food({ source: 'off', id: 'off-nutella' }))).toBe(false);
     expect(canPublishFood(food({ source: 'custom', id: 'off-3017620422003' }))).toBe(false);
   });
   it('never republishes generic foods or another member’s food', () => {

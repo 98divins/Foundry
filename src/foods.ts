@@ -1,19 +1,22 @@
 import { fold } from './exercises';
 import { FR_FOODS } from './foodsFr';
 import { FR_FOODS_MORE } from './foodsFrMore';
+import { FR_FOODS_EVERYDAY } from './foodsFrEveryday';
 import { kcalFromMacros, type Food } from './nutrition';
 import { getLang, t } from './i18n';
 import { FOOD_EN, PORTION_EN } from './foodsEn';
 
 /* ---------- Built-in foods ---------- */
 
-export const FR_FOOD_LIST: Food[] = [...FR_FOODS, ...FR_FOODS_MORE].map(([id, name, , kcal, protein, carbs, fat, fiber, label, grams]) => ({
-  id,
-  name,
-  per100: { kcal, protein, carbs, fat, fiber },
-  serving: label && grams ? { label, grams } : null,
-  source: 'generic',
-}));
+export const FR_FOOD_LIST: Food[] = [...FR_FOODS, ...FR_FOODS_MORE, ...FR_FOODS_EVERYDAY].map(
+  ([id, name, , kcal, protein, carbs, fat, fiber, label, grams]) => ({
+    id,
+    name,
+    per100: { kcal, protein, carbs, fat, fiber },
+    serving: label && grams ? { label, grams } : null,
+    source: 'generic',
+  }),
+);
 
 const FR_NAME = new Map(FR_FOOD_LIST.map((f) => [f.id, f.name]));
 

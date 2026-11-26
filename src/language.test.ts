@@ -88,3 +88,17 @@ describe('body areas', () => {
     expect(muscleLabel('upper_back')).toBe('Back');
   });
 });
+
+describe('everyday foods', () => {
+  it('ready-to-eat foods are found by what people type, in French or English', () => {
+    expect(
+      searchFoods(FR_FOOD_LIST, 'sandwich poulet')
+        .slice(0, 3)
+        .map((f) => f.name),
+    ).toContain('Sandwich poulet crudités (baguette)');
+    expect(searchFoods(FR_FOOD_LIST, 'eclair')[0].name).toMatch(/^Éclair/);
+    expect(searchFoods(FR_FOOD_LIST, 'tuna mayo')[0].name).toBe('Sandwich thon mayonnaise (baguette)');
+    const s = FR_FOOD_LIST.find((f) => f.name === 'Sandwich poulet crudités (baguette)')!;
+    expect(s.serving?.grams).toBe(300);
+  });
+});

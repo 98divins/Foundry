@@ -10,3 +10,4 @@ supabase
 docs
 *.md
 src/foodsEn.ts
+src/foodsFrEveryday.ts
