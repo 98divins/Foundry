@@ -63,3 +63,15 @@ describe('weekly goals', () => {
     expect(goalRate(noDiet, undefined, 0)).toBeNull();
   });
 });
+
+describe('where a day stands against the diet goal', () => {
+  it('says what is left to enter the calorie range and to reach 90 % protein', async () => {
+    const { dayTargetStatus } = await import('./goals');
+    const target = { kcal: 2450, protein: 160 };
+    // 2 175 eaten: 275 below the target, but the range starts at 2 205 (-10 %).
+    const s = dayTargetStatus({ kcal: 2175, protein: 126 }, target);
+    expect(s).toMatchObject({ kcalMin: 2205, kcalMax: 2695, kcal: 'below', kcalToGo: 30, proteinMin: 144, proteinToGo: 18, met: false });
+    expect(dayTargetStatus({ kcal: 2300, protein: 150 }, target)).toMatchObject({ kcal: 'in', kcalToGo: 395, proteinToGo: 0, met: true });
+    expect(dayTargetStatus({ kcal: 2800, protein: 170 }, target)).toMatchObject({ kcal: 'over', kcalToGo: 105, met: false });
+  });
+});

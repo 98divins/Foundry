@@ -19,6 +19,7 @@ import {
   type Macros,
   type Meal,
 } from '../../nutrition';
+import { dayTargetStatus } from '../../goals';
 import { useNutrition } from '../../store';
 import { fmtNum, fromDisplay, toDisplay, uid } from '../../utils';
 import { EntrySheet } from './EntrySheet';
@@ -190,6 +191,7 @@ export function NutritionHome({ date }: { date: string }) {
               <span className={'macro-fill kcal' + (remaining! < 0 ? ' over' : '')} style={{ width: `${pct}%` }} />
             </span>
           )}
+          {targets && totals.kcal > 0 && <DayGoalLine eaten={totals} target={targets} incomplete={incomplete} />}
           <div className="macro-grid">
             <MacroBar label={t('Protein')} value={totals.protein} target={targets?.protein} tone="p" />
             <MacroBar label={t('Carbs')} value={totals.carbs} target={targets?.carbs} tone="c" />
@@ -631,5 +633,37 @@ function CheckInSheet({ open, onClose, current }: { open: boolean; onClose: () =
         </>
       )}
     </Sheet>
+  );
+}
+
+/** Whether the day meets the diet goal (kcal within ±10 %, protein ≥ 90 %), and what is left. */
+function DayGoalLine({
+  eaten,
+  target,
+  incomplete,
+}: {
+  eaten: { kcal: number; protein: number };
+  target: { kcal: number; protein: number };
+  incomplete: boolean;
+}) {
+  const s = dayTargetStatus(eaten, target);
+  const range = { min: s.kcalMin, max: s.kcalMax };
+  const kcalText =
+    s.kcal === 'below'
+      ? t('{n} kcal more to enter the goal ({min}–{max})', { n: s.kcalToGo, ...range })
+      : s.kcal === 'in'
+        ? t('Calories in the goal ({min}–{max}), {n} kcal of room left', { n: s.kcalToGo, ...range })
+        : t('{n} kcal over the goal ({min}–{max})', { n: s.kcalToGo, ...range });
+  const proteinText =
+    s.proteinToGo > 0
+      ? t('Protein: {n} g more to reach {min} g (90 %)', { n: s.proteinToGo, min: s.proteinMin })
+      : t('Protein: goal reached ({min} g)', { min: s.proteinMin });
+  return (
+    <div className={'day-goal small' + (s.met ? ' met' : '')} role="status">
+      <strong>{s.met ? t('Diet goal met today ✓') : t('Diet goal not met yet')}</strong>
+      <span>{kcalText}</span>
+      <span>{proteinText}</span>
+      {incomplete && <span className="muted">{t('Day marked incomplete: it does not count.')}</span>}
+    </div>
   );
 }

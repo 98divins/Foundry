@@ -5027,3 +5027,15 @@ a.btn.disabled {
 .history-item .history-ex {
   padding-right: 110px;
 }
+.day-goal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 10px 0 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-2, rgba(127, 127, 127, 0.1));
+}
+.day-goal.met {
+  outline: 1px solid var(--success, #2e9e5b);
+}

@@ -25,13 +25,36 @@ export function targetsOn(n: NutritionState, day: string) {
   return t;
 }
 
+/** Where a day stands against the diet goal: calories within ±10 % of the target, protein at least 90 %. */
+export interface DayTargetStatus {
+  kcalMin: number;
+  kcalMax: number;
+  kcal: 'below' | 'in' | 'over';
+  /** kcal still to eat to enter the range (below), or room left before leaving it (in). */
+  kcalToGo: number;
+  proteinMin: number;
+  /** g of protein still missing to reach 90 % (0 when reached). */
+  proteinToGo: number;
+  met: boolean;
+}
+
+export function dayTargetStatus(eaten: { kcal: number; protein: number }, target: { kcal: number; protein: number }): DayTargetStatus {
+  const kcalMin = Math.round(target.kcal * 0.9);
+  const kcalMax = Math.round(target.kcal * 1.1);
+  const proteinMin = Math.round(target.protein * 0.9);
+  const kcal = eaten.kcal < kcalMin ? 'below' : eaten.kcal > kcalMax ? 'over' : 'in';
+  const kcalToGo = kcal === 'below' ? kcalMin - Math.round(eaten.kcal) : kcal === 'in' ? kcalMax - Math.round(eaten.kcal) : Math.round(eaten.kcal) - kcalMax;
+  const proteinToGo = Math.max(0, Math.ceil(proteinMin - eaten.protein));
+  return { kcalMin, kcalMax, kcal, kcalToGo, proteinMin, proteinToGo, met: kcal === 'in' && proteinToGo === 0 };
+}
+
 export function dietOnTarget(n: NutritionState, day: string): boolean {
   if (n.incompleteDays.includes(day)) return false;
   const target = targetsOn(n, day);
   if (!target) return false;
   const eaten = dayTotals(n.log, day);
   if (eaten.kcal <= 0) return false;
-  return Math.abs(eaten.kcal - target.kcal) <= target.kcal * 0.1 && eaten.protein >= target.protein * 0.9;
+  return dayTargetStatus(eaten, target).met;
 }
 
 export interface WeekGoal {
