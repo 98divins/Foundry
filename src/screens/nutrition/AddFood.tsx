@@ -36,7 +36,13 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
   const [mode, setMode] = useState<Mode>('search');
   const [meal, setMeal] = useState<Meal>(MEALS.includes(initialMeal) ? initialMeal : 'snacks');
   const [picked, setPicked] = useState<Food | null>(null);
-  const [added, setAdded] = useState<string[]>([]);
+  const [added, setAdded] = useState<{ name: string; at: number } | null>(null);
+  // The confirmation fades on its own; the back arrow returns to the day.
+  useEffect(() => {
+    if (!added) return;
+    const id = setTimeout(() => setAdded(null), 2500);
+    return () => clearTimeout(id);
+  }, [added]);
 
   const log = (entry: Omit<FoodEntry, 'id' | 'date' | 'meal' | 'createdAt'>, food?: Food) => {
     setN((x) => ({
@@ -47,7 +53,7 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
     }));
     // A scanned Open Food Facts product becomes findable by every member (once, under its barcode).
     if (food?.source === 'off' && cloud.user) publishFood(cloud.user.id, food).catch(() => {});
-    setAdded((a) => [...a, itemName(entry)]);
+    setAdded({ name: itemName(entry), at: Date.now() });
   };
 
   return (
@@ -75,15 +81,9 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
             { value: 'quick', label: t('Quick') },
           ]}
         />
-        {added.length > 0 && (
-          <div className="added-box" role="status">
-            <span>
-              {t('Added:')} {added.slice(-3).join(', ')}
-              {added.length > 3 && t(' and {n} more', { n: added.length - 3 })}
-            </span>
-            <button className="btn btn-small btn-primary" onClick={() => back('n/' + date)}>
-              {t('Done')}
-            </button>
+        {added && (
+          <div className="added-toast" role="status" key={added.at}>
+            {t('Added:')} {added.name}
           </div>
         )}
 
@@ -109,7 +109,7 @@ export function AddFood({ date, meal: initialMeal }: { date: string; meal: Meal 
                 ...x,
                 log: [...x.log, ...entriesFromMeal(sm, servings, date, meal, uid).map((e) => (date > dayKey() ? { ...e, planned: true } : e))],
               }));
-              setAdded((a) => [...a, sm.name]);
+              setAdded({ name: sm.name, at: Date.now() });
             }}
           />
         )}
@@ -300,6 +300,7 @@ export function SearchFoods({
   return (
     <>
       <form
+        className="search-sticky"
         onSubmit={(e) => {
           e.preventDefault();
           searchOnline();

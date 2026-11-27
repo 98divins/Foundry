@@ -17,7 +17,7 @@ test('log a food: search it, choose the amount, see it in the day and in the tot
   const sheet = page.getByRole('dialog', { name: 'Banana' });
   await sheet.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Banana');
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'Back' }).click();
   await page
     .getByRole('button', { name: /Breakfast/ })
     .first()
