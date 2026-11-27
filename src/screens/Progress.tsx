@@ -399,7 +399,12 @@ export function DietTraining() {
   const insights = useMemo(() => crossInsights(index, diet, nutrition.proteinPerKg), [index, diet, nutrition.proteinPerKg]);
   const weekLabel = (t: number) => new Date(t).toLocaleDateString(locale(), { day: 'numeric', month: 'numeric' });
   const hasDiet = diet.some((d) => d.loggedDays > 0);
-  const dietRows = starts.map((t, i) => ({ t, d: diet[i], idx: index[i], tr: training[i] })).reverse();
+  // Start at the first week with any meals or workouts, so a long period shows no empty rows.
+  const first = starts.findIndex((_, i) => diet[i].loggedDays > 0 || training[i].sets > 0);
+  const dietRows = starts
+    .map((t, i) => ({ t, d: diet[i], idx: index[i], tr: training[i] }))
+    .slice(Math.max(0, first))
+    .reverse();
   return (
     <>
       <section className="panel">
