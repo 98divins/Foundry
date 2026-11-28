@@ -46,7 +46,7 @@ import {
   type BoardPeriod,
   type PublicStats,
 } from '../socialStats';
-import { fmtDuration, fmtEstimate, fmtKm, fmtNum, fmtVolume } from '../utils';
+import { fmtDuration, fmtEstimate, fmtNum, fmtVolume } from '../utils';
 
 const METRICS: { id: BoardMetric; label: string; hint: string; weekHint?: string }[] = [
   { id: 'days', label: tk('Training days'), hint: tk('Days with a workout. Three workouts on one day count once.') },
@@ -685,7 +685,6 @@ export function FriendCompare({ id }: { id: string }) {
   };
   // The figures of the main card, for the chosen period or dates; the score counts the ones won.
   type Fig = { key: string; label: string; a: number | null | undefined; b: number | null | undefined; fmt?: (x: number) => string };
-  const sameWeek = theirs && theirs.week === mine.week;
   const figures: Fig[] = custom
     ? [
         { key: 'days', label: t('Training days'), a: mineRange?.days, b: theirRange?.days },
@@ -698,25 +697,21 @@ export function FriendCompare({ id }: { id: string }) {
         { key: 'days', label: t('Training days'), a: v(mine, 'days'), b: v(theirs, 'days') },
         { key: 'goals', label: t('Goals met'), a: v(mine, 'goals'), b: v(theirs, 'goals'), fmt: (x) => `${x} %` },
         { key: 'cardio', label: t('Cardio'), a: v(mine, 'cardio'), b: v(theirs, 'cardio'), fmt: (x) => fmtDuration(x * 60000) },
-        {
-          key: 'km',
-          label: t('Cardio distance'),
-          a: period === 'week' ? (mine.weekCardioKm ?? null) : (mine.periods?.[period]?.cardioKm ?? null),
-          b: theirs ? (period === 'week' ? (sameWeek ? (theirs.weekCardioKm ?? null) : 0) : (theirs.periods?.[period]?.cardioKm ?? null)) : null,
-          fmt: (x) => fmtKm(x),
-        },
         { key: 'sets', label: t('Sets'), a: v(mine, 'sets'), b: v(theirs, 'sets') },
         { key: 'volume', label: t('Volume'), a: v(mine, 'volume'), b: v(theirs, 'volume'), fmt: (x) => fmtVolume(x, unit) },
         { key: 'prs', label: t('Records'), a: v(mine, 'prs'), b: v(theirs, 'prs') },
-        period === 'week'
-          ? { key: 'time', label: t('Time'), a: mine.weekMinutes, b: theirs ? (sameWeek ? theirs.weekMinutes : 0) : null, fmt: (x) => fmtDuration(x * 60000) }
-          : {
-              key: 'strength',
-              label: t('Strength progress'),
-              a: v(mine, 'strength'),
-              b: v(theirs, 'strength'),
-              fmt: (x) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) }),
-            },
+        // Distance and time are left out: distance is often not logged, and a timer left running inflates time.
+        ...(period === 'week'
+          ? []
+          : [
+              {
+                key: 'strength',
+                label: t('Strength progress'),
+                a: v(mine, 'strength'),
+                b: v(theirs, 'strength'),
+                fmt: (x: number) => t('{v} pts', { v: (x > 0 ? '+' : '') + fmtNum(x) }),
+              },
+            ]),
       ];
   const score = compareScore(figures.map((f) => [f.a, f.b]));
   // Best lifts are kept per period: over dates, use the shortest period that covers them.

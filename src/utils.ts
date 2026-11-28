@@ -236,7 +236,7 @@ const PR_METRICS: Record<ExerciseKind, PRKind[]> = {
  */
 /** Records per set, computed once per list of workouts (memo.ts). */
 /** Sessions of an exercise that only set the starting point: no record before the next one. */
-export const RECORD_AFTER_SESSIONS = 3;
+export const RECORD_AFTER_SESSIONS = 7;
 
 export const computePRs = (workouts: Workout[]): Map<string, PRKind[]> => prsMemo(workouts, undefined);
 const prsMemo = memoByRef((workouts: Workout[], _: undefined) => computePRsUncached(workouts));
@@ -263,7 +263,7 @@ function computePRsUncached(workouts: Workout[]): Map<string, PRKind[]> {
     }
     for (const [exId, sets] of byExercise) {
       const prev = bests.get(exId);
-      // The first sessions of an exercise only set the starting point: records count from the 4th.
+      // The first sessions of an exercise only set the starting point: records count from the 8th.
       const seen = sessionsSeen.get(exId) ?? 0;
       sessionsSeen.set(exId, seen + 1);
       const counts = seen >= RECORD_AFTER_SESSIONS;

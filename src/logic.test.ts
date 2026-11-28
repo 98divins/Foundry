@@ -29,9 +29,9 @@ const set = (id: string, weight: number | null, reps: number, extra: Partial<Set
   ...extra,
 });
 
-/** Two small earlier sessions, so the next two are the 3rd and 4th (records count from the 4th). */
+/** Six small earlier sessions, so the next two are the 7th and 8th (records count from the 8th). */
 const baseline = (exerciseId: string): Workout[] =>
-  [0, 1].map((i) => ({
+  [0, 1, 2, 3, 4, 5].map((i) => ({
     id: `base-${exerciseId}-${i}`,
     name: 'Base',
     startedAt: Date.UTC(2025, 11, 1 + i, 10),
@@ -78,14 +78,10 @@ describe('records', () => {
     workout('3', 5, 'bench_bb', [set('e', 60, 10, { type: 'warmup' }), set('f', 82.5, 5)]),
   ];
 
-  it('the first three sessions are the starting point: no record before the fourth', () => {
-    const early = [
-      workout('x1', 1, 'bench_bb', [set('p', 60, 5)]),
-      workout('x2', 2, 'bench_bb', [set('q', 70, 5)]),
-      workout('x3', 3, 'bench_bb', [set('r', 80, 5)]),
-    ];
+  it('the first seven sessions are the starting point: no record before the eighth', () => {
+    const early = [1, 2, 3, 4, 5, 6, 7].map((d) => workout('x' + d, d, 'bench_bb', [set('p' + d, 50 + d * 5, 5)]));
     expect(computePRs(early).size).toBe(0); // heavier each time, but still learning the starting level
-    expect(computePRs([...early, workout('x4', 4, 'bench_bb', [set('s', 82.5, 5)])]).get('s')).toContain('weight');
+    expect(computePRs([...early, workout('x8', 8, 'bench_bb', [set('s', 90, 5)])]).get('s')).toContain('weight');
   });
 
   it('first sessions are the baseline, later improvements are flagged once', () => {
