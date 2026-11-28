@@ -279,7 +279,7 @@ function ExerciseCard({
     if (timed) return fmtSet(p, kind, unit);
     const w = p.weight ? fmtNum(toDisplay(p.weight, unit)) : null;
     const sign = kind === 'assisted' ? '−' : kind === 'bodyweight' ? '+' : '';
-    return `${w ? `${sign}${w} × ` : ''}${p.reps ?? '–'}${rpeOn && p.rpe ? ` · ${t('Effort {n}/10', { n: p.rpe })}` : ''}`;
+    return `${w ? `${sign}${w} × ` : ''}${p.reps ?? '–'}`;
   };
 
   const weightHeader = kind === 'bodyweight' ? `+${unit}` : kind === 'assisted' ? `−${unit}` : unit;
@@ -380,9 +380,15 @@ function ExerciseCard({
                   className="set-prev"
                   disabled={!p}
                   onClick={() => p && setSet(i, { weight: p.weight, reps: p.reps, duration: p.duration ?? null, distance: p.distance ?? null })}
-                  aria-label={p ? t('Use previous: {value}', { value: prevText(p) }) : t('No previous set')}
+                  aria-label={
+                    p
+                      ? t('Use previous: {value}', { value: prevText(p) + (rpeOn && p.rpe ? ' · ' + t('Effort {n}/10', { n: p.rpe }) : '') })
+                      : t('No previous set')
+                  }
                 >
-                  {prevText(p)}
+                  <span>{prevText(p)}</span>
+                  {/* The effort logged last time, on its own line so it is never cut off. */}
+                  {rpeOn && p?.rpe ? <span className="set-prev-rpe">{t('Effort {n}/10', { n: p.rpe })}</span> : null}
                 </button>
               )}
               {kind === 'duration' ? (

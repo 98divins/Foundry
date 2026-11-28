@@ -5073,3 +5073,15 @@ a.btn.disabled {
     opacity: 0;
   }
 }
+
+.set-prev-rpe {
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
+  opacity: 0.8;
+}
+.set-prev > span:first-child {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
