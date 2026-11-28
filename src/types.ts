@@ -71,6 +71,8 @@ export interface SetEntry {
   target?: { reps: number | null; repsMax: number | null } | null;
   /** Rate of perceived exertion, 6–10 (optional, Settings → Features in test). */
   rpe?: number | null;
+  /** When the set was ticked (live workouts), to close a forgotten workout at its real end. */
+  doneAt?: number;
   done: boolean;
 }
 

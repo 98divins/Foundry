@@ -20,6 +20,7 @@ import { ImportRoutines } from './screens/ImportRoutines';
 import { WorkoutDetail } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 import { useStore } from './store';
+import { autoFinish } from './autoFinish';
 import { CloudDialogs } from './components/Account';
 import { ConsentGate } from './components/Legal';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -79,6 +80,21 @@ export function App() {
   const nutritionDay = section === 'n' && (!param || /^\d{4}-\d{2}-\d{2}$/.test(param));
   const isTab = TABS.some((tab) => tab.path === (section ?? '')) && (section !== 'n' || nutritionDay);
   const now = useNow(1000, !!state.active && section !== 'active');
+
+  // A workout left running is closed at its last activity (see autoFinish.ts).
+  const { update } = useStore();
+  const activeId = state.active?.id;
+  useEffect(() => {
+    if (!activeId) return;
+    const check = () => update((s) => autoFinish(s, Date.now()));
+    check();
+    const id = setInterval(check, 60000);
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, [activeId, update]);
 
   const cloud = useCloud();
   const requests = useIncomingRequests();

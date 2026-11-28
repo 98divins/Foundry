@@ -249,7 +249,7 @@ function ExerciseCard({
       setTimeout(() => setFlash(null), 600);
       return;
     }
-    setSet(i, { done: true, ...filled });
+    setSet(i, { done: true, doneAt: Date.now(), ...filled });
     onSetCompleted();
   };
 
