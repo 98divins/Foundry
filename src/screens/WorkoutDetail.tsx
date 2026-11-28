@@ -176,6 +176,7 @@ export function WorkoutDetail({ id, justFinished }: { id: string; justFinished?:
                         <td className={'set-type-cell t-' + s.type}>{label}</td>
                         <td>
                           {fmtSet(s, kind, unit)}
+                          {s.rpe ? <span className="muted small"> · {t('Effort {n}/10', { n: s.rpe })}</span> : null}
                           {kinds && (
                             <span className="pr-pill" title={kinds.map((k) => t(PR_LABEL[k])).join(', ')}>
                               <Icon name="trophy" size={12} /> {kinds.map((k) => t(PR_LABEL[k])).join(' · ')}

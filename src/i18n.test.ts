@@ -22,6 +22,7 @@ function messages(): string[] {
 
 // Messages that read the same in both languages.
 const SAME = new Set([
+  'Effort {n}/10',
   'Style',
   'kettlebell',
   'kettlebells',

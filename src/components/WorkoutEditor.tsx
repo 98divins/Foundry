@@ -279,7 +279,7 @@ function ExerciseCard({
     if (timed) return fmtSet(p, kind, unit);
     const w = p.weight ? fmtNum(toDisplay(p.weight, unit)) : null;
     const sign = kind === 'assisted' ? '−' : kind === 'bodyweight' ? '+' : '';
-    return `${w ? `${sign}${w} × ` : ''}${p.reps ?? '–'}${rpeOn && p.rpe ? ` @${p.rpe}` : ''}`;
+    return `${w ? `${sign}${w} × ` : ''}${p.reps ?? '–'}${rpeOn && p.rpe ? ` · ${t('Effort {n}/10', { n: p.rpe })}` : ''}`;
   };
 
   const weightHeader = kind === 'bodyweight' ? `+${unit}` : kind === 'assisted' ? `−${unit}` : unit;
